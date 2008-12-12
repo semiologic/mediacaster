@@ -1,0 +1,15 @@
+.media_container
+{
+	overflow: hidden;
+	clear: both;
+}
+
+.media_attachment
+{
+	border-top: solid 1px ForestGreen;
+	border-bottom: solid 1px ForestGreen;
+    background: #ddffdd;
+	width: 100%;
+	padding: 20px 50px 20px 50px;
+	margin: 6px 0px;
+}
