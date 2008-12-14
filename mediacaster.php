@@ -12,7 +12,7 @@ Author URI: http://www.getsemiologic.com
 Terms of use
 ------------
 
-This software is copyright Mesoconcepts Ltd (http://www.mesoconcepts.com), and is distributed under the terms of the GPL license, v.2.
+This software is copyright Mesoconcepts (http://www.mesoconcepts.com), and is distributed under the terms of the GPL license, v.2.
 
 http://www.opensource.org/licenses/gpl-2.0.php
 */
