@@ -359,9 +359,8 @@ class mediacaster_admin
 				if ( current_user_can('upload_files') )
 				{
 					echo '<p>'
-						.  '<input type="button" class="button" tabindex="4"'
-						. ' value="' . __('Save Changes') . '"'
-						. ' onclick="return form.save.click();"'
+						. '<input type="submit" name="save" class="button" tabindex="4"'
+						. ' value="' . __('Save') . '"'
 						. ' />'
 						. '</p>';
 				}
