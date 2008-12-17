@@ -383,9 +383,8 @@ class mediacaster_admin
 					. ' id="new_media" name="new_media"'
 					. ' />'
 					. ' '
-					. '<input type="button"'
-					. ' value="' . __('Upload') . '"'
-					. ' onclick="return form.save.click();"'
+					. '<input type="submit" name="save" class="button" tabindex="4"'
+					. ' value="' . __('Save') . '"'
 					. ' />'
 				. '</li>'
 				. '</ul>';
