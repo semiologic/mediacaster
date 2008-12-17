@@ -43,6 +43,11 @@ class mediacaster_admin
 
 	function update_path($post_ID)
 	{
+		$post = get_post($post_ID);
+		
+		if ( $post->post_type == 'revision' ) return;
+		
+		
 		$old = get_post_meta($post_ID, '_mediacaster_path', true);
 		$new = mediacaster::get_path($post_ID);
 
