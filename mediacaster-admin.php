@@ -72,6 +72,11 @@ class mediacaster_admin
 
 	function save_media($post_ID)
 	{
+		$post = get_post($post_ID);
+		
+		if ( $post->post_type == 'revision' ) return;
+		
+		
 		global $wpdb;
 		
 		$path = mediacaster::get_path($post_ID);
