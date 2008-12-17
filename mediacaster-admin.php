@@ -17,7 +17,7 @@ class mediacaster_admin
 		add_action('admin_head', array('mediacaster_admin', 'display_js_files'), 0);
 		add_filter('admin_footer', array('mediacaster_admin', 'quicktag'));
 		add_filter('mce_external_plugins', array('mediacaster_admin', 'editor_plugin'), 5);
-		add_filter('mce_buttons', array('mediacaster_admin', 'editor_button'));
+		add_filter('mce_buttons_3', array('mediacaster_admin', 'editor_button'));
 		
 		if ( get_option('mediacaster') === false )
 		{
