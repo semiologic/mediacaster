@@ -52,9 +52,6 @@ class mediacaster
 		
 		add_filter('get_the_excerpt', array('mediacaster', 'disable'), 0);
 		add_filter('get_the_excerpt', array('mediacaster', 'enable'), 20);
-		
-		if ( @ini_get('pcre.backtrack_limit') < 250000 )
-			@ini_set('pcre.backtrack_limit', 250000);
 	} # init()
 	
 	
