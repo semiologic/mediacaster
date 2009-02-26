@@ -89,8 +89,9 @@ class mediacaster_admin
 			foreach ( array_keys((array) $_POST['delete_media']) as $key )
 			{
 				$key = stripslashes(html_entity_decode(urldecode($key)));
-
-				$ext = pathinfo($key, PATHINFO_EXTENSION);
+				
+				preg_match("/\.(.+?)$/i", $key, $ext); 
+				$ext = end($ext);
 
 				@unlink(ABSPATH . $path . $key);
 				unset($_POST['update_media'][$key]);
@@ -156,8 +157,9 @@ class mediacaster_admin
 							SET		post_content = '" . $wpdb->escape($post_content) . "'
 							WHERE	ID = " . intval($post_ID) . "
 							");
-
-					$ext = pathinfo($old, PATHINFO_EXTENSION);
+					
+					preg_match("/\.(.+?)$/i", $old, $ext); 
+					$ext = end($ext);
 
 					if ( in_array(strtolower($ext), array('flv', 'swf', 'mov', 'mp4', 'm4v', 'm4a')) )
 					{
@@ -169,8 +171,9 @@ class mediacaster_admin
 							if ( $image = glob(ABSPATH . $path . $old_name . '.{jpg,jpeg,png}', GLOB_BRACE) )
 							{
 								$image = current($image);
-
-								$ext = pathinfo($image, PATHINFO_EXTENSION);
+								
+								preg_match("/\.(.+?)$/i", $image, $ext); 
+								$ext = end($ext);
 								$ext = strtolower($ext);
 
 								$old_name = basename($image, '.' . $ext);
@@ -184,7 +187,8 @@ class mediacaster_admin
 							{
 								$image = current($image);
 
-								$ext = pathinfo($image, PATHINFO_EXTENSION);
+								preg_match("/\.(.+?)$/i", $image, $ext); 
+								$ext = end($ext);
 								$ext = strtolower($ext);
 
 								$old_name = basename($image, '.' . $ext);
@@ -204,7 +208,8 @@ class mediacaster_admin
 				$new_name = preg_replace("/\s+/", " ", $new_name);
 				$new_name = ABSPATH . $path . $new_name;
 				
-				$ext = pathinfo($new_name, PATHINFO_EXTENSION);
+				preg_match("/\.(.+?)$/i", $new_name, $ext); 
+				$ext = end($ext);
 				$new_name = str_replace('.' . $ext, '.' . strtolower($ext), $new_name);
 				$ext = strtolower($ext);
 
@@ -277,7 +282,8 @@ class mediacaster_admin
 							);
 					$key = urlencode($key);
 					
-					$ext = pathinfo($name, PATHINFO_EXTENSION);
+					preg_match("/\.(.+?)$/i", $name, $ext); 
+					$ext = end($ext);
 					
 					if ( in_array($ext, array('flv', 'swf', 'mov', 'mp4', 'm4a', 'm4v')) )
 					{
@@ -542,9 +548,10 @@ class mediacaster_admin
 			$tmp_name =& $_FILES['mediacaster']['tmp_name']['itunes']['image']['new'];
 			
 			$name = strip_tags(stripslashes($name));
-
-			$ext = pathinfo($name, PATHINFO_EXTENSION);
-
+			
+			preg_match("/\.(.+?)$/i", $name, $ext); 
+			$ext = end($ext);
+			
 			if ( !in_array(strtolower($ext), array('jpg', 'jpeg', 'png')) )
 			{
 				echo '<div class="error">'
@@ -577,8 +584,9 @@ class mediacaster_admin
 			
 			$name = strip_tags(stripslashes($name));
 
-			$ext = pathinfo($name, PATHINFO_EXTENSION);
-
+			preg_match("/\.(.+?)$/i", $name, $ext); 
+			$ext = end($ext);
+			
 			if ( !in_array(strtolower($ext), array('jpg', 'jpeg', 'png')) )
 			{
 				echo '<div class="error">'
@@ -607,9 +615,10 @@ class mediacaster_admin
 						@unlink($cover);
 					}
 				}
-
-				$ext = pathinfo($name, PATHINFO_EXTENSION);
-
+				
+				preg_match("/\.(.+?)$/i", $name, $ext); 
+				$ext = end($ext);
+				
 				$entropy = get_option('sem_entropy');
 
 				$entropy = intval($entropy) + 1;

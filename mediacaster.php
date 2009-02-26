@@ -3,7 +3,7 @@
 Plugin Name: Mediacaster
 Plugin URI: http://www.semiologic.com/software/publishing/mediacaster/
 Description: Lets you add podcasts and videos to your site's posts and pages.
-Version: 1.5.5
+Version: 1.5.6 alpha
 Author: Denis de Bernardy
 Author URI: http://www.getsemiologic.com
 */
@@ -206,8 +206,9 @@ class mediacaster
 				break;
 			}
 		}
-
-		$ext = pathinfo(basename($file), PATHINFO_EXTENSION);
+		
+		preg_match("/\.(.+?)$/i", $file, $ext); 
+		$ext = end($ext);
 		
 		switch ( strtolower($ext) )
 		{
@@ -368,7 +369,8 @@ class mediacaster
 				
 				foreach ( $files as $key => $file )
 				{
-					$ext = pathinfo($key, PATHINFO_EXTENSION);
+					preg_match("/\.(.+?)$/i", $key, $ext); 
+					$ext = end($ext);
 
 					switch ( strtolower($ext) )
 					{
@@ -572,8 +574,9 @@ class mediacaster
 		}
 
 		$image = false;
-
-		$ext = pathinfo(basename($file), PATHINFO_EXTENSION);
+		
+		preg_match("/\.(.+?)$/i", $file, $ext); 
+		$ext = end($ext);
 
 		switch ( strtolower($ext) )
 		{
@@ -670,8 +673,9 @@ class mediacaster
 
 		$image = false;
 
-		$ext = pathinfo(basename($file), PATHINFO_EXTENSION);
-
+		preg_match("/\.(.+?)$/i", $file, $ext); 
+		$ext = end($ext);
+		
 		switch ( strtolower($ext) )
 		{
 		case 'mov':
@@ -844,7 +848,8 @@ class mediacaster
 				case 'video':
 					$title = preg_replace("/\.(flv|swf)$/i", "", $key);
 
-					$ext = pathinfo($key, PATHINFO_EXTENSION);
+					preg_match("/\.(.+?)$/i", $key, $ext); 
+					$ext = end($ext);
 
 					$image = $file;
 					$image = str_replace($site_url, '', $image);
@@ -1289,7 +1294,8 @@ class mediacaster
 
 		foreach ( $files as $key => $file )
 		{
-			$ext = pathinfo($key, PATHINFO_EXTENSION);
+			preg_match("/\.(.+?)$/i", $key, $ext); 
+			$ext = end($ext);
 
 			switch ( strtolower($ext) )
 			{
