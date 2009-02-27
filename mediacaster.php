@@ -89,8 +89,8 @@ class mediacaster
 	{
 		$folder = plugins_url() . '/' . basename(dirname(__FILE__));
 		
-		wp_enqueue_script( 'swfobject', $folder . 'player/swfobject.js', false, '1.5' );
-		wp_enqueue_script( 'qtobject', $folder . 'player/qtobject.js', false, '1.0.2' );
+		wp_enqueue_script( 'swfobject', $folder . '/player/swfobject.js', false, '1.5' );
+		wp_enqueue_script( 'qtobject', $folder . '/player/qtobject.js', false, '1.0.2' );
 	} # scripts()
 
 
