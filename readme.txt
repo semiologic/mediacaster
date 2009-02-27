@@ -3,7 +3,7 @@ Contributors: Denis-de-Bernardy, Semiologic
 Donate link: http://buy.semiologic.com/drink
 Tags: mediacaster, podcasting, podcast, videocasting, videocast, mp3, video, semiologic
 Requires at least: 2.5
-Tested up to: 2.7
+Tested up to: 2.7.2
 Stable tag: trunk
 
 Short Intro
