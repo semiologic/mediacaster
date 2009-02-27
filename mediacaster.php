@@ -267,7 +267,7 @@ class mediacaster
 
 			if ( $flash_audios )
 			{
-				$site_url = trailingslashit(get_option('siteurl'));
+				$site_url = trailingslashit(site_url());
 
 				$height = 20;
 				$display_height = 0;
@@ -323,7 +323,7 @@ class mediacaster
 					$height = $height + $num * 23;
 				}
 
-				$file = trailingslashit(get_option('siteurl')) . '?videos=' . $post_ID;
+				$file = trailingslashit(site_url()) . '?videos=' . $post_ID;
 
 				# insert player
 
@@ -549,7 +549,7 @@ class mediacaster
 		
 		if ( strpos($file, '/') === false )
 		{
-			$site_url = trailingslashit(get_option('siteurl'));
+			$site_url = trailingslashit(site_url());
 
 			$path = mediacaster::get_path(get_the_ID());
 
@@ -580,7 +580,7 @@ class mediacaster
 		{
 		case 'flv':
 		case 'swf':
-			$site_url = trailingslashit(get_option('siteurl'));
+			$site_url = trailingslashit(site_url());
 
 			$image = $file;
 			$image = str_replace($site_url, '', $image);
@@ -606,7 +606,7 @@ class mediacaster
 
 		$id = 'm' . md5($file . '_' . $GLOBALS['player_count']++);
 
-		$player = trailingslashit(get_option('siteurl'))
+		$player = trailingslashit(site_url())
 			. 'wp-content/plugins/mediacaster/player/player.swf';
 
 		return '<div class="media_container">'
@@ -653,7 +653,7 @@ class mediacaster
 		
 		if ( strpos($file, '/') === false )
 		{
-			$site_url = trailingslashit(get_option('siteurl'));
+			$site_url = trailingslashit(site_url());
 
 			$path = mediacaster::get_path(get_the_ID());
 
@@ -678,7 +678,7 @@ class mediacaster
 		{
 		case 'mov':
 		case 'mp4':
-			$site_url = trailingslashit(get_option('siteurl'));
+			$site_url = trailingslashit(site_url());
 
 			$image = $file;
 			$image = str_replace($site_url, '', $image);
@@ -746,7 +746,7 @@ class mediacaster
 	{	
 		if ( strpos($file, '/') === false )
 		{
-			$site_url = trailingslashit(get_option('siteurl'));
+			$site_url = trailingslashit(site_url());
 
 			$path = mediacaster::get_path(get_the_ID());
 
@@ -826,7 +826,7 @@ class mediacaster
 
 		if ( $files )
 		{
-			$site_url = trailingslashit(get_option('siteurl'));
+			$site_url = trailingslashit(site_url());
 
 			if ( $type == 'audio' )
 			{
@@ -983,7 +983,7 @@ class mediacaster
 			return $GLOBALS['mediacaster_file_cache'][$tag];
 		}
 
-		$site_url = trailingslashit(get_option('siteurl'));
+		$site_url = trailingslashit(site_url());
 
 		if ( defined('GLOB_BRACE') )
 		{
@@ -1218,7 +1218,7 @@ class mediacaster
 				$options = mediacaster::regen_options();
 			}
 
-			$site_url = trailingslashit(get_option('siteurl'));
+			$site_url = trailingslashit(site_url());
 
 			echo "\n\t\t"
 				. '<copyright>&#xA9; ' . apply_filters('the_excerpt_rss', $options['itunes']['copyright']) . '</copyright>' . "\n\t\t"
@@ -1280,7 +1280,7 @@ class mediacaster
 
 	function display_feed_enclosures()
 	{
-		$site_url = trailingslashit(get_option('siteurl'));
+		$site_url = trailingslashit(site_url());
 
 		global $post;
 
