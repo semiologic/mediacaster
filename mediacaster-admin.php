@@ -320,7 +320,7 @@ class mediacaster_admin
 					echo '<div style="margin: 1em 0px;">'
 						. ( $img_cover
 							? ( '<img src="'
-								. str_replace(ABSPATH, trailingslashit(get_option('siteurl')), $img_cover)
+								. str_replace(ABSPATH, trailingslashit(site_url()), $img_cover)
 								. '" />' . '<br />'
 								)
 							: ''
@@ -354,7 +354,7 @@ class mediacaster_admin
 
 					echo '<div style="margin: 1em 0px;">'
 						. '<img src="'
-							. trailingslashit(get_option('siteurl')) . $cover
+							. trailingslashit(site_url()) . $cover
 							. '" />' . '<br />'
 						. '<input type="text" style="width: 320px;" tabindex="4"'
 							. ' value="Entry-specific mp3 playlist cover"'
@@ -673,7 +673,7 @@ class mediacaster_admin
 			$options = mediacaster::regen_options();
 		}
 
-		$site_url = trailingslashit(get_option('siteurl'));
+		$site_url = trailingslashit(site_url());
 
 		echo '<div class="wrap">' . "\n"
 			. '<h2>'. __('Mediacaster Settings') . '</h2>' . "\n"
@@ -1366,7 +1366,7 @@ document.mediacasterFiles = mediacasterFiles;
 		{
 			$path = plugin_basename(__FILE__);
 
-			$plugin = trailingslashit(get_option('siteurl'))
+			$plugin = trailingslashit(site_url())
 				. 'wp-content/plugins/'
 				. ( strpos($path, '/') !== false
 					? ( dirname($path) . '/' )
