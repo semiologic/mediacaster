@@ -87,12 +87,10 @@ class mediacaster
 
 	function scripts()
 	{
-		$plugin_path = plugin_basename(__FILE__);
-		$plugin_path = preg_replace("/[^\/]+$/", '', $plugin_path);
-		$plugin_path = '/wp-content/plugins/' . $plugin_path;
+		$folder = plugins_url() . '/' . basename(dirname(__FILE__));
 		
-		wp_enqueue_script( 'swfobject', $plugin_path . 'player/swfobject.js', false, '1.5' );
-		wp_enqueue_script( 'qtobject', $plugin_path . 'player/qtobject.js', false, '1.0.2' );
+		wp_enqueue_script( 'swfobject', $folder . 'player/swfobject.js', false, '1.5' );
+		wp_enqueue_script( 'qtobject', $folder . 'player/qtobject.js', false, '1.0.2' );
 	} # scripts()
 
 
@@ -1450,7 +1448,7 @@ class mediacaster
 		$folder = plugins_url() . '/' . basename(dirname(__FILE__));
 		$css = $folder . '/mediacaster.css';
 		
-		wp_enqueue_style('sem_admin_menu', $css, null, '1.5.6');
+		wp_enqueue_style('mediacaster', $css, null, '1.5.6');
 	} # display_css()
 } # mediacaster
 
