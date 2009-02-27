@@ -48,7 +48,7 @@ class mediacaster
 			add_action('wp_print_scripts', array('mediacaster', 'scripts'));
 		}
 		
-		add_action('wp_head', array('mediacaster', 'display_css'));
+		add_action('wp_print_styles', array('mediacaster', 'display_css'));
 		
 		add_filter('get_the_excerpt', array('mediacaster', 'disable'), 0);
 		add_filter('get_the_excerpt', array('mediacaster', 'enable'), 20);
