@@ -90,7 +90,7 @@ class mediacaster_admin
 			{
 				$key = stripslashes(html_entity_decode(urldecode($key)));
 				
-				preg_match("/\.(.+?)$/i", $key, $ext); 
+				preg_match("/\.([^.]+)$/", $key, $ext); 
 				$ext = end($ext);
 
 				@unlink(ABSPATH . $path . $key);
@@ -158,7 +158,7 @@ class mediacaster_admin
 							WHERE	ID = " . intval($post_ID) . "
 							");
 					
-					preg_match("/\.(.+?)$/i", $old, $ext); 
+					preg_match("/\.([^.]+)$/", $old, $ext); 
 					$ext = end($ext);
 
 					if ( in_array(strtolower($ext), array('flv', 'swf', 'mov', 'mp4', 'm4v', 'm4a')) )
@@ -172,7 +172,7 @@ class mediacaster_admin
 							{
 								$image = current($image);
 								
-								preg_match("/\.(.+?)$/i", $image, $ext); 
+								preg_match("/\.([^.]+)$/", $image, $ext); 
 								$ext = end($ext);
 								$ext = strtolower($ext);
 
@@ -187,7 +187,7 @@ class mediacaster_admin
 							{
 								$image = current($image);
 
-								preg_match("/\.(.+?)$/i", $image, $ext); 
+								preg_match("/\.([^.]+)$/", $image, $ext); 
 								$ext = end($ext);
 								$ext = strtolower($ext);
 
@@ -208,7 +208,7 @@ class mediacaster_admin
 				$new_name = preg_replace("/\s+/", " ", $new_name);
 				$new_name = ABSPATH . $path . $new_name;
 				
-				preg_match("/\.(.+?)$/i", $new_name, $ext); 
+				preg_match("/\.([^.]+)$/", $new_name, $ext); 
 				$ext = end($ext);
 				$new_name = str_replace('.' . $ext, '.' . strtolower($ext), $new_name);
 				$ext = strtolower($ext);
@@ -282,7 +282,7 @@ class mediacaster_admin
 							);
 					$key = urlencode($key);
 					
-					preg_match("/\.(.+?)$/i", $name, $ext); 
+					preg_match("/\.([^.]+)$/", $name, $ext); 
 					$ext = end($ext);
 					
 					if ( in_array($ext, array('flv', 'swf', 'mov', 'mp4', 'm4a', 'm4v')) )
@@ -549,7 +549,7 @@ class mediacaster_admin
 			
 			$name = strip_tags(stripslashes($name));
 			
-			preg_match("/\.(.+?)$/i", $name, $ext); 
+			preg_match("/\.([^.]+)$/", $name, $ext); 
 			$ext = end($ext);
 			
 			if ( !in_array(strtolower($ext), array('jpg', 'jpeg', 'png')) )
@@ -584,7 +584,7 @@ class mediacaster_admin
 			
 			$name = strip_tags(stripslashes($name));
 
-			preg_match("/\.(.+?)$/i", $name, $ext); 
+			preg_match("/\.([^.]+)$/", $name, $ext); 
 			$ext = end($ext);
 			
 			if ( !in_array(strtolower($ext), array('jpg', 'jpeg', 'png')) )
@@ -616,7 +616,7 @@ class mediacaster_admin
 					}
 				}
 				
-				preg_match("/\.(.+?)$/i", $name, $ext); 
+				preg_match("/\.([^.]+)$/", $name, $ext); 
 				$ext = end($ext);
 				
 				$entropy = get_option('sem_entropy');

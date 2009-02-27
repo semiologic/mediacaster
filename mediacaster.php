@@ -205,7 +205,7 @@ class mediacaster
 			}
 		}
 		
-		preg_match("/\.(.+?)$/i", $file, $ext); 
+		preg_match("/\.([^.]+)$/", $file, $ext); 
 		$ext = end($ext);
 		
 		switch ( strtolower($ext) )
@@ -367,7 +367,7 @@ class mediacaster
 				
 				foreach ( $files as $key => $file )
 				{
-					preg_match("/\.(.+?)$/i", $key, $ext); 
+					preg_match("/\.([^.]+)$/", $key, $ext); 
 					$ext = end($ext);
 
 					switch ( strtolower($ext) )
@@ -573,7 +573,7 @@ class mediacaster
 
 		$image = false;
 		
-		preg_match("/\.(.+?)$/i", $file, $ext); 
+		preg_match("/\.([^.]+)$/", $file, $ext); 
 		$ext = end($ext);
 
 		switch ( strtolower($ext) )
@@ -671,7 +671,7 @@ class mediacaster
 
 		$image = false;
 
-		preg_match("/\.(.+?)$/i", $file, $ext); 
+		preg_match("/\.([^.]+)$/", $file, $ext); 
 		$ext = end($ext);
 		
 		switch ( strtolower($ext) )
@@ -846,7 +846,7 @@ class mediacaster
 				case 'video':
 					$title = preg_replace("/\.(flv|swf)$/i", "", $key);
 
-					preg_match("/\.(.+?)$/i", $key, $ext); 
+					preg_match("/\.([^.]+)$/", $key, $ext); 
 					$ext = end($ext);
 
 					$image = $file;
@@ -1292,7 +1292,7 @@ class mediacaster
 
 		foreach ( $files as $key => $file )
 		{
-			preg_match("/\.(.+?)$/i", $key, $ext); 
+			preg_match("/\.([^.]+)$/", $key, $ext); 
 			$ext = end($ext);
 
 			switch ( strtolower($ext) )
