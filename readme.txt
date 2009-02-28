@@ -1,5 +1,5 @@
 === Mediacaster ===
-Contributors: Denis-de-Bernardy, Semiologic
+Contributors: Denis-de-Bernardy
 Donate link: http://buy.semiologic.com/drink
 Tags: mediacaster, podcasting, podcast, videocasting, videocast, mp3, video, semiologic
 Requires at least: 2.5
