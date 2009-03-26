@@ -131,7 +131,7 @@
 				longname : "Mediacaster",
 				author : 'Denis de Bernardy',
 				authorurl : 'http://www.semiologic.com/',
-				infourl : 'http://www.semiologic.com/software/publishing/mediacaster/',
+				infourl : 'http://www.semiologic.com/software/mediacaster/',
 				version : "1.5"
 			};
 		}
