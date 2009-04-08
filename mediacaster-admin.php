@@ -531,7 +531,7 @@ class mediacaster_admin
 		{
 			$options = get_option('mediacaster');
 
-			$itunes_image = ABSPATH . 'wp-content/itunes/' . $options['itunes']['image']['name'];
+			$itunes_image = WP_CONTENT_DIR . '/itunes/' . $options['itunes']['image']['name'];
 
 			@unlink($itunes_image);
 		}
@@ -567,10 +567,10 @@ class mediacaster_admin
 				$options['itunes']['image']['counter'] = $options['itunes']['image']['counter'] + 1;
 				$options['itunes']['image']['name'] = $options['itunes']['image']['counter'] . '_' . $name;
 
-				$new_name = ABSPATH . 'wp-content/itunes/' . $options['itunes']['image']['name'];
+				$new_name = WP_CONTENT_DIR . '/itunes/' . $options['itunes']['image']['name'];
 
-				@mkdir(ABSPATH . 'wp-content/itunes');
-				@chmod(ABSPATH . 'wp-content/itunes', 0777);
+				@mkdir(WP_CONTENT_DIR . '/itunes');
+				@chmod(WP_CONTENT_DIR . '/itunes', 0777);
 
 				@move_uploaded_file($tmp_name, $new_name);
 				@chmod($new_name, 0666);
@@ -1010,7 +1010,7 @@ class mediacaster_admin
 					. ' value="' . attribute_escape($options['itunes']['image']['name']) . '"'
 					. ' />' . "\n";
 			
-			if ( file_exists(ABSPATH . 'wp-content/itunes/' . $options['itunes']['image']['name']) )
+			if ( file_exists(WP_CONTENT_DIR . '/itunes/' . $options['itunes']['image']['name']) )
 			{
 				echo '<div style="margin-bottom: 6px;">';
 
@@ -1021,7 +1021,7 @@ class mediacaster_admin
 							. '"'
 						. ' />' . '<br />' . "\n";
 				
-				if ( is_writable(ABSPATH . 'wp-content/itunes/' . $options['itunes']['image']['name']) )
+				if ( is_writable(WP_CONTENT_DIR . '/itunes/' . $options['itunes']['image']['name']) )
 				{
 					echo '<label for="delete_itunes">'
 						. '<input type="checkbox"'
@@ -1032,7 +1032,7 @@ class mediacaster_admin
 						. __('Delete')
 						. '</label>';
 				}
-				elseif ( file_exists(ABSPATH . 'wp-content/itunes/' . $options['itunes']['image']['name']) )
+				elseif ( file_exists(WP_CONTENT_DIR . '/itunes/' . $options['itunes']['image']['name']) )
 				{
 					echo __('This cover is not writable by the server.');
 				}
