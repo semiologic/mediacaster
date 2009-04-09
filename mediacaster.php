@@ -379,7 +379,8 @@ class mediacaster
 						case 'm4v':
 						case 'm4a':
 							$videocasts .= '<li class="video">'
-								. '<a href="' . htmlspecialchars($file) . '" target="_blank">'
+								. '<a href="' . htmlspecialchars($file) . '"'
+									. ' onclick="window.open(this.href); return false;">'
 								. basename($key, '.' . $ext)
 								. '</a>'
 								. ' (video)'
@@ -390,7 +391,8 @@ class mediacaster
 						case 'gz':
 						case 'pdf':
 							$attachments .= '<li class="audio">'
-								. '<a href="' . htmlspecialchars($file) . '" target="_blank">'
+								. '<a href="' . htmlspecialchars($file) . '"'
+									. ' onclick="window.open(this.href); return false;">'
 								. basename($key, '.' . $ext)
 								. '</a>'
 								. ' (attachment)'
@@ -400,7 +402,8 @@ class mediacaster
 						case 'mp3':
 						default:
 							$podcasts .= '<li class="audio">'
-								. '<a href="' . htmlspecialchars($file) . '" target="_blank">'
+								. '<a href="' . htmlspecialchars($file) . '"'
+									. ' onclick="window.open(this.href); return false;">'
 								. basename($key, '.' . $ext)
 								. '</a>'
 								. ' (audio)'
