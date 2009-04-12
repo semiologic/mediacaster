@@ -87,10 +87,10 @@ class mediacaster
 
 	function scripts()
 	{
-		$folder = plugins_url() . '/' . basename(dirname(__FILE__));
+		$folder = plugin_dir_url(__FILE__);
 		
-		wp_enqueue_script( 'swfobject', $folder . '/js/swfobject.js', false, '1.5' );
-		wp_enqueue_script( 'qtobject', $folder . '/js/qtobject.js', false, '1.0.2' );
+		wp_enqueue_script( 'swfobject', $folder . 'js/swfobject.js', false, '1.5' );
+		wp_enqueue_script( 'qtobject', $folder . 'js/qtobject.js', false, '1.0.2' );
 	} # scripts()
 
 
@@ -1448,8 +1448,8 @@ class mediacaster
 	
 	function display_css()
 	{
-		$folder = plugins_url() . '/' . basename(dirname(__FILE__));
-		$css = $folder . '/mediacaster.css';
+		$folder = plugin_dir_url(__FILE__);
+		$css = $folder . 'mediacaster.css';
 		
 		wp_enqueue_style('mediacaster', $css, null, '1.5.6');
 	} # display_css()
