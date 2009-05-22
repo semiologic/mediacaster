@@ -834,7 +834,7 @@ class mediacaster_admin
 
 		echo '<p class="submit">'
 			. '<input type="submit"'
-				. ' value="' . attribute_escape(__('Save Changes')) . '"'
+				. ' value="' . esc_attr(__('Save Changes')) . '"'
 				. ' />'
 			. '</p>' . "\n";
 
@@ -902,7 +902,7 @@ class mediacaster_admin
 			. '<td>'
 			. '<input type="text" style="width: 480px;"'
 				. ' id="mediacaster[captions][enclosures]" name="mediacaster[captions][enclosures]"'
-				. ' value="' . attribute_escape($options['captions']['enclosures']) . '"'
+				. ' value="' . esc_attr($options['captions']['enclosures']) . '"'
 				. ' />' . "\n"
 			. '</td>'
 			. '</tr>' . "\n";
@@ -911,7 +911,7 @@ class mediacaster_admin
 
 		echo '<p class="submit">'
 			. '<input type="submit"'
-				. ' value="' . attribute_escape(__('Save Changes')) . '"'
+				. ' value="' . esc_attr(__('Save Changes')) . '"'
 				. ' />'
 			. '</p>' . "\n";
 
@@ -939,7 +939,7 @@ class mediacaster_admin
 				. '<td>'
 				. '<input type="text" style="width: 480px;"'
 					. ' id="mediacaster[itunes][author]" name="mediacaster[itunes][author]"'
-					. ' value="' . attribute_escape($options['itunes']['author']) . '"'
+					. ' value="' . esc_attr($options['itunes']['author']) . '"'
 					. ' />' . "\n"
 				. '</td>'
 				. '</tr>' . "\n";
@@ -979,13 +979,13 @@ class mediacaster_admin
 					$category = $category;
 
 					echo '<option'
-						. ' value="' . attribute_escape($category) . '"'
+						. ' value="' . esc_attr($category) . '"'
 						. ( ( $category == $options['itunes']['category'][$i] )
 							? ' selected="selected"'
 							: ''
 							)
 						. '>'
-						. attribute_escape($category)
+						. esc_attr($category)
 						. '</option>' . "\n";
 				}
 				echo '</select>'
@@ -1007,7 +1007,7 @@ class mediacaster_admin
 					. ' />' . "\n"
 				. '<input type="hidden"'
 					. ' id="mediacaster[itunes][image][name]" name="mediacaster[itunes][image][name]"'
-					. ' value="' . attribute_escape($options['itunes']['image']['name']) . '"'
+					. ' value="' . esc_attr($options['itunes']['image']['name']) . '"'
 					. ' />' . "\n";
 			
 			if ( file_exists(WP_CONTENT_DIR . '/itunes/' . $options['itunes']['image']['name']) )
@@ -1017,7 +1017,7 @@ class mediacaster_admin
 				echo '<img src="'
 							. $site_url
 							. 'wp-content/itunes/'
-							. attribute_escape($options['itunes']['image']['name'])
+							. esc_attr($options['itunes']['image']['name'])
 							. '"'
 						. ' />' . '<br />' . "\n";
 				
@@ -1065,7 +1065,7 @@ class mediacaster_admin
 
 			foreach ( array('Yes', 'No', 'Clean') as $answer )
 			{
-				$answer = attribute_escape($answer);
+				$answer = esc_attr($answer);
 
 				echo '<option'
 					. ' value="' . $answer . '"'
@@ -1096,7 +1096,7 @@ class mediacaster_admin
 
 			foreach ( array('Yes', 'No') as $answer )
 			{
-				$answer = attribute_escape($answer);
+				$answer = esc_attr($answer);
 
 				echo '<option'
 					. ' value="' . $answer . '"'
@@ -1132,7 +1132,7 @@ class mediacaster_admin
 
 			echo '<p class="submit">'
 				. '<input type="submit"'
-					. ' value="' . attribute_escape(__('Save Changes')) . '"'
+					. ' value="' . esc_attr(__('Save Changes')) . '"'
 					. ' />'
 				. '</p>' . "\n";;
 		}
