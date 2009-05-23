@@ -3,9 +3,11 @@
 Plugin Name: Mediacaster
 Plugin URI: http://www.semiologic.com/software/mediacaster/
 Description: Lets you add podcasts and videos to your site's posts and pages.
-Version: 1.5.6 RC
+Version: 1.6 alpha
 Author: Denis de Bernardy
 Author URI: http://www.getsemiologic.com
+Text Domain: mediacaster-info
+Domain Path: /lang
 */
 
 /*
