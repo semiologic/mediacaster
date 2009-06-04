@@ -652,25 +652,17 @@ class mediacaster_admin {
 			. '&nbsp;'
 			. __('Bottom')
 			. '</label>'
-			. ' '
-			. '<label for="mediacaster[player][center]">'
-			. '<input type="checkbox"'
-				. ' id="mediacaster[player][center]" name="mediacaster[player][center]"'
-				. ( $options['player']['center']
-					? ' checked="checked"'
-					: ''
-					)
-				. ' />'
-			. '&nbsp;'
-			. __('Center-Aligned')
-			. '</label>'
 			. '</td>'
 			. '</tr>' . "\n";
 
+		global $content_width;
+		
+		$default_width = isset($content_width) ? $content_width : 320;
+		
 		echo '<tr valign="top">'
 			. '<th scope="row">'
 			. '<label for="mediacaster[player][width]">'
-				. __('Player Width x Height') . ':'
+				. __('Video Player Width x Height') . ':'
 			. '</label>'
 			. '</th>'
 			. '<td>'
@@ -679,7 +671,7 @@ class mediacaster_admin {
 				. ' value="'
 					. ( $options['player']['width']
 						? intval($options['player']['width'])
-						: 320
+						: $content_width
 						)
 					 . '"'
 				. ' />' . "\n"
@@ -689,13 +681,12 @@ class mediacaster_admin {
 				. ' value="'
 					. ( ( isset($options['player']['height']) && $options['player']['height'] )
 						? intval($options['player']['height'])
-						: intval($options['player']['width'] * 240 / 320 )
+						: intval($options['player']['width'] * ( 180 * 320 ) / ( 320 * $default_width ) )
 						)
 					 . '"'
 				. ' />' . "\n"
 			. '</td>' . "\n"
 			. '</tr>';
-
 
 		if ( defined('GLOB_BRACE') ) {
 			if ( $cover = glob(ABSPATH . 'media/cover{,-*}.{jpg,jpeg,png}', GLOB_BRACE) ) {

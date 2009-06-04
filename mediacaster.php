@@ -182,11 +182,24 @@ class mediacaster {
 	 **/
 
 	function display_player_callback($input) {
-		$file = $input[1];
-		
+		global $content_width;
 		$options = get_option('mediacaster');
-		$width = $options['player']['width'] ? $options['player']['width'] : 320;
-		$height = $options['player']['height'] ? $options['player']['height'] : intval($width * 240 / 320 );
+		
+		if ( isset($options['player']['width']) && absint($options['player']['width']) ) {
+			$width = absint($options['player']['width']);
+		} elseif ( isset($content_width) && absint($content_width) ) {
+			$width = absint($content_width);
+		} else {
+			$width = 320;
+		}
+		
+		if ( isset($options['player']['height']) && absint($options['player']['height']) ) {
+			$height = absint($options['player']['height']);
+		} else {
+			$height = absint($width * 180 / 320);
+		}
+		
+		$file = $input[1];
 		
 		if ( preg_match("/
 				^
@@ -235,8 +248,8 @@ class mediacaster {
 
 		case 'mp3':
 		default:
-			$height = 20;
-			return mediacaster::display_player($file, $width, $height, 0);
+			$height = 4;
+			return mediacaster::display_player($file, $width, $height);
 			break;
 		}
 	} # display_player_callback()
@@ -257,8 +270,6 @@ class mediacaster {
 		$enc = '';
 
 		if ( $post_ID > 0 ) {
-			$options = get_option('mediacaster');
-
 			$path = mediacaster::get_path($post_ID);
 
 			$files = mediacaster::get_files($path, $post_ID);
@@ -267,22 +278,28 @@ class mediacaster {
 				$$var = mediacaster::extract_podcasts($files, $post_ID, $var);
 			}
 
-			$width = $options['player']['width'] ? $options['player']['width'] : 320;
-			$height = $options['player']['height'] ? $options['player']['height'] : intval($width * 240 / 320 );
+			global $content_width;
+			$options = get_option('mediacaster');
+
+			if ( isset($options['player']['width']) && absint($options['player']['width']) ) {
+				$width = absint($options['player']['width']);
+			} elseif ( isset($content_width) && absint($content_width) ) {
+				$width = absint($content_width);
+			} else {
+				$width = 320;
+			}
+
+			if ( isset($options['player']['height']) && absint($options['player']['height']) ) {
+				$height = absint($options['player']['height']);
+			} else {
+				$height = intval($width * 180 / 320);
+			}
+			
 
 			if ( $flash_audios ) {
 				$site_url = trailingslashit(site_url());
 
-				$height = 20;
-				$display_height = 0;
-
-				# playlist height
-
-				$num = count($flash_audios);
-				
-				if ( $num > 1 ) {
-					$height += $num * 23;
-				}
+				$height = 4;
 
 				# cover
 
@@ -297,7 +314,6 @@ class mediacaster {
 					$mp3_width = $cover_width;
 
 					$height = $height + $cover_height;
-					$display_height = $display_height + $cover_height;
 				} else {
 					$mp3_width = $width;
 				}
@@ -306,30 +322,21 @@ class mediacaster {
 
 				# insert player
 
-				$out .= mediacaster::display_player($file, $mp3_width, $height, $display_height) . "\n";
+				$out .= mediacaster::display_player($file, $mp3_width, $height) . "\n";
 			}
 
 			if ( $flash_videos ) {
-				$display_height = $options['player']['height'] ? $options['player']['height'] : intval($width * 240 / 320 );
-				$height = $display_height + 20;
-
-				# playlist height
-
-				$num = count($flash_videos);
-
-				if ( $num > 1 ) {
-					$height += $num * 23;
-				}
+				$height = $options['player']['height'] ? $options['player']['height'] : intval($width * 180 / 320 );
 
 				$file = trailingslashit(site_url()) . '?videos=' . $post_ID;
 
 				# insert player
 
-				$out .= mediacaster::display_player($file, $width, $height, $display_height) . "\n";
+				$out .= mediacaster::display_player($file, $width, $height) . "\n";
 			}
 
 			if ( $qt_audios ) {
-				$height = $options['player']['height'] ? $options['player']['height'] : intval($width * 240 / 320 );
+				$height = $options['player']['height'] ? $options['player']['height'] : intval($width * 180 / 320 );
 
 				foreach ( $qt_audios as $file ) {
 					$out .= mediacaster::display_quicktime($file, $width, $height);
@@ -337,7 +344,7 @@ class mediacaster {
 			}
 
 			if ( $qt_videos ) {
-				$height = $options['player']['height'] ? $options['player']['height'] : intval($width * 240 / 320 );
+				$height = $options['player']['height'] ? $options['player']['height'] : intval($width * 180 / 320 );
 
 				foreach ( $qt_videos as $file ) {
 					$out .= mediacaster::display_quicktime($file, $width, $height);
@@ -540,11 +547,10 @@ EOS;
 	 * @param string $file
 	 * @param int $width
 	 * @param int $height
-	 * @param int $display_height
 	 * @return string $player
 	 **/
 
-	function display_player($file, $width, $height, $display_height = null) {
+	function display_player($file, $width, $height) {
 		if ( strpos($file, '/') === false ) {
 			$site_url = trailingslashit(site_url());
 
@@ -553,11 +559,6 @@ EOS;
 			$file = $site_url . $path . $file;
 		}
 		
-		if ( !isset($display_height) ) {
-			$display_height = $height;
-			$height = $height + 20;
-		}
-
 		$image = false;
 		
 		preg_match("/\.([^.]+)$/", $file, $ext); 
@@ -585,6 +586,8 @@ EOS;
 
 			break;
 		}
+		
+		$height += 55;
 
 		$id = 'm' . md5($file . '_' . $GLOBALS['player_count']++);
 
@@ -594,18 +597,18 @@ EOS;
 		
 		$autostart = 'false';
 		$autoscroll = 'false';
-		$overstretch = 'true';
 		$thumbsinplaylist = 'false';
 		$allowfullscreen = 'true';
-		
+
 		$flashvars = array();
 		$flashvars['file'] = $file;
 		$flashvars['shuffle'] = 'false';
-		$flashvars['thumbsinplaylist'] = 'false';
-		#$flashvars['display_height'] = $display_height;
+		#$flashvars['playlist'] = 'bottom';
+		$flashvars['skin'] = plugin_dir_url(__FILE__) . 'player/kleur.swf';
+		
 		if ( $image )
 			$flashvars['image'] = $image;
-		$flashvars = http_build_query($flashvars, null, '&amp;');
+		$flashvars = http_build_query($flashvars, null, '&');
 		
 		$script = '';
 		
@@ -613,10 +616,6 @@ EOS;
 			$script = <<<EOS
 <script type="text/javascript">
 var params = {};
-params.autostart = "$autostart";
-params.autoscroll = "$autoscroll";
-params.overstretch = "$overstretch";
-params.thumbsinplaylist = "$thumbsinplaylist";
 params.allowfullscreen = "$allowfullscreen";
 params.flashvars = "$flashvars";
 
@@ -629,18 +628,10 @@ EOS;
 <div class="media_container"><div class="media" style="width: {$width}px; height: {$height}px;">
 <object id="$id" classid="clsid:D27CDB6E-AE6D-11cf-96B8-444553540000" width="$width" height="$height">
 <param name="movie" value="$player" />
-<param name="autostart" value="$autostart" />
-<param name="autoscroll" value="$autoscroll" />
-<param name="overstretch" value="$overstretch" />
-<param name="thumbsinplaylist" value="$thumbsinplaylist" />
 <param name="allowfullscreen" value="$allowfullscreen" />
 <param name="flashvars" value="$flashvars" />
 <!--[if !IE]>-->
 <object type="application/x-shockwave-flash" data="$player" width="$width" height="$height">
-<param name="autostart" value="$autostart" />
-<param name="autoscroll" value="$autoscroll" />
-<param name="overstretch" value="$overstretch" />
-<param name="thumbsinplaylist" value="$thumbsinplaylist" />
 <param name="allowfullscreen" value="$allowfullscreen" />
 <param name="flashvars" value="$flashvars" />
 <!--<![endif]-->
@@ -1373,7 +1364,7 @@ EOS;
 		$options['itunes']['copyright'] = $options['itunes']['author'];
 
 		$options['player']['width'] = 320;
-		$options['player']['height'] = 240;
+		$options['player']['height'] = 180;
 		$options['player']['position'] = 'top';
 		$options['player']['center'] = true;
 
