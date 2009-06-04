@@ -492,8 +492,6 @@ class mediacaster_admin {
 
 		$options = mediacaster_admin::strip_tags_rec($options);
 		
-		$options['player']['center'] = isset($options['player']['center']);
-
 		if ( @ $_FILES['mediacaster']['name']['itunes']['image']['new'] ) {
 			$name =& $_FILES['mediacaster']['name']['itunes']['image']['new'];
 			$tmp_name =& $_FILES['mediacaster']['tmp_name']['itunes']['image']['new'];

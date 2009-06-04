@@ -1366,7 +1366,6 @@ EOS;
 		$options['player']['width'] = 320;
 		$options['player']['height'] = 180;
 		$options['player']['position'] = 'top';
-		$options['player']['center'] = true;
 
 		$options['enclosures'] = '';
 
