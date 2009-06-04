@@ -1,58 +1,56 @@
 <?php
+/**
+ * mediacaster_admin
+ *
+ * @package Mediacaster
+ **/
 
-class mediacaster_admin
-{
-	#
-	# init()
-	#
+add_action('admin_menu', array('mediacaster_admin', 'add_admin_page'));
+add_action('admin_menu', array('mediacaster_admin', 'add_meta_boxes'), 20);
 
-	function init()
-	{
-		add_action('admin_menu', array('mediacaster_admin', 'add_admin_page'));
-		add_action('admin_menu', array('mediacaster_admin', 'add_meta_boxes'), 20);
-		
-		add_action('save_post', array('mediacaster_admin', 'update_path'), 20);
-		add_action('save_post', array('mediacaster_admin', 'save_media'), 30);
-		
-		add_action('admin_head', array('mediacaster_admin', 'display_js_files'), 0);
-		add_filter('admin_footer', array('mediacaster_admin', 'quicktag'));
-		add_filter('mce_external_plugins', array('mediacaster_admin', 'editor_plugin'), 5);
-		add_filter('mce_buttons_4', array('mediacaster_admin', 'editor_button'));
-		
-		if ( get_option('mediacaster') === false )
-		{
-			$options = mediacaster::regen_options();
-		}
-	} # init()
+add_action('save_post', array('mediacaster_admin', 'update_path'), 20);
+add_action('save_post', array('mediacaster_admin', 'save_media'), 30);
 
+add_action('admin_head', array('mediacaster_admin', 'display_js_files'), 0);
+add_filter('admin_footer', array('mediacaster_admin', 'quicktag'));
+add_filter('mce_external_plugins', array('mediacaster_admin', 'editor_plugin'), 5);
+add_filter('mce_buttons_4', array('mediacaster_admin', 'editor_button'));
 
-	#
-	# add_meta_boxes()
-	#
+if ( get_option('mediacaster') === false ) {
+	mediacaster::regen_options();
+}
 
-	function add_meta_boxes()
-	{
+class mediacaster_admin {
+	/**
+	 * add_meta_boxes()
+	 *
+	 * @return void
+	 **/
+
+	function add_meta_boxes() {
 		add_meta_box('mediacaster', 'Mediacaster', array('mediacaster_admin', 'display_media'), 'post', 'normal');
 		add_meta_box('mediacaster', 'Mediacaster', array('mediacaster_admin', 'display_media'), 'page', 'normal');
 	} # add_meta_boxes()
 
 
-	#
-	# update_path()
-	#
+	/**
+	 * update_path()
+	 *
+	 * @param int $post_ID
+	 * @return void
+	 **/
 
-	function update_path($post_ID)
-	{
+	function update_path($post_ID) {
 		$post = get_post($post_ID);
 		
-		if ( $post->post_type == 'revision' ) return;
+		if ( $post->post_type == 'revision' )
+			return;
 		
 		
 		$old = get_post_meta($post_ID, '_mediacaster_path', true);
 		$new = mediacaster::get_path($post_ID);
 
-		if ( $old && $old != $new )
-		{
+		if ( $old && $old != $new ) {
 			mediacaster_admin::create_path(dirname($new));
 
 			@rename(ABSPATH . $old, ABSPATH . $new);
@@ -66,12 +64,14 @@ class mediacaster_admin
 	} # update_path()
 
 
-	#
-	# save_media()
-	#
+	/**
+	 * save_media()
+	 *
+	 * @param int $post_ID
+	 * @return void
+	 **/
 
-	function save_media($post_ID)
-	{
+	function save_media($post_ID) {
 		$post = get_post($post_ID);
 		
 		if ( $post->post_type == 'revision' ) return;
@@ -84,11 +84,9 @@ class mediacaster_admin
 		#var_dump($path);
 		#die;
 
-		if ( current_user_can('upload_files') )
-		{
-			foreach ( array_keys((array) $_POST['delete_media']) as $key )
-			{
-				$key = stripslashes(html_entity_decode(urldecode($key)));
+		if ( current_user_can('upload_files') ) {
+			foreach ( array_keys((array) $_POST['delete_media']) as $key ) {
+				$key = @stripslashes(html_entity_decode(urldecode($key), ENT_COMPAT, get_option('blog_charset')));
 				
 				preg_match("/\.([^.]+)$/", $key, $ext); 
 				$ext = end($ext);
@@ -110,22 +108,16 @@ class mediacaster_admin
 						WHERE	ID = " . intval($post_ID) . "
 						");
 
-				if ( in_array(strtolower($ext), array('flv', 'swf', 'mov', 'mp4', 'm4v', 'm4a')) )
-				{
+				if ( in_array(strtolower($ext), array('flv', 'swf', 'mov', 'mp4', 'm4v', 'm4a')) ) {
 					$image = basename($key, '.' . $ext);
 
-					if ( defined('GLOB_BRACE') )
-					{
-						if ( $image = glob(ABSPATH . $path . $image . '.{jpg,jpeg,png}', GLOB_BRACE) )
-						{
+					if ( defined('GLOB_BRACE') ) {
+						if ( $image = glob(ABSPATH . $path . $image . '.{jpg,jpeg,png}', GLOB_BRACE) ) {
 							$image = current($image);
 							@unlink($image);
 						}
-					}
-					else
-					{
-						if ( $image = glob(ABSPATH . $path . $image . '.jpg') )
-						{
+					} else {
+						if ( $image = glob(ABSPATH . $path . $image . '.jpg') ) {
 							$image = current($image);
 							@unlink($image);
 						}
@@ -133,15 +125,13 @@ class mediacaster_admin
 				}
 			}
 
-			foreach ( (array) $_POST['update_media'] as $old => $new )
-			{
+			foreach ( (array) $_POST['update_media'] as $old => $new ) {
 				$old = stripslashes(html_entity_decode(urldecode($old)));
 				$new = strip_tags(stripslashes($new));
 				$new = str_replace(array("<", ">", "&", "%", "/"), "", $new);
 				$new = preg_replace("/\s+/", " ", $new);
 				
-				if ( $old != $new )
-				{
+				if ( $old != $new ) {
 					@rename(ABSPATH . $path . $old, ABSPATH . $path . $new);
 					
 					$post_content = $wpdb->get_var("
@@ -161,15 +151,12 @@ class mediacaster_admin
 					preg_match("/\.([^.]+)$/", $old, $ext); 
 					$ext = end($ext);
 
-					if ( in_array(strtolower($ext), array('flv', 'swf', 'mov', 'mp4', 'm4v', 'm4a')) )
-					{
+					if ( in_array(strtolower($ext), array('flv', 'swf', 'mov', 'mp4', 'm4v', 'm4a')) ) {
 						$old_name = basename($old, '.' . $ext);
 						$new_name = basename($new, '.' . $ext);
 
-						if ( defined('GLOB_BRACE') )
-						{
-							if ( $image = glob(ABSPATH . $path . $old_name . '.{jpg,jpeg,png}', GLOB_BRACE) )
-							{
+						if ( defined('GLOB_BRACE') ) {
+							if ( $image = glob(ABSPATH . $path . $old_name . '.{jpg,jpeg,png}', GLOB_BRACE) ) {
 								$image = current($image);
 								
 								preg_match("/\.([^.]+)$/", $image, $ext); 
@@ -180,11 +167,8 @@ class mediacaster_admin
 
 								@rename(ABSPATH . $path . $old_name . '.' . $ext, ABSPATH . $path . $new_name . '.' . $ext);
 							}
-						}
-						else
-						{
-							if ( $image = glob(ABSPATH . $path . $old_name . '.jpg') )
-							{
+						} else {
+							if ( $image = glob(ABSPATH . $path . $old_name . '.jpg') ) {
 								$image = current($image);
 
 								preg_match("/\.([^.]+)$/", $image, $ext); 
@@ -200,8 +184,7 @@ class mediacaster_admin
 				}
 			}
 
-			if ( $_FILES['new_media'] )
-			{
+			if ( $_FILES['new_media'] ) {
 				$tmp_name = $_FILES['new_media']['tmp_name'];
 				$new_name = strip_tags(stripslashes($_FILES['new_media']['name']));
 				$new_name = str_replace(array("<", ">", "&", "%", "/"), "", $new_name);
@@ -222,8 +205,7 @@ class mediacaster_admin
 							'pdf', 'zip', 'gz'
 							)
 						)
-					)
-				{
+					) {
 					@move_uploaded_file($tmp_name, $new_name);
 					@chmod($new_name, 0666);
 				}
@@ -240,20 +222,21 @@ class mediacaster_admin
 	} # save_media()
 
 
-	#
-	# display_media()
-	#
+	/**
+	 * display_media()
+	 *
+	 * @param object $post
+	 * @return void
+	 **/
 
-	function display_media()
-	{
-		$post_ID = isset($GLOBALS['post_ID']) ? $GLOBALS['post_ID'] : $GLOBALS['temp_ID'];
+	function display_media($post) {
+		$post_ID = $post->ID;
 
 		#echo '<pre>';
 		#var_dump($post_ID);
 		#echo '</pre>';
 
-		if ( $post_ID > 0 )
-		{
+		if ( $post_ID > 0 ) {
 			echo '<p>'
 				. __('To attach media to this entry, either use the file uploader below or drop files into the following folder using ftp software:')
 				. '</p>';
@@ -266,14 +249,12 @@ class mediacaster_admin
 
 			$cover = mediacaster::get_cover($path);
 
-			if ( $files || strpos($cover, $path) !== false )
-			{
+			if ( $files || strpos($cover, $path) !== false ) {
 				echo '<p>'
 					. __('Media files currently include:')
 					. '</p>';
 
-				foreach ( (array) $files as $key => $file )
-				{
+				foreach ( (array) $files as $key => $file ) {
 					$name = $key;
 					$key = str_replace(
 							array("\\", "'"),
@@ -285,49 +266,37 @@ class mediacaster_admin
 					preg_match("/\.([^.]+)$/", $name, $ext); 
 					$ext = end($ext);
 					
-					if ( in_array($ext, array('flv', 'swf', 'mov', 'mp4', 'm4a', 'm4v')) )
-					{
+					if ( in_array($ext, array('flv', 'swf', 'mov', 'mp4', 'm4a', 'm4v')) ) {
 						$file_name = basename($name, '.' . $ext);
 						
-						if ( defined('GLOB_BRACE') )
-						{
-							if ( $img_cover = glob(ABSPATH . $path . $file_name . '.{jpg,jpeg,png}', GLOB_BRACE) )
-							{
+						if ( defined('GLOB_BRACE') ) {
+							if ( $img_cover = glob(ABSPATH . $path . $file_name . '.{jpg,jpeg,png}', GLOB_BRACE) ) {
 								$img_cover = current($img_cover);
+							} else {
+								$img_cover = dirname(__FILE__) . '/tinymce/images/video.gif';
 							}
-							else
-							{
+						} else {
+							if ( $img_cover = glob(ABSPATH . $path . $file_name . '.jpg') ) {
+								$img_cover = current($img_cover);
+							} else {
 								$img_cover = dirname(__FILE__) . '/tinymce/images/video.gif';
 							}
 						}
-						else
-						{
-							if ( $img_cover = glob(ABSPATH . $path . $file_name . '.jpg') )
-							{
-								$img_cover = current($img_cover);
-							}
-							else
-							{
-								$img_cover = dirname(__FILE__) . '/tinymce/images/video.gif';
-							}
-						}
-					}
-					else
-					{
+					} else {
 						$img_cover = false;
 					}
 
 					echo '<div style="margin: 1em 0px;">'
 						. ( $img_cover
 							? ( '<img src="'
-								. str_replace(ABSPATH, trailingslashit(site_url()), $img_cover)
+								. esc_url(str_replace(ABSPATH, trailingslashit(site_url()), $img_cover))
 								. '" />' . '<br />'
 								)
 							: ''
 							)
 						. '<input type="text" tabindex="4" style="width: 320px;"'
 							. ' name=update_media[' . $key . ']'
-							. ' value="' . htmlentities($name) . '"'
+							. ' value="' . esc_attr($name) . '"'
 							. ( !current_user_can('upload_files') ? ' disabled="disabled"' : '' )
 							. ' />'
 						. '&nbsp;'
@@ -342,8 +311,7 @@ class mediacaster_admin
 						. '</div>' . "\n";
 				}
 
-				if ( strpos($cover, $path) !== false )
-				{
+				if ( strpos($cover, $path) !== false ) {
 					$key = basename($cover);
 					$key = str_replace(
 							array("\\", "'"),
@@ -354,7 +322,7 @@ class mediacaster_admin
 
 					echo '<div style="margin: 1em 0px;">'
 						. '<img src="'
-							. trailingslashit(site_url()) . $cover
+							. esc_url(trailingslashit(site_url()) . $cover)
 							. '" />' . '<br />'
 						. '<input type="text" style="width: 320px;" tabindex="4"'
 							. ' value="Entry-specific mp3 playlist cover"'
@@ -372,35 +340,31 @@ class mediacaster_admin
 						. '</div>';
 				}
 				
-				if ( current_user_can('upload_files') )
-				{
+				if ( current_user_can('upload_files') ) {
 					echo '<p>'
 						. '<input type="submit" name="save" class="button" tabindex="4"'
-						. ' value="' . __('Save') . '"'
+						. ' value="' . esc_attr(__('Save')) . '"'
 						. ' />'
 						. '</p>';
 				}
-			}
-			else
-			{
+			} else {
 				mediacaster_admin::create_path($path);
 			}
 		}
 
-		if ( current_user_can('upload_files') )
-		{
+		if ( current_user_can('upload_files') ) {
 			echo '<p>'
 				. __('Enter a file to add new media (this can take a while if the file is large)') . ':'
 				. '</p>';
 
-			echo '<ul>'
+			echo '<ul class="ul-square">'
 				. '<li>'
 					. '<input type="file" style="width: 400px;" tabindex="4"'
 					. ' id="new_media" name="new_media"'
 					. ' />'
 					. ' '
 					. '<input type="submit" name="save" class="button" tabindex="4"'
-					. ' value="' . __('Save') . '"'
+					. ' value="' . esc_attr(__('Save')) . '"'
 					. ' />'
 				. '</li>'
 				. '</ul>';
@@ -408,7 +372,7 @@ class mediacaster_admin
 			echo '<p>'
 				. __('Tips') . ':'
 				. '</p>'
-				. '<ul>'
+				. '<ul class="ul-square">'
 				. '<li>'
 				. __('Supported formats include .mp3, .flv, .swf, .m4a, .mp4, .m4v, .mov, .pdf, .zip and .gz.')
 				. '</li>'
@@ -422,37 +386,35 @@ class mediacaster_admin
 				. __('Your media folder must be writable by the server for any of this to work at all.')
 				. '</li>'
 				. '<li>'
-				. __('Maximum file size is 32M. If large files won\'t upload on your server, have your host increase its upload_max_filesize parameter.')
+				. sprintf(__('Maximum file size is %s based on your server\'s configuration. If large files won\'t upload on your server, have your host increase its upload_max_filesize parameter.'), wp_convert_bytes_to_hr(apply_filters('import_upload_size_limit', wp_max_upload_size())))
 				. '</li>'
 				. '<li>'
 				. __('If you\'re uploading <a href="http://go.semiologic.com/camtasia">Camtasia</a> videos, upload <em>only</em> the video file (swf, flv, mov...). The other files created by Camtasia are for use in a standalone web page.')
 				. '</li>'
 				. '</ul>';
 
-			if ( !defined('GLOB_BRACE') )
-			{
+			if ( !defined('GLOB_BRACE') ) {
 				echo '<p>' . __('Notice: GLOB_BRACE is an undefined constant on your server. Non .jpg images will be ignored.') . '</p>';
 			}
 		}
 	} # display_media()
 
 
-	#
-	# create_path()
-	#
+	/**
+	 * create_path()
+	 *
+	 * @param string $path
+	 * @return void
+	 **/
 
-	function create_path($path)
-	{
-		if ( $path )
-		{
-			if ( !file_exists(ABSPATH . $path) )
-			{
+	function create_path($path) {
+		if ( $path ) {
+			if ( !file_exists(ABSPATH . $path) ) {
 				$parent = dirname($path);
 
 				mediacaster_admin::create_path($parent);
 
-				if ( is_writable(ABSPATH . $parent) )
-				{
+				if ( is_writable(ABSPATH . $parent) ) {
 					@mkdir(ABSPATH . $path);
 					@chmod(ABSPATH . $path, 0777);
 				}
@@ -461,74 +423,64 @@ class mediacaster_admin
 	} # create_path()
 
 
-	#
-	# add_admin_page()
-	#
+	/**
+	 * add_admin_page()
+	 *
+	 * @return void
+	 **/
 
-	function add_admin_page()
-	{
+	function add_admin_page() {
 		add_options_page(
 			__('Mediacaster'),
 			__('Mediacaster'),
 			'manage_options',
-			__FILE__,
+			'mediacaster',
 			array('mediacaster_admin', 'display_admin_page')
 			);
 	} # add_admin_page()
 
 
-	#
-	# strip_tags_rec()
-	#
+	/**
+	 * strip_tags_rec()
+	 *
+	 * @return void
+	 **/
 
-	function strip_tags_rec($input)
-	{
-		if ( is_array($input) )
-		{
-			foreach ( array_keys($input) as $key )
-			{
-				$input[$key] = mediacaster_admin::strip_tags_rec($input[$key]);
-			}
-		}
-		else
-		{
+	function strip_tags_rec($input) {
+		if ( is_array($input) ) {
+			$input = array_map(array('mediacaster_admin', 'strip_tags_rec'), $input);
+		} else {
 			$input = strip_tags($input);
 		}
 
 		return $input;
 	} # strip_tags_rec()
 
+	
+	/**
+	 * update_options()
+	 *
+	 * @return void
+	 **/
 
-	#
-	# update_options()
-	#
-
-	function update_options()
-	{
+	function update_options() {
 		check_admin_referer('mediacaster');
 
-		if ( isset($_POST['delete_cover']) )
-		{
-			if ( defined('GLOB_BRACE') )
-			{
-				if ( $cover = glob(ABSPATH . 'media/cover{,-*}.{jpg,jpeg,png}', GLOB_BRACE) )
-				{
+		if ( isset($_POST['delete_cover']) ) {
+			if ( defined('GLOB_BRACE') ) {
+				if ( $cover = glob(ABSPATH . 'media/cover{,-*}.{jpg,jpeg,png}', GLOB_BRACE) ) {
 					$cover = current($cover);
 					@unlink($cover);
 				}
-			}
-			else
-			{
-				if ( $cover = glob(ABSPATH . 'media/cover-*.jpg') )
-				{
+			} else {
+				if ( $cover = glob(ABSPATH . 'media/cover-*.jpg') ) {
 					$cover = current($cover);
 					@unlink($cover);
 				}
 			}
 		}
 
-		if ( isset($_POST['delete_itunes']) )
-		{
+		if ( isset($_POST['delete_itunes']) ) {
 			$options = get_option('mediacaster');
 
 			$itunes_image = WP_CONTENT_DIR . '/itunes/' . $options['itunes']['image']['name'];
@@ -542,8 +494,7 @@ class mediacaster_admin
 		
 		$options['player']['center'] = isset($options['player']['center']);
 
-		if ( @ $_FILES['mediacaster']['name']['itunes']['image']['new'] )
-		{
+		if ( @ $_FILES['mediacaster']['name']['itunes']['image']['new'] ) {
 			$name =& $_FILES['mediacaster']['name']['itunes']['image']['new'];
 			$tmp_name =& $_FILES['mediacaster']['tmp_name']['itunes']['image']['new'];
 			
@@ -552,8 +503,7 @@ class mediacaster_admin
 			preg_match("/\.([^.]+)$/", $name, $ext); 
 			$ext = end($ext);
 			
-			if ( !in_array(strtolower($ext), array('jpg', 'jpeg', 'png')) )
-			{
+			if ( !in_array(strtolower($ext), array('jpg', 'jpeg', 'png')) ) {
 				echo '<div class="error">'
 					. "<p>"
 						. "<strong>"
@@ -561,9 +511,7 @@ class mediacaster_admin
 						. "</strong>"
 					. "</p>\n"
 					. "</div>\n";
-			}
-			else
-			{
+			} else {
 				$options['itunes']['image']['counter'] = $options['itunes']['image']['counter'] + 1;
 				$options['itunes']['image']['name'] = $options['itunes']['image']['counter'] . '_' . $name;
 
@@ -577,8 +525,7 @@ class mediacaster_admin
 			}
 		}
 
-		if ( @ $_FILES['new_cover']['name'] )
-		{
+		if ( @ $_FILES['new_cover']['name'] ) {
 			$name =& $_FILES['new_cover']['name'];
 			$tmp_name =& $_FILES['new_cover']['tmp_name'];
 			
@@ -587,8 +534,7 @@ class mediacaster_admin
 			preg_match("/\.([^.]+)$/", $name, $ext); 
 			$ext = end($ext);
 			
-			if ( !in_array(strtolower($ext), array('jpg', 'jpeg', 'png')) )
-			{
+			if ( !in_array(strtolower($ext), array('jpg', 'jpeg', 'png')) ) {
 				echo '<div class="error">'
 					. "<p>"
 						. "<strong>"
@@ -596,21 +542,14 @@ class mediacaster_admin
 						. "</strong>"
 					. "</p>\n"
 					. "</div>\n";
-			}
-			else
-			{
-				if ( defined('GLOB_BRACE') )
-				{
-					if ( $cover = glob(ABSPATH . 'media/cover{,-*}.{jpg,jpeg,png}', GLOB_BRACE) )
-					{
+			} else {
+				if ( defined('GLOB_BRACE') ) {
+					if ( $cover = glob(ABSPATH . 'media/cover{,-*}.{jpg,jpeg,png}', GLOB_BRACE) ) {
 						$cover = current($cover);
 						@unlink($cover);
 					}
-				}
-				else
-				{
-					if ( $cover = glob(ABSPATH . 'media/cover-*.jpg') )
-					{
+				} else {
+					if ( $cover = glob(ABSPATH . 'media/cover-*.jpg') ) {
 						$cover = current($cover);
 						@unlink($cover);
 					}
@@ -637,20 +576,20 @@ class mediacaster_admin
 	} # update_options()
 
 
-	#
-	# display_admin_page()
-	#
+	/**
+	 * display_admin_page()
+	 *
+	 * @return void
+	 **/
 
-	function display_admin_page()
-	{
+	function display_admin_page() {
 		echo '<form enctype="multipart/form-data" method="post" action="">' . "\n";
 
 		$bytes = apply_filters( 'import_upload_size_limit', wp_max_upload_size() );
 
-		echo  "\n" . '<input type="hidden" name="MAX_FILE_SIZE" value="' . $bytes .'" />' . "\n";
+		echo  "\n" . '<input type="hidden" name="MAX_FILE_SIZE" value="' . esc_attr($bytes) .'" />' . "\n";
 
-		if ( $_POST['update_mediacaster_options'] )
-		{
+		if ( $_POST['update_mediacaster_options'] ) {
 			echo '<div class="updated">' . "\n"
 				. '<p>'
 					. '<strong>'
@@ -665,8 +604,7 @@ class mediacaster_admin
 		$options = get_option('mediacaster');
 		#$options = false;
 
-		if ( $options == false )
-		{
+		if ( $options == false ) {
 			$options = mediacaster::regen_options();
 		}
 
@@ -676,7 +614,7 @@ class mediacaster_admin
 			. '<h2>'. __('Mediacaster Settings') . '</h2>' . "\n"
 			. '<input type="hidden" name="update_mediacaster_options" value="1" />' . "\n";
 
-		if ( function_exists('wp_nonce_field') ) wp_nonce_field('mediacaster');
+		wp_nonce_field('mediacaster');
 
 		echo '<h3>'
 				. __('Media Player')
@@ -740,7 +678,7 @@ class mediacaster_admin
 				. ' id="mediacaster[player][width]" name="mediacaster[player][width]"'
 				. ' value="'
 					. ( $options['player']['width']
-						? $options['player']['width']
+						? intval($options['player']['width'])
 						: 320
 						)
 					 . '"'
@@ -750,7 +688,7 @@ class mediacaster_admin
 				. ' id="mediacaster[player][height]" name="mediacaster[player][height]"'
 				. ' value="'
 					. ( ( isset($options['player']['height']) && $options['player']['height'] )
-						? $options['player']['height']
+						? intval($options['player']['height'])
 						: intval($options['player']['width'] * 240 / 320 )
 						)
 					 . '"'
@@ -759,17 +697,12 @@ class mediacaster_admin
 			. '</tr>';
 
 
-		if ( defined('GLOB_BRACE') )
-		{
-			if ( $cover = glob(ABSPATH . 'media/cover{,-*}.{jpg,jpeg,png}', GLOB_BRACE) )
-			{
+		if ( defined('GLOB_BRACE') ) {
+			if ( $cover = glob(ABSPATH . 'media/cover{,-*}.{jpg,jpeg,png}', GLOB_BRACE) ) {
 				$cover = current($cover);
 			}
-		}
-		else
-		{
-			if ( $cover = glob(ABSPATH . 'media/cover-*.jpg') )
-			{
+		} else {
+			if ( $cover = glob(ABSPATH . 'media/cover-*.jpg') ) {
 				$cover = current($cover);
 			}
 		}
@@ -780,18 +713,16 @@ class mediacaster_admin
 			. '</th>' . "\n"
 			. '<td>';
 
-		if ( file_exists($cover) )
-		{
+		if ( file_exists($cover) ) {
 			echo '<div style="margin-botton: 6px;">';
 			
 			echo '<img src="'
-					. str_replace(ABSPATH, $site_url, $cover)
+					. esc_url(str_replace(ABSPATH, $site_url, $cover))
 					. '"'
 				. ' />' . "\n"
 				. '<br />' . "\n";
 				
-			if ( is_writable($cover) )
-			{
+			if ( is_writable($cover) ) {
 				echo '<label for="delete_cover">'
 					. '<input type="checkbox"'
 						. ' id="delete_cover" name="delete_cover"'
@@ -800,9 +731,7 @@ class mediacaster_admin
 					. '&nbsp;'
 					. __('Delete')
 					. '</label>';
-			}
-			else
-			{
+			} else {
 				echo __('This cover is not writable by the server.');
 			}
 			
@@ -819,8 +748,7 @@ class mediacaster_admin
 				. ' />'
 			. '</div>' . "\n";
 
-		if ( !defined('GLOB_BRACE') )
-		{
+		if ( !defined('GLOB_BRACE') ) {
 			echo '<p>' . __('Notice: GLOB_BRACE is an undefined constant on your server. Non .jpg images will be ignored.') . '</p>';
 		}
 		
@@ -885,8 +813,7 @@ class mediacaster_admin
 		echo '</td>'
 			. '</tr>';
 
-		if ( !$options['captions']['enclosures'] )
-		{
+		if ( !$options['captions']['enclosures'] ) {
 			$options['captions']['enclosures'] = __('Enclosures');
 		}
 
@@ -917,14 +844,11 @@ class mediacaster_admin
 			. __('iTunes')
 			. '</h3>' . "\n";
 
-		if ( class_exists('podPress_class') )
-		{
+		if ( class_exists('podPress_class') ) {
 			echo '<p>'
 				. __('PodPress was detected. Configure itunes-related fields in your PodPress options')
 				. '</p>' . "\n";
-		}
-		else
-		{
+		} else {
 			echo '<table class="form-table">';
 			
 			echo '<tr valign="top">'
@@ -964,15 +888,13 @@ class mediacaster_admin
 				. '</th>'
 				. '<td>';
 
-			for ( $i = 1; $i <= 3; $i++ )
-			{
+			for ( $i = 1; $i <= 3; $i++ ) {
 				echo '<select style="width: 480px;"'
 						. ' id="mediacaster[itunes][category][' . $i . ']" name="mediacaster[itunes][category][' . $i . ']"'
 						. ' >' . "\n"
 					. '<option value="">' . __('Select...') . '</option>' . "\n";
 
-				foreach ( mediacaster_admin::get_itunes_categories() as $category )
-				{
+				foreach ( mediacaster_admin::get_itunes_categories() as $category ) {
 					$category = $category;
 
 					echo '<option'
@@ -984,8 +906,7 @@ class mediacaster_admin
 						. '>'
 						. esc_attr($category)
 						. '</option>' . "\n";
-				}
-				echo '</select>'
+				} echo '</select>'
 				 	. '<br />'. "\n";
 			}
 
@@ -1007,19 +928,17 @@ class mediacaster_admin
 					. ' value="' . esc_attr($options['itunes']['image']['name']) . '"'
 					. ' />' . "\n";
 			
-			if ( file_exists(WP_CONTENT_DIR . '/itunes/' . $options['itunes']['image']['name']) )
-			{
+			if ( file_exists(WP_CONTENT_DIR . '/itunes/' . $options['itunes']['image']['name']) ) {
 				echo '<div style="margin-bottom: 6px;">';
 
 				echo '<img src="'
-							. $site_url
-							. 'wp-content/itunes/'
-							. esc_attr($options['itunes']['image']['name'])
+							. esc_url($site_url
+								. 'wp-content/itunes/'
+								. $options['itunes']['image']['name'])
 							. '"'
 						. ' />' . '<br />' . "\n";
 				
-				if ( is_writable(WP_CONTENT_DIR . '/itunes/' . $options['itunes']['image']['name']) )
-				{
+				if ( is_writable(WP_CONTENT_DIR . '/itunes/' . $options['itunes']['image']['name']) ) {
 					echo '<label for="delete_itunes">'
 						. '<input type="checkbox"'
 							. ' id="delete_itunes" name="delete_itunes"'
@@ -1028,9 +947,7 @@ class mediacaster_admin
 						. '&nbsp;'
 						. __('Delete')
 						. '</label>';
-				}
-				elseif ( file_exists(WP_CONTENT_DIR . '/itunes/' . $options['itunes']['image']['name']) )
-				{
+				} elseif ( file_exists(WP_CONTENT_DIR . '/itunes/' . $options['itunes']['image']['name']) ) {
 					echo __('This cover is not writable by the server.');
 				}
 				
@@ -1060,12 +977,9 @@ class mediacaster_admin
 					. ' id="mediacaster[itunes][explicit]" name="mediacaster[itunes][explicit]"'
 					. ' >' . "\n";
 
-			foreach ( array('Yes', 'No', 'Clean') as $answer )
-			{
-				$answer = esc_attr($answer);
-
+			foreach ( array('Yes', 'No', 'Clean') as $answer ) {
 				echo '<option'
-					. ' value="' . $answer . '"'
+					. ' value="' . esc_attr($answer) . '"'
 					. ( ( $answer == $options['itunes']['explicit'] )
 						? ' selected="selected"'
 						: ''
@@ -1091,12 +1005,9 @@ class mediacaster_admin
 					. ' id="mediacaster[itunes][block]" name="mediacaster[itunes][block]"'
 					. ' >' . "\n";
 
-			foreach ( array('Yes', 'No') as $answer )
-			{
-				$answer = esc_attr($answer);
-
+			foreach ( array('Yes', 'No') as $answer ) {
 				echo '<option'
-					. ' value="' . $answer . '"'
+					. ' value="' . esc_attr($answer) . '"'
 					. ( ( $answer == $options['itunes']['block'] )
 						? ' selected="selected"'
 						: ''
@@ -1140,12 +1051,13 @@ class mediacaster_admin
 	} # display_admin_page()
 
 
-	#
-	# get_itunes_categories()
-	#
+	/**
+	 * get_itunes_categories()
+	 *
+	 * @return void
+	 **/
 
-	function get_itunes_categories()
-	{
+	function get_itunes_categories() {
 		return array(
 			'Arts',
 			'Arts / Design',
@@ -1233,30 +1145,25 @@ class mediacaster_admin
 	} # get_itunes_categories()
 	
 	
-	#
-	# quicktag()
-	#
+	/**
+	 * quicktag()
+	 *
+	 * @return void
+	 **/
 
-	function quicktag()
-	{
+	function quicktag() {
 		if ( !$GLOBALS['editing'] ) return;
 
 ?><script type="text/javascript">
-if ( document.getElementById('quicktags') )
-{
-	function mediacasterAddMedia(elt)
-	{
-		if ( elt.value == 'media:url' )
-		{
+if ( document.getElementById('quicktags') ) {
+	function mediacasterAddMedia(elt) {
+		if ( elt.value == 'media:url' ) {
 			var url = prompt('<?php echo __('Enter the url of a media file'); ?>', 'http://');
 		
-			if ( url && url != 'http://' )
-			{
+			if ( url && url != 'http://' ) {
 				edInsertContent(edCanvas, '[media:' + url + ']');
 			}
-		}
-		else if ( elt.value != '' )
-		{
+		} else if ( elt.value != '' ) {
 			edInsertContent(edCanvas, '[media:' + elt.value + ']');
 		}
 
@@ -1272,8 +1179,7 @@ if ( document.getElementById('quicktags') )
 	var label;
 	var value;
 
-	for ( i = 0; i < mediacasterFiles.length; i++ )
-	{
+	for ( i = 0; i < mediacasterFiles.length; i++ ) {
 		label = new String(mediacasterFiles[i].label);
 		value = new String(mediacasterFiles[i].value);
 		value = value.replace("\"", "&quot;");
@@ -1290,12 +1196,13 @@ if ( document.getElementById('quicktags') )
 	} # quicktag()
 
 
-	#
-	# display_js_files()
-	#
+	/**
+	 * display_js_files()
+	 *
+	 * @return void
+	 **/
 
-	function display_js_files()
-	{
+	function display_js_files() {
 		if ( !$GLOBALS['editing'] ) return;
 
 		global $post;
@@ -1306,8 +1213,7 @@ if ( document.getElementById('quicktags') )
 		$i = 0;
 		$js_options = array();
 
-		foreach ( array_keys($files) as $file )
-		{
+		foreach ( array_keys($files) as $file ) {
 			$js_option = "mediacasterFiles['"
 				. $i++
 				. "']"
@@ -1336,14 +1242,15 @@ document.mediacasterFiles = mediacasterFiles;
 	} # display_js_files()
 
 
-	#
-	# editor_button()
-	#
+	/**
+	 * editor_button()
+	 *
+	 * @param array $buttons
+	 * @return array $buttons
+	 **/
 	
-	function editor_button($buttons)
-	{
-		if ( !empty($buttons) )
-		{
+	function editor_button($buttons) {
+		if ( !empty($buttons) ) {
 			$buttons[] = '|';
 		}
 		
@@ -1353,23 +1260,15 @@ document.mediacasterFiles = mediacasterFiles;
 	} # editor_button()
 	
 
-	#
-	# editor_plugin()
-	#
+	/**
+	 * editor_plugin()
+	 *
+	 * @return void
+	 **/
 
-	function editor_plugin($plugin_array)
-	{
-		if ( get_user_option('rich_editing') == 'true')
-		{
-			$path = plugin_basename(__FILE__);
-
-			$plugin = trailingslashit(site_url())
-				. 'wp-content/plugins/'
-				. ( strpos($path, '/') !== false
-					? ( dirname($path) . '/' )
-					: ''
-					)
-				. 'tinymce/editor_plugin.js';
+	function editor_plugin($plugin_array) {
+		if ( get_user_option('rich_editing') == 'true') {
+			$plugin = plugin_dir_url(__FILE__) . 'tinymce/editor_plugin.js';
 				
 			$plugin_array['mediacaster'] = $plugin;
 		}
@@ -1377,8 +1276,6 @@ document.mediacasterFiles = mediacasterFiles;
 		return $plugin_array;
 	} # editor_plugin()
 } # mediacaster_admin
-
-mediacaster_admin::init();
 
 
 

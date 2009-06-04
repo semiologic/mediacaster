@@ -71,24 +71,20 @@
 		 * @return {tinymce.ui.Control} New control instance or null if no control was created.
 		 */
 		createControl : function(n, cm) {
-			switch ( n )
-			{
+			switch ( n ) {
 			case 'mediacaster':
 				var myMediacasterDropdown = cm.createListBox('MediacasterDropdown', {
 					title : 'Mediacaster',
 					onselect : function(v) {
-						if ( v == 'media:url' )
-						{
+						if ( v == 'media:url' ) {
 							v = prompt('Enter the url of a media file:', 'http://');
 							
-							if ( v == 'http://' )
-							{
+							if ( v == 'http://' ) {
 								v = '';
 							}
 						}
 						
-						if ( v )
-						{
+						if ( v ) {
 							v = '[media:' + v + ']';
 						
 							window.tinyMCE.execInstanceCommand('content', 'mceInsertContent', false, v);
@@ -103,11 +99,9 @@
 				myMediacasterDropdown.add('Enter a url', 'media:url');
 				
 				// Media files
-				if ( document.mediacasterFiles )
-				{
+				if ( document.mediacasterFiles ) {
 					var i;
-					for ( i = 0; i < document.mediacasterFiles.length; i++ )
-					{
+					for ( i = 0; i < document.mediacasterFiles.length; i++ ) {
 						myMediacasterDropdown.add(document.mediacasterFiles[i].label, document.mediacasterFiles[i].value);
 					}
 				}
@@ -132,7 +126,7 @@
 				author : 'Denis de Bernardy',
 				authorurl : 'http://www.semiologic.com/',
 				infourl : 'http://www.semiologic.com/software/mediacaster/',
-				version : "1.5"
+				version : "1.6"
 			};
 		}
 	});
