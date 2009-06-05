@@ -1391,4 +1391,13 @@ EOS;
 if ( is_admin() || strpos($_SERVER['REQUEST_URI'], 'wp-includes') !== false ) {
 	include dirname(__FILE__) . '/mediacaster-admin.php';
 }
+
+if ( !function_exists('load_multipart_entry') ) :
+function load_multipart_entry() {
+	include dirname(__FILE__) . '/multipart-entry/multipart-entry.php';
+}
+endif;
+
+foreach ( array('post.php', 'post-new.php', 'page.php', 'page-new.php') as $hook )
+	add_action("load-$hook", 'load_multipart_entry');
 ?>
