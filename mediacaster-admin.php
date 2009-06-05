@@ -569,7 +569,13 @@ class mediacaster_admin {
 		#echo '<pre>';
 		#var_dump($options);
 		#echo '</pre>';
-
+		if ( isset($options['player']['width']) && absint($options['player']['width']) == 320
+			&& isset($options['player']['height']) && in_array(absint($options['player']['height']), array(240, 180))
+			) {
+			unset($options['width']);
+			unset($options['height']);
+		}
+		
 		update_option('mediacaster', $options);
 	} # update_options()
 
@@ -669,7 +675,7 @@ class mediacaster_admin {
 				. ' value="'
 					. ( $options['player']['width']
 						? intval($options['player']['width'])
-						: $content_width
+						: ''
 						)
 					 . '"'
 				. ' />' . "\n"
@@ -679,10 +685,11 @@ class mediacaster_admin {
 				. ' value="'
 					. ( ( isset($options['player']['height']) && $options['player']['height'] )
 						? intval($options['player']['height'])
-						: intval($options['player']['width'] * ( 180 * 320 ) / ( 320 * $default_width ) )
+						: ''
 						)
 					 . '"'
 				. ' />' . "\n"
+			. sprintf(__('Leave blank for default: %s x %s'), $default_width, intval($default_width * 180 / 320))
 			. '</td>' . "\n"
 			. '</tr>';
 
