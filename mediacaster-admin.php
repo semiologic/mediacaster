@@ -569,12 +569,6 @@ class mediacaster_admin {
 		#echo '<pre>';
 		#var_dump($options);
 		#echo '</pre>';
-		if ( isset($options['player']['width']) && absint($options['player']['width']) == 320
-			&& isset($options['player']['height']) && in_array(absint($options['player']['height']), array(240, 180))
-			) {
-			unset($options['width']);
-			unset($options['height']);
-		}
 		
 		update_option('mediacaster', $options);
 	} # update_options()

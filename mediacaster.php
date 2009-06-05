@@ -185,13 +185,6 @@ class mediacaster {
 		global $content_width;
 		$options = get_option('mediacaster');
 		
-		if ( isset($options['player']['width']) && absint($options['player']['width']) == 320
-			&& isset($options['player']['height']) && in_array(absint($options['player']['height']), array(240, 180))
-			) {
-			unset($options['player']['width']);
-			unset($options['player']['height']);
-		}
-			
 		if ( isset($options['player']['width']) && absint($options['player']['width']) ) {
 			$width = absint($options['player']['width']);
 		} elseif ( isset($content_width) && absint($content_width) ) {
@@ -287,13 +280,6 @@ class mediacaster {
 
 			global $content_width;
 			$options = get_option('mediacaster');
-
-			if ( isset($options['player']['width']) && absint($options['player']['width']) == 320
-				&& isset($options['player']['height']) && in_array(absint($options['player']['height']), array(240, 180))
-				) {
-				unset($options['player']['width']);
-				unset($options['player']['height']);
-			}
 
 			if ( isset($options['player']['width']) && absint($options['player']['width']) ) {
 				$width = absint($options['player']['width']);
