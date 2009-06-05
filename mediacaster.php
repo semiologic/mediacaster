@@ -587,7 +587,7 @@ EOS;
 			break;
 		}
 		
-		$height += 55;
+		$height += 54;
 
 		$id = 'm' . md5($file . '_' . $GLOBALS['player_count']++);
 
