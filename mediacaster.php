@@ -3,7 +3,7 @@
 Plugin Name: Mediacaster
 Plugin URI: http://www.semiologic.com/software/mediacaster/
 Description: Lets you add podcasts and videos to your site's posts and pages.
-Version: 1.6 beta
+Version: 1.6 RC
 Author: Denis de Bernardy
 Author URI: http://www.getsemiologic.com
 Text Domain: mediacaster-info
@@ -617,7 +617,6 @@ EOS;
 		$flashvars = array();
 		$flashvars['file'] = $file;
 		$flashvars['shuffle'] = 'false';
-		#$flashvars['playlist'] = 'bottom';
 		$flashvars['skin'] = plugin_dir_url(__FILE__) . 'player/kleur.swf';
 		
 		if ( $image )
