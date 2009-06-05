@@ -359,7 +359,7 @@ class mediacaster_admin {
 
 			echo '<ul class="ul-square">'
 				. '<li>'
-					. '<input type="file" style="width: 400px;" tabindex="4"'
+					. '<input type="file" tabindex="4"'
 					. ' id="new_media" name="new_media"'
 					. ' />'
 					. ' '
@@ -386,7 +386,7 @@ class mediacaster_admin {
 				. __('Your media folder must be writable by the server for any of this to work at all.')
 				. '</li>'
 				. '<li>'
-				. sprintf(__('Maximum file size is %s based on your server\'s configuration. If large files won\'t upload on your server, have your host increase its upload_max_filesize parameter.'), wp_convert_bytes_to_hr(apply_filters('import_upload_size_limit', wp_max_upload_size())))
+				. sprintf(__('Maximum file size is %s based on your server\'s configuration.'), wp_convert_bytes_to_hr(apply_filters('import_upload_size_limit', wp_max_upload_size())))
 				. '</li>'
 				. '<li>'
 				. __('If you\'re uploading <a href="http://go.semiologic.com/camtasia">Camtasia</a> videos, upload <em>only</em> the video file (swf, flv, mov...). The other files created by Camtasia are for use in a standalone web page.')
