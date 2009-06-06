@@ -5,34 +5,26 @@
  * @package Mediacaster
  **/
 
-add_action('admin_menu', array('mediacaster_admin', 'add_admin_page'));
-add_action('admin_menu', array('mediacaster_admin', 'add_meta_boxes'), 20);
+add_action('settings_page_mediacaster', array('mediacaster_admin', 'save_options'), 0);
 
 add_action('save_post', array('mediacaster_admin', 'update_path'), 20);
 add_action('save_post', array('mediacaster_admin', 'save_media'), 30);
 
-add_action('admin_head', array('mediacaster_admin', 'display_js_files'), 0);
-add_filter('admin_footer', array('mediacaster_admin', 'quicktag'));
-add_filter('mce_external_plugins', array('mediacaster_admin', 'editor_plugin'), 5);
-add_filter('mce_buttons_4', array('mediacaster_admin', 'editor_button'));
-
-if ( get_option('mediacaster') === false ) {
-	mediacaster::regen_options();
-}
-
 class mediacaster_admin {
 	/**
-	 * add_meta_boxes()
+	 * init_editor()
 	 *
 	 * @return void
 	 **/
 
-	function add_meta_boxes() {
-		add_meta_box('mediacaster', 'Mediacaster', array('mediacaster_admin', 'display_media'), 'post', 'normal');
-		add_meta_box('mediacaster', 'Mediacaster', array('mediacaster_admin', 'display_media'), 'page', 'normal');
-	} # add_meta_boxes()
-
-
+	function init_editor() {
+		add_action('admin_head', array('mediacaster_admin', 'display_js_files'), 0);
+		add_filter('admin_footer', array('mediacaster_admin', 'quicktag'));
+		add_filter('mce_external_plugins', array('mediacaster_admin', 'editor_plugin'));
+		add_filter('mce_buttons_4', array('mediacaster_admin', 'editor_button'));
+	} # init_editor()
+	
+	
 	/**
 	 * update_path()
 	 *
@@ -223,18 +215,14 @@ class mediacaster_admin {
 
 
 	/**
-	 * display_media()
+	 * edit_media()
 	 *
 	 * @param object $post
 	 * @return void
 	 **/
 
-	function display_media($post) {
+	function edit_media($post) {
 		$post_ID = $post->ID;
-
-		#echo '<pre>';
-		#var_dump($post_ID);
-		#echo '</pre>';
 
 		if ( $post_ID > 0 ) {
 			echo '<p>'
@@ -247,9 +235,7 @@ class mediacaster_admin {
 
 			$files = mediacaster::get_files($path);
 
-			$cover = mediacaster::get_cover($path);
-
-			if ( $files || strpos($cover, $path) !== false ) {
+			if ( $files ) {
 				echo '<p>'
 					. __('Media files currently include:')
 					. '</p>';
@@ -310,35 +296,6 @@ class mediacaster_admin {
 							. '</label>'
 						. '</div>' . "\n";
 				}
-
-				if ( strpos($cover, $path) !== false ) {
-					$key = basename($cover);
-					$key = str_replace(
-							array("\\", "'"),
-							array("\\\\", "\\'"),
-							htmlentities($key)
-							);
-					$key = urlencode($key);
-
-					echo '<div style="margin: 1em 0px;">'
-						. '<img src="'
-							. esc_url(trailingslashit(site_url()) . $cover)
-							. '" />' . '<br />'
-						. '<input type="text" style="width: 320px;" tabindex="4"'
-							. ' value="Entry-specific mp3 playlist cover"'
-							. ' disabled="disabled"'
-							. ' />'
-						. '&nbsp;'
-						. '<label>'
-							. '<input type="checkbox" tabindex="4"'
-								. ' name=delete_media[' . $key . ']'
-								. ( !current_user_can('upload_files') ? ' disabled="disabled"' : '' )
-								. ' />'
-							. '&nbsp;'
-							. __('Delete')
-							. '</label>'
-						. '</div>';
-				}
 				
 				if ( current_user_can('upload_files') ) {
 					echo '<p>'
@@ -380,9 +337,6 @@ class mediacaster_admin {
 				. __('Upload a .jpg or .png image named after your video to use it as the cover for that video. <i>e.g.</i> myvideo.jpg for myvideo.swf or myvideo.mov.')
 				. '</li>'
 				. '<li>'
-				. __('Upload a cover.jpg or cover.png image if you with to override the default cover for your podcast playlist.')
-				. '</li>'
-				. '<li>'
 				. __('Your media folder must be writable by the server for any of this to work at all.')
 				. '</li>'
 				. '<li>'
@@ -397,7 +351,7 @@ class mediacaster_admin {
 				echo '<p>' . __('Notice: GLOB_BRACE is an undefined constant on your server. Non .jpg images will be ignored.') . '</p>';
 			}
 		}
-	} # display_media()
+	} # edit_media()
 
 
 	/**
@@ -424,23 +378,6 @@ class mediacaster_admin {
 
 
 	/**
-	 * add_admin_page()
-	 *
-	 * @return void
-	 **/
-
-	function add_admin_page() {
-		add_options_page(
-			__('Mediacaster'),
-			__('Mediacaster'),
-			'manage_options',
-			'mediacaster',
-			array('mediacaster_admin', 'display_admin_page')
-			);
-	} # add_admin_page()
-
-
-	/**
 	 * strip_tags_rec()
 	 *
 	 * @return void
@@ -458,12 +395,15 @@ class mediacaster_admin {
 
 	
 	/**
-	 * update_options()
+	 * save_options()
 	 *
 	 * @return void
 	 **/
 
-	function update_options() {
+	function save_options() {
+		if ( !$_POST )
+			return;
+		
 		check_admin_referer('mediacaster');
 
 		if ( isset($_POST['delete_cover']) ) {
@@ -571,46 +511,36 @@ class mediacaster_admin {
 		#echo '</pre>';
 		
 		update_option('mediacaster', $options);
-	} # update_options()
+		
+		echo '<div class="updated">' . "\n"
+			. '<p>'
+				. '<strong>'
+				. __('Settings saved.')
+				. '</strong>'
+			. '</p>' . "\n"
+			. '</div>' . "\n";
+	} # save_options()
 
 
 	/**
-	 * display_admin_page()
+	 * edit_options()
 	 *
 	 * @return void
 	 **/
 
-	function display_admin_page() {
+	function edit_options() {
 		echo '<form enctype="multipart/form-data" method="post" action="">' . "\n";
 
 		$bytes = apply_filters( 'import_upload_size_limit', wp_max_upload_size() );
 
 		echo  "\n" . '<input type="hidden" name="MAX_FILE_SIZE" value="' . esc_attr($bytes) .'" />' . "\n";
 
-		if ( $_POST['update_mediacaster_options'] ) {
-			echo '<div class="updated">' . "\n"
-				. '<p>'
-					. '<strong>'
-					. __('Settings saved.')
-					. '</strong>'
-				. '</p>' . "\n"
-				. '</div>' . "\n";
-
-			mediacaster_admin::update_options();
-		}
-
 		$options = get_option('mediacaster');
-		#$options = false;
-
-		if ( $options == false ) {
-			$options = mediacaster::regen_options();
-		}
-
+		
 		$site_url = trailingslashit(site_url());
-
+		
 		echo '<div class="wrap">' . "\n"
-			. '<h2>'. __('Mediacaster Settings') . '</h2>' . "\n"
-			. '<input type="hidden" name="update_mediacaster_options" value="1" />' . "\n";
+			. '<h2>'. __('Mediacaster Settings') . '</h2>' . "\n";
 
 		wp_nonce_field('mediacaster');
 
@@ -625,9 +555,9 @@ class mediacaster_admin {
 			. __('Player Position')
 			. '</th>'
 			. '<td>'
-			. '<label for="mediacaster[player][position][top]">'
+			. '<label for="mediacaster-player-position-top">'
 			. '<input type="radio"'
-				. ' id="mediacaster[player][position][top]" name="mediacaster[player][position]"'
+				. ' id="mediacaster-player-position-top" name="mediacaster[player][position]"'
 				. ' value="top"'
 				. ( $options['player']['position'] != 'bottom'
 					? ' checked="checked"'
@@ -638,9 +568,9 @@ class mediacaster_admin {
 			. __('Top')
 			. '</label>'
 			. ' '
-			. '<label for="mediacaster[player][position][bottom]">'
+			. '<label for="mediacaster-player-position-bottom">'
 			. '<input type="radio"'
-				. ' id="mediacaster[player][position][bottom]" name="mediacaster[player][position]"'
+				. ' id="mediacaster-player-position-bottom" name="mediacaster[player][position]"'
 				. ' value="bottom"'
 				. ( $options['player']['position'] == 'bottom'
 					? ' checked="checked"'
@@ -653,63 +583,52 @@ class mediacaster_admin {
 			. '</td>'
 			. '</tr>' . "\n";
 
-		global $content_width;
-		
-		$default_width = isset($content_width) ? $content_width : 320;
-		
 		echo '<tr valign="top">'
 			. '<th scope="row">'
-			. '<label for="mediacaster[player][width]">'
-				. __('Video Player Width x Height') . ':'
-			. '</label>'
+			. __('Video Player Format')
 			. '</th>'
 			. '<td>'
-			. '<input type="text"'
-				. ' id="mediacaster[player][width]" name="mediacaster[player][width]"'
-				. ' value="'
-					. ( $options['player']['width']
-						? intval($options['player']['width'])
-						: ''
-						)
-					 . '"'
-				. ' />' . "\n"
-			. ' x '
-			. '<input type="text"'
-				. ' id="mediacaster[player][height]" name="mediacaster[player][height]"'
-				. ' value="'
-					. ( ( isset($options['player']['height']) && $options['player']['height'] )
-						? intval($options['player']['height'])
-						: ''
-						)
-					 . '"'
-				. ' />' . "\n"
-			. sprintf(__('Leave blank for default: %s x %s'), $default_width, intval($default_width * 180 / 320))
+			. '<label for="mediacaster-player-format-16-9">'
+			. '<input type="radio"'
+				. ' id="mediacaster-player-format-16-9" name="mediacaster[player][format]"'
+				. ' value="16/9"'
+				. ( $options['player']['format'] != '4/3'
+					? ' checked="checked"'
+					: ''
+					)
+				. ' />'
+			. '&nbsp;'
+			. __('16/9')
+			. '</label>'
+			. ' '
+			. '<label for="mediacaster-player-format-4-3">'
+			. '<input type="radio"'
+				. ' id="mediacaster-player-format-4-3" name="mediacaster[player][format]"'
+				. ' value="4/3"'
+				. ( $options['player']['format'] == '4/3'
+					? ' checked="checked"'
+					: ''
+					)
+				. ' />'
+			. '&nbsp;'
+			. __('4/3')
+			. '</label>'
 			. '</td>' . "\n"
 			. '</tr>';
 
-		if ( defined('GLOB_BRACE') ) {
-			if ( $cover = glob(ABSPATH . 'media/cover{,-*}.{jpg,jpeg,png}', GLOB_BRACE) ) {
-				$cover = current($cover);
-			}
-		} else {
-			if ( $cover = glob(ABSPATH . 'media/cover-*.jpg') ) {
-				$cover = current($cover);
-			}
-		}
+		$cover = mediacaster::get_cover();
 
 		echo '<tr valign="top">'
 			. '<th scope="row">'
-				. __('MP3 Playlist Cover') . ':'
+				. __('MP3 Playlist Cover')
 			. '</th>' . "\n"
 			. '<td>';
-
-		if ( file_exists($cover) ) {
+		
+		if ( $cover ) {
+			$cover = ABSPATH . $cover;
 			echo '<div style="margin-botton: 6px;">';
 			
-			echo '<img src="'
-					. esc_url(str_replace(ABSPATH, $site_url, $cover))
-					. '"'
-				. ' />' . "\n"
+			echo '<img src="' . esc_url(str_replace(ABSPATH, $site_url, $cover)) . '" />' . "\n"
 				. '<br />' . "\n";
 				
 			if ( is_writable($cover) ) {
@@ -733,9 +652,7 @@ class mediacaster_admin {
 				. __('New Image (jpg or png)') . ':'
 			. '</label>'
 			. '<br />' . "\n"
-			. '<input type="file" style="width: 480px;"'
-				. ' id="new_cover" name="new_cover"'
-				. ' />'
+			. '<input type="file" id="new_cover" name="new_cover" />'
 			. '</div>' . "\n";
 
 		if ( !defined('GLOB_BRACE') ) {
@@ -744,80 +661,24 @@ class mediacaster_admin {
 		
 		echo '</td>'
 			. '</tr>';
-			
-		echo '</table>';
-
-		echo '<p class="submit">'
-			. '<input type="submit"'
-				. ' value="' . esc_attr(__('Save Changes')) . '"'
-				. ' />'
-			. '</p>' . "\n";
-
-
-		echo '<h3>'
-				. __('Enclosures')
-				. '</h3>' . "\n";
-
-		echo '<table class="form-table">';
 		
 		echo '<tr valign="top">'
 			. '<th scope="row">'
-			. '<p>'
-			. __('Preferences')
-			. '</p>'
-			. '</th>'
-			. '<td>';
-		
-		echo '<p>'
-			. __('Media files you include using Mediacaster will get listed in your site\'s RSS feed as enclosures (the term itself is blogging jargon). This lets feed readers and various devices (e.g. an iPod) know media files are attached, and process them accordingly.')
-			. '</p>';
-
-		echo '<p>'
-			. '<input type="radio"'
-				. ' id="mediacaster[enclosures][none]" name="mediacaster[enclosures]"'
-				. ' value=""'
-				. ( $options['enclosures'] == ''
-					? ' checked="checked"'
-					: ''
-					)
-				. ' />' . "\n"
-				. '<label for="mediacaster[enclosures][none]">'
-				. __('List enclosures in machine readable format only, for use in RSS readers and iPods.')
-				. '</label>'
-			. '</p>' . "\n";
-
-		echo '<p>'
-			. '<input type="radio"'
-				. ' id="mediacaster[enclosures][all]" name="mediacaster[enclosures]"'
-				. ' value="all"'
-				. ( $options['enclosures'] == 'all'
-					? ' checked="checked"'
-					: ''
-					)
-				. ' />' . "\n"
-				. '<label for="mediacaster[enclosures][all]">'
-				. __('List enclosures in machine readable format, and as download links in human readable format at the end of each post.')
-				. '</label>'
-			. '</p>' . "\n";
-		
-		echo '</td>'
-			. '</tr>';
-
-		if ( !$options['captions']['enclosures'] ) {
-			$options['captions']['enclosures'] = __('Enclosures');
-		}
-
-		echo '<tr valign="top">'
-			. '<th scope="row">'
-			. '<label for="mediacaster[captions][enclosures]">'
-			. __('Enclosure Caption')
-			. '</label>'
+			. __('Compatibility Mode')
 			. '</th>'
 			. '<td>'
-			. '<input type="text" style="width: 480px;"'
-				. ' id="mediacaster[captions][enclosures]" name="mediacaster[captions][enclosures]"'
-				. ' value="' . esc_attr($options['captions']['enclosures']) . '"'
-				. ' />' . "\n"
+			. '<label>'
+			. '<input type="checkbox"'
+				. ' name="mediacaster[compat]"'
+				. ' value="top"'
+				. ( !isset($options['compat']) || isset($options['compat']) && $options['compat']
+					? ' checked="checked"'
+					: ''
+					)
+				. ' />'
+			. '&nbsp;'
+			. esc_html(__('Process code inserted using the Audio Player and FLV Player plugins'))
+			. '</label>'
 			. '</td>'
 			. '</tr>' . "\n";
 		
@@ -843,13 +704,13 @@ class mediacaster_admin {
 			
 			echo '<tr valign="top">'
 				. '<th scope="row">'
-				. '<label for="mediacaster[itunes][author]">'
+				. '<label for="mediacaster-itunes-author">'
 					. __('Author')
 					. '</label>'
 				. '</th>'
 				. '<td>'
-				. '<input type="text" style="width: 480px;"'
-					. ' id="mediacaster[itunes][author]" name="mediacaster[itunes][author]"'
+				. '<input type="text" class="widefat"'
+					. ' id="mediacaster-itunes-author" name="mediacaster[itunes][author]"'
 					. ' value="' . esc_attr($options['itunes']['author']) . '"'
 					. ' />' . "\n"
 				. '</td>'
@@ -858,13 +719,13 @@ class mediacaster_admin {
 
 			echo '<tr valign="top">'
 				. '<th scope="row">'
-				. '<label for="mediacaster[itunes][summary]">'
+				. '<label for="mediacaster-itunes-summary">'
 					. __('Summary') . ':'
 					. '</label>'
 				. '</th>'
 				. '<td>'
-				. '<textarea style="width: 480px; height: 40px;"'
-					. ' id="mediacaster[itunes][summary]" name="mediacaster[itunes][summary]"'
+				. '<textarea class="widefat" cols="58" rows="3"'
+					. ' id="mediacaster-itunes-summary" name="mediacaster[itunes][summary]"'
 					. ' >' . "\n"
 					. $options['itunes']['summary']
 					. '</textarea>' . "\n"
@@ -879,8 +740,8 @@ class mediacaster_admin {
 				. '<td>';
 
 			for ( $i = 1; $i <= 3; $i++ ) {
-				echo '<select style="width: 480px;"'
-						. ' id="mediacaster[itunes][category][' . $i . ']" name="mediacaster[itunes][category][' . $i . ']"'
+				echo '<select class="widefat"'
+						. ' name="mediacaster[itunes][category][' . $i . ']"'
 						. ' >' . "\n"
 					. '<option value="">' . __('Select...') . '</option>' . "\n";
 
@@ -910,11 +771,11 @@ class mediacaster_admin {
 				. '</th>'
 				. '<td>'
 				. '<input type="hidden"'
-					. ' id="mediacaster[itunes][image][counter]" name="mediacaster[itunes][image][counter]"'
+					. ' id="mediacaster-itunes-image-counter" name="mediacaster[itunes][image][counter]"'
 					. ' value="' . intval($options['itunes']['image']['counter']) . '"'
 					. ' />' . "\n"
 				. '<input type="hidden"'
-					. ' id="mediacaster[itunes][image][name]" name="mediacaster[itunes][image][name]"'
+					. ' id="mediacaster-itunes-image-name" name="mediacaster[itunes][image][name]"'
 					. ' value="' . esc_attr($options['itunes']['image']['name']) . '"'
 					. ' />' . "\n";
 			
@@ -944,12 +805,12 @@ class mediacaster_admin {
 				echo '</div>';
 			}
 
-			echo '<label for="mediacaster[itunes][image][new]">'
+			echo '<label for="mediacaster-itunes-image-new">'
 					. __('New Image (jpg or png)') . ':'
 					. '</label>'
 				. '<br />' . "\n"
-				. '<input type="file" style="width: 480px;"'
-					. ' id="mediacaster[itunes][image][new]" name="mediacaster[itunes][image][new]"'
+				. '<input type="file"'
+					. ' id="mediacaster-itunes-image-new" name="mediacaster[itunes][image][new]"'
 					. ' />' . "\n";
 			
 			echo '</td>'
@@ -958,13 +819,13 @@ class mediacaster_admin {
 
 			echo '<tr valign="top">'
 				. '<th scope="row">'
-					. '<label for="mediacaster[itunes][explicit]">'
+					. '<label for="mediacaster-itunes-explicit">'
 					. __('Explicit') . ':'
 					. '</label>'
 				. '</th>'
 				. '<td>'
-				. '<select style="width: 480px;"'
-					. ' id="mediacaster[itunes][explicit]" name="mediacaster[itunes][explicit]"'
+				. '<select class="widefat"'
+					. ' id="mediacaster-itunes-explicit" name="mediacaster[itunes][explicit]"'
 					. ' >' . "\n";
 
 			foreach ( array('Yes', 'No', 'Clean') as $answer ) {
@@ -986,13 +847,13 @@ class mediacaster_admin {
 
 			echo '<tr valign="top">'
 				. '<th scope="row">'
-					. '<label for="mediacaster[itunes][block]">'
+					. '<label for="mediacaster-itunes-block">'
 					. __('Block iTunes') . ':'
 					. '</label>'
 				. '</th>'
 				. '<td>'
-				. '<select style="width: 480px;"'
-					. ' id="mediacaster[itunes][block]" name="mediacaster[itunes][block]"'
+				. '<select class="widefat"'
+					. ' id="mediacaster-itunes-block" name="mediacaster[itunes][block]"'
 					. ' >' . "\n";
 
 			foreach ( array('Yes', 'No') as $answer ) {
@@ -1013,13 +874,13 @@ class mediacaster_admin {
 
 			echo '<tr valign="top">'
 				. '<th scope="row">'
-				. '<label for="mediacaster[itunes][copyright]">'
+				. '<label for="mediacaster-itunes-copyright">'
 					. __('Copyright') . ':'
 					. '</label>'
 				. '</th>'
 				. '<td>'
-				. '<textarea style="width: 480px; height: 40px;"'
-					. ' id="mediacaster[itunes][copyright]" name="mediacaster[itunes][copyright]"'
+				. '<textarea class="widefat" cols="58" rows="2"'
+					. ' id="mediacaster-itunes-copyright" name="mediacaster[itunes][copyright]"'
 					. ' >' . "\n"
 					. $options['itunes']['copyright']
 					. '</textarea>' . "\n"
@@ -1038,7 +899,7 @@ class mediacaster_admin {
 		echo '</div>' . "\n";
 
 		echo '</form>' . "\n";
-	} # display_admin_page()
+	} # edit_options()
 
 
 	/**

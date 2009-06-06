@@ -3,7 +3,7 @@
 Plugin Name: Mediacaster
 Plugin URI: http://www.semiologic.com/software/mediacaster/
 Description: Lets you add podcasts and videos to your site's posts and pages.
-Version: 1.6 RC
+Version: 1.6 beta
 Author: Denis de Bernardy
 Author URI: http://www.getsemiologic.com
 Text Domain: mediacaster-info
@@ -27,12 +27,11 @@ http://www.opensource.org/licenses/gpl-2.0.php
  **/
 
 # audio:
-add_filter('the_content', array('mediacaster', 'display_players'), 20);
-remove_filter('the_content', 'ap_insert_player_widgets');
+add_filter('the_content', array('mediacaster', 'display_players'), 0);
 
 # playlists:
 add_filter('the_content', array('mediacaster', 'display_playlist'), 1000);
-add_action('template_redirect', array('mediacaster', 'catch_playlist'));
+add_action('template_redirect', array('mediacaster', 'catch_playlist'), 0);
 
 add_action('rss2_ns', array('mediacaster', 'display_feed_ns'));
 add_action('atom_ns', array('mediacaster', 'display_feed_ns'));
@@ -45,13 +44,50 @@ add_action('atom_entry', array('mediacaster', 'display_feed_enclosures'));
 
 if ( !is_admin() ) {
 	add_action('wp_print_scripts', array('mediacaster', 'scripts'));
-	add_action('wp_print_styles', array('mediacaster', 'display_css'));
+	add_action('wp_print_styles', array('mediacaster', 'styles'));
+} else {
+	add_action('admin_menu', array('mediacaster', 'admin_menu'));
+	add_action('admin_menu', array('mediacaster', 'meta_boxes'), 20);
 }
 
 add_filter('get_the_excerpt', array('mediacaster', 'disable'), 0);
 add_filter('get_the_excerpt', array('mediacaster', 'enable'), 20);
 
+if ( get_option('mediacaster') === false )
+	mediacaster::init_options();
+
+add_action('init', array('mediacaster', 'init'));
+
 class mediacaster {
+	/**
+	 * init()
+	 *
+	 * @return void
+	 **/
+
+	function init() {
+		global $player_width;
+		global $player_height;
+		global $content_width;
+		
+		$o = get_option('mediacaster');
+		
+		if ( !isset($player_width) ) {
+			if ( isset($content_width) )
+				$player_width = $content_width;
+			else
+				$player_width = 420;
+		}
+		
+		if ( !isset($player_height) ) {
+			if ( $o['player']['format'] == '16/9' )
+				$player_height = round($player_width * 9 / 16);
+			else
+				$player_height = round($player_width * 3 / 4);
+		}
+	} # init()
+	
+	
 	/**
 	 * disable()
 	 *
@@ -60,7 +96,7 @@ class mediacaster {
 	 **/
 
 	function disable($in = null) {
-		remove_filter('the_content', array('mediacaster', 'display_players'), 20);
+		remove_filter('the_content', array('mediacaster', 'display_players'), 0);
 		remove_filter('the_content', array('mediacaster', 'display_playlist'), 1000);
 		
 		return $in;
@@ -75,7 +111,7 @@ class mediacaster {
 	 **/
 	
 	function enable($in = null) {
-		add_filter('the_content', array('mediacaster', 'display_players'), 20);
+		add_filter('the_content', array('mediacaster', 'display_players'), 0);
 		add_filter('the_content', array('mediacaster', 'display_playlist'), 1000);
 		
 		return $in;
@@ -97,6 +133,20 @@ class mediacaster {
 	
 	
 	/**
+	 * styles()
+	 *
+	 * @return void
+	 **/
+	
+	function styles() {
+		$folder = plugin_dir_url(__FILE__);
+		$css = $folder . 'mediacaster.css';
+		
+		wp_enqueue_style('mediacaster', $css, null, '1.6');
+	} # styles()
+	
+	
+	/**
 	 * display_players()
 	 *
 	 * @param string $buffer
@@ -104,8 +154,11 @@ class mediacaster {
 	 **/
 
 	function display_players($buffer) {
-		$buffer = mediacaster::compat($buffer);
-
+		$o = get_option('mediacaster');
+		
+		if ( !isset($o['compat']) || isset($o['compat']) && $o['compat'] )
+			$buffer = mediacaster::compat($buffer);
+		
 		$buffer = preg_replace_callback("/
 			(?:<p(?:\s[^>]*)?>)?
 			\[(?:audio|video|media)\s*:
@@ -116,7 +169,7 @@ class mediacaster {
 			array('mediacaster', 'display_player_callback'),
 			$buffer
 			);
-
+		
 		return $buffer;
 	} # display_players()
 
@@ -130,7 +183,7 @@ class mediacaster {
 
 	function compat($buffer) {
 		# transform <!--podcast#file-->, <!--media#file--> and <!--videocast#file--> into [media:file]
-
+		
 		$buffer = preg_replace(
 			"/
 				(?:<p>\s*)?				# maybe a paragraph tag
@@ -182,47 +235,10 @@ class mediacaster {
 	 **/
 
 	function display_player_callback($input) {
-		global $content_width;
-		$options = get_option('mediacaster');
-		
-		if ( isset($options['player']['width']) && absint($options['player']['width']) ) {
-			$width = absint($options['player']['width']);
-		} elseif ( isset($content_width) && absint($content_width) ) {
-			$width = absint($content_width);
-		} else {
-			$width = 320;
-		}
-		
-		if ( isset($options['player']['height']) && absint($options['player']['height']) ) {
-			$height = absint($options['player']['height']);
-		} else {
-			$height = absint($width * 180 / 320);
-		}
-		
 		$file = $input[1];
 		
-		if ( preg_match("/
-				^
-				(?:
-					https?:\/\/[^\/]*
-				)
-				(
-					(youtube)
-				|
-					(google)
-				)
-				/ix", $file, $match)
-			) {
-			switch ( strtolower(end($match)) ) {
-			case 'youtube':
-				return mediacaster::display_youtube($file, $width, $height);
-				break;
-			
-			case 'google':
-				return mediacaster::display_googlevideo($file, $width, $height);
-				break;
-			}
-		}
+		if ( preg_match("/^https?:\/\/(?:www\.)youtube\.com\/watch\?/ix", $file, $match) )
+			return mediacaster::display_youtube($file);
 		
 		preg_match("/\.([^.]+)$/", $file, $ext); 
 		$ext = end($ext);
@@ -231,25 +247,23 @@ class mediacaster {
 		case 'pdf':
 		case 'zip':
 		case 'gz':
-			return mediacaster::display_attachment($file);
+			return mediacaster::display_file($file);
 			break;
 			
 		case 'mov':
 		case 'm4v':
-		case 'mp4':
 		case 'm4a':
-			return mediacaster::display_quicktime($file, $width, $height);
+			return mediacaster::display_quicktime($file);
 			break;
 
 		case 'flv':
-		case 'swf':
-			return mediacaster::display_player($file, $width, $height);
+		case 'mp4':
+			return mediacaster::display_video($file);
 			break;
 
 		case 'mp3':
 		default:
-			$height = 4;
-			return mediacaster::display_player($file, $width, $height);
+			return mediacaster::display_audio($file);
 			break;
 		}
 	} # display_player_callback()
@@ -263,307 +277,206 @@ class mediacaster {
 	 **/
 
 	function display_playlist($content) {
+		if ( !in_the_loop() )
+			return $content;
+		
 		global $wpdb;
 		$post_ID = get_the_ID();
+		
+		if ( $post_ID <= 0 )
+			return;
 
 		$out = '';
-		$enc = '';
 
-		if ( $post_ID > 0 ) {
-			$path = mediacaster::get_path($post_ID);
+		$path = mediacaster::get_path($post_ID);
 
-			$files = mediacaster::get_files($path, $post_ID);
+		$files = mediacaster::get_files($path, $post_ID);
 
-			foreach ( array('flash_audios', 'flash_videos', 'qt_audios', 'qt_videos') as $var ) {
-				$$var = mediacaster::extract_podcasts($files, $post_ID, $var);
-			}
+		foreach ( array('flash_audios', 'flash_videos', 'qt_audios', 'qt_videos') as $var )
+			$$var = mediacaster::extract_podcasts($files, $post_ID, $var);
 
-			global $content_width;
-			$options = get_option('mediacaster');
+		if ( $flash_audios ) {
+			$site_url = trailingslashit(site_url());
 
-			if ( isset($options['player']['width']) && absint($options['player']['width']) ) {
-				$width = absint($options['player']['width']);
-			} elseif ( isset($content_width) && absint($content_width) ) {
-				$width = absint($content_width);
+			# cover
+			$cover = mediacaster::get_cover();
+
+			if ( $cover ) {
+				$cover_size = getimagesize(ABSPATH . $cover);
+
+				$cover_width = $cover_size[0];
+				$cover_height = $cover_size[1];
+
+				$mp3_width = $cover_width;
+
+				$height = $height + $cover_height;
 			} else {
-				$width = 320;
+				$mp3_width = $width;
 			}
 
-			if ( isset($options['player']['height']) && absint($options['player']['height']) ) {
-				$height = absint($options['player']['height']);
-			} else {
-				$height = intval($width * 180 / 320);
-			}
-			
+			$file = $site_url . '?podcasts=' . $post_ID;
 
-			if ( $flash_audios ) {
-				$site_url = trailingslashit(site_url());
-
-				$height = 4;
-
-				# cover
-
-				$cover = mediacaster::get_cover($path);
-
-				if ( $cover ) {
-					$cover_size = getimagesize(ABSPATH . $cover);
-
-					$cover_width = $cover_size[0];
-					$cover_height = $cover_size[1];
-
-					$mp3_width = $cover_width;
-
-					$height = $height + $cover_height;
-				} else {
-					$mp3_width = $width;
-				}
-
-				$file = $site_url . '?podcasts=' . $post_ID;
-
-				# insert player
-
-				$out .= mediacaster::display_player($file, $mp3_width, $height) . "\n";
-			}
-
-			if ( $flash_videos ) {
-				$height = $options['player']['height'] ? $options['player']['height'] : intval($width * 180 / 320 );
-
-				$file = trailingslashit(site_url()) . '?videos=' . $post_ID;
-
-				# insert player
-
-				$out .= mediacaster::display_player($file, $width, $height) . "\n";
-			}
-
-			if ( $qt_audios ) {
-				$height = $options['player']['height'] ? $options['player']['height'] : intval($width * 180 / 320 );
-
-				foreach ( $qt_audios as $file ) {
-					$out .= mediacaster::display_quicktime($file, $width, $height);
-				}
-			}
-
-			if ( $qt_videos ) {
-				$height = $options['player']['height'] ? $options['player']['height'] : intval($width * 180 / 320 );
-
-				foreach ( $qt_videos as $file ) {
-					$out .= mediacaster::display_quicktime($file, $width, $height);
-				}
-			}
-
-			if ( $files && $options['enclosures'] ) {
-				$enc .= '<div class="enclosures">'
-					. '<h2>'
-						. ( $options['captions']['enclosures']
-							? $options['captions']['enclosures']
-							: __('Enclosures')
-							)
-						. '</h2>'
-					. '<ul>' . "\n";
-
-				$podcasts = '';
-				$videocasts = '';
-				$attachments = '';
-				
-				foreach ( $files as $key => $file ) {
-					preg_match("/\.([^.]+)$/", $key, $ext); 
-					$ext = end($ext);
-
-					switch ( strtolower($ext) ) {
-						case 'swf':
-						case 'flv':
-						case 'mov':
-						case 'mp4':
-						case 'm4v':
-						case 'm4a':
-							$videocasts .= '<li class="video">'
-								. '<a href="' . esc_url($file) . '"'
-									. ' onclick="window.open(this.href); return false;">'
-								. basename($key, '.' . $ext)
-								. '</a>'
-								. ' (video)'
-								. '</li>' . "\n";
-							break;
-							
-						case 'zip':
-						case 'gz':
-						case 'pdf':
-							$attachments .= '<li class="file">'
-								. '<a href="' . esc_url($file) . '"'
-									. ' onclick="window.open(this.href); return false;">'
-								. basename($key, '.' . $ext)
-								. '</a>'
-								. ' (attachment)'
-								. '</li>' . "\n";
-							break;
-							
-						case 'mp3':
-						default:
-							$podcasts .= '<li class="audio">'
-								. '<a href="' . esc_url($file) . '"'
-									. ' onclick="window.open(this.href); return false;">'
-								. basename($key, '.' . $ext)
-								. '</a>'
-								. ' (audio)'
-								. '</li>' . "\n";
-							break;
-					}
-				}
-
-				$enc .= $podcasts
-					. $videocasts
-					. $attachments
-					. '</ul>' . "\n"
-					. '</div>' . "\n";
-			}
+			# insert player
+			$out .= mediacaster::display_audio($file) . "\n";
+		}
+		
+		if ( $flash_videos ) {
+			$site_url = trailingslashit(site_url());
+			$file = $site_url . '?videos=' . $post_ID;
+			$out .= mediacaster::display_video($file) . "\n";
 		}
 
-		if ( $options['player']['position'] != 'bottom' ) {
-			$content = $out . $content . $enc;
-		} else {
-			$content = $content . $out . $enc;
+		if ( $qt_audios ) {
+			foreach ( $qt_audios as $file )
+				$out .= mediacaster::display_quicktime($file) . "\n";
 		}
+
+		if ( $qt_videos ) {
+			foreach ( $qt_videos as $file )
+				$out .= mediacaster::display_quicktime($file) . "\n";
+		}
+
+		if ( $options['player']['position'] != 'bottom' )
+			$content = $out . $content;
+		else
+			$content = $content . $out;
 
 		return $content;
 	} # display_playlist()
-
+	
 	
 	/**
-	 * display_youtube()
+	 * get_flashvars()
 	 *
 	 * @param string $file
-	 * @param int $width
-	 * @param int $height
-	 * @return string $player
+	 * @param string $image
+	 * @return array $flashvars
 	 **/
 
-	function display_youtube($file, $width, $height) {
-		$id = 'm' . md5($file . '_' . $GLOBALS['player_count']++);
+	function get_flashvars($file, $image = false) {
+		$flashvars = array();
+		$flashvars['file'] = $file;
+		$flashvars['title'] = 'title';
+		$flashvars['description'] = 'description';
+		$flashvars['author'] = 'author';
 		
-		$file = parse_url($file);
-		$file = $file['query'];
-		parse_str($file, $file);
-		$file = $file['v'];
-		$file = preg_replace("/[^a-z0-9_-]/i", '', $file);
+		if ( $image )
+			$flashvars['image'] = $image;
 		
-		if ( !$file )
-			return '';
+		$flashvars['skin'] = plugin_dir_url(__FILE__) . 'player/kleur.swf';
+		$flashvars['plugins'] = 'quickkeys-1,viral-1';
 		
-		# adjust height for youtube control
-		$height += 20;
+		$flashvars['viral.onpause'] = 'false';
+		$flashvars['viral.link'] = in_the_loop() ? get_permalink() : get_option('home');
 		
-		$player = 'http://www.youtube.com/v/' . $file;
-
-		$get_flash = __('<a href="http://www.macromedia.com/go/getflashplayer">Get Flash 9.0</a> to see this player.', 'mediacaster');
-		
-		$script = '';
-		
-		if ( !is_feed() )
-			$script = <<<EOS
-<script type="text/javascript">
-swfobject.embedSWF("$player", "$id", "$width", "$height", "9.0.0");
-</script>
-EOS;
-		
-		return <<<EOS
-
-<div class="media_container"><div class="media" style="width: {$width}px; height: {$height}px;">
-<object id="$id" classid="clsid:D27CDB6E-AE6D-11cf-96B8-444553540000" width="$width" height="$height">
-<param name="movie" value="$player" />
-<!--[if !IE]>-->
-<object type="application/x-shockwave-flash" data="$player" width="$width" height="$height">
-<!--<![endif]-->
-<p>$get_flash</p>
-<!--[if !IE]>-->
-</object>
-<!--<![endif]-->
-</object>
-</div></div>
-$script
-
-EOS;
-	} # display_youtube()
+		return apply_filters('mediacaster_flashvars', $flashvars);
+	} # get_flashvars()
 
 
 	/**
-	 * display_googlevideo()
+	 * display_audio()
 	 *
 	 * @param string $file
-	 * @param int $width
-	 * @param int $height
 	 * @return string $player
 	 **/
 
-	function display_googlevideo($file, $width, $height) {
-		$id = 'm' . md5($file . '_' . $GLOBALS['player_count']++);
-		
-		$file = parse_url($file);
-		$file = $file['query'];
-		parse_str($file, $file);
-		$file = $file['docid'];
-		$file = preg_replace("/[^a-z0-9_-]/i", '', $file);
-		
-		if ( !$file ) return '';
-		
-		# adjust height for google video control
-		$height += 26;
-
-		$player = 'http://video.google.com/googleplayer.swf?docId=' . $file;
-
-		$get_flash = __('<a href="http://www.macromedia.com/go/getflashplayer">Get Flash 9.0</a> to see this player.', 'mediacaster');
-		
-		$script = '';
-		
-		if ( !is_feed() )
-			$script = <<<EOS
-<script type="text/javascript">
-swfobject.embedSWF("$player", "$id", "$width", "$height", "9.0.0");
-</script>
-EOS;
-		
-		return <<<EOS
-
-<div class="media_container"><div class="media" style="width: {$width}px; height: {$height}px;">
-<object id="$id" classid="clsid:D27CDB6E-AE6D-11cf-96B8-444553540000" width="$width" height="$height">
-<param name="movie" value="$player" />
-<!--[if !IE]>-->
-<object type="application/x-shockwave-flash" data="$player" width="$width" height="$height">
-<!--<![endif]-->
-<p>$get_flash</p>
-<!--[if !IE]>-->
-</object>
-<!--<![endif]-->
-</object>
-</div></div>
-$script
-
-EOS;
-	} # display_googlevideo()
-
-
-	/**
-	 * display_player()
-	 *
-	 * @param string $file
-	 * @param int $width
-	 * @param int $height
-	 * @return string $player
-	 **/
-
-	function display_player($file, $width, $height) {
+	function display_audio($file) {
 		if ( strpos($file, '/') === false ) {
 			$site_url = trailingslashit(site_url());
-
 			$path = mediacaster::get_path(get_the_ID());
-
 			$file = $site_url . $path . $file;
 		}
 		
-		$image = false;
+		global $player_width;
+		static $count = 0;
+		
+		if ( $cover = mediacaster::get_cover() ) {
+			$cover_size = getimagesize(ABSPATH . $cover);
+			$width = $cover_size[0];
+			$height = $cover_size[1];
+			
+			if ( $width < 360 )
+				$width = 360;
+		} else {
+			$width = $player_width;
+			$height = 0;
+		}
+		
+		$height += 59;
+		
+		$id = 'm' . md5($file . '_' . $count++);
+		
+		$player = plugin_dir_url(__FILE__) . 'player/player-viral.swf';
+		
+		$allowfullscreen = 'true';
+		$allowscriptaccess = 'always';
+		$allownetworking = 'all';
+		
+		$flashvars = mediacaster::get_flashvars($file, $image);
+		$flashvars = apply_filters('mediacaster_audio_flashvars', $flashvars);
+		$flashvars = http_build_query($flashvars, null, '&');
+		
+		$script = '';
+		
+		if ( !is_feed() )
+			$script = <<<EOS
+<script type="text/javascript">
+var params = {};
+params.allowfullscreen = "$allowfullscreen";
+params.allowscriptaccess = "$allowscriptaccess";
+//params.allownetworking = "$allownetworking";
+params.flashvars = "$flashvars";
+
+swfobject.embedSWF("$player", "$id", "$width", "$height", "9.0.0", false, false, params);
+</script>
+EOS;
+		
+		return <<<EOS
+
+<div class="media_container"><div class="media" style="width: {$width}px; height: {$height}px;">
+<object id="$id" classid="clsid:D27CDB6E-AE6D-11cf-96B8-444553540000" width="$width" height="$height">
+<param name="movie" value="$player" />
+<param name="allowfullscreen" value="$allowfullscreen" />
+<param name="allowscriptaccess" value="$allowscriptaccess" />
+<param name="allownetworking" value="$allownetworking" />
+<param name="flashvars" value="$flashvars" />
+<embed src="$player" width="$width" height="$height" allowfullscreen="$allowfullscreen" allowscriptaccess="$allowscriptaccess" allownetworking="$allownetworking" flashvars="$flashvars" />
+</object>
+</div></div>
+$script
+
+EOS;
+	} # display_audio()
+
+
+	/**
+	 * display_video()
+	 *
+	 * @param string $file
+	 * @return string $player
+	 **/
+
+	function display_video($file) {
+		if ( strpos($file, '/') === false ) {
+			$site_url = trailingslashit(site_url());
+			$path = mediacaster::get_path(get_the_ID());
+			$file = $site_url . $path . $file;
+		}
+		
+		global $player_width;
+		global $player_height;
+		static $count = 0;
+		
+		$width = $player_width;
+		$height = $player_height;
+		
+		$height += 59;
 		
 		preg_match("/\.([^.]+)$/", $file, $ext); 
 		$ext = end($ext);
-
+		
+		$image = false;
+		
 		switch ( strtolower($ext) ) {
 		case 'flv':
 		case 'swf':
@@ -587,26 +500,16 @@ EOS;
 			break;
 		}
 		
-		$height += 54;
-
-		$id = 'm' . md5($file . '_' . $GLOBALS['player_count']++);
-
-		$player = plugin_dir_url(__FILE__) . 'player/player.swf';
-
-		$get_flash = __('<a href="http://www.macromedia.com/go/getflashplayer">Get Flash 9.0</a> to see this player.', 'mediacaster');
+		$id = 'm' . md5($file . '_' . $count++);
 		
-		$autostart = 'false';
-		$autoscroll = 'false';
-		$thumbsinplaylist = 'false';
+		$player = plugin_dir_url(__FILE__) . 'player/player-viral.swf';
+		
 		$allowfullscreen = 'true';
-
-		$flashvars = array();
-		$flashvars['file'] = $file;
-		$flashvars['shuffle'] = 'false';
-		$flashvars['skin'] = plugin_dir_url(__FILE__) . 'player/kleur.swf';
+		$allowscriptaccess = 'always';
+		$allownetworking = 'all';
 		
-		if ( $image )
-			$flashvars['image'] = $image;
+		$flashvars = mediacaster::get_flashvars($file, $image);
+		$flashvars = apply_filters('mediacaster_video_flashvars', $flashvars);
 		$flashvars = http_build_query($flashvars, null, '&');
 		
 		$script = '';
@@ -616,6 +519,8 @@ EOS;
 <script type="text/javascript">
 var params = {};
 params.allowfullscreen = "$allowfullscreen";
+params.allowscriptaccess = "$allowscriptaccess";
+params.allownetworking = "$allownetworking";
 params.flashvars = "$flashvars";
 
 swfobject.embedSWF("$player", "$id", "$width", "$height", "9.0.0", false, false, params);
@@ -628,22 +533,83 @@ EOS;
 <object id="$id" classid="clsid:D27CDB6E-AE6D-11cf-96B8-444553540000" width="$width" height="$height">
 <param name="movie" value="$player" />
 <param name="allowfullscreen" value="$allowfullscreen" />
+<param name="allowscriptaccess" value="$allowscriptaccess" />
+<param name="allownetworking" value="$allownetworking" />
 <param name="flashvars" value="$flashvars" />
-<!--[if !IE]>-->
-<object type="application/x-shockwave-flash" data="$player" width="$width" height="$height">
-<param name="allowfullscreen" value="$allowfullscreen" />
-<param name="flashvars" value="$flashvars" />
-<!--<![endif]-->
-<p>$get_flash</p>
-<!--[if !IE]>-->
-</object>
-<!--<![endif]-->
+<embed src="$player" width="$width" height="$height" allowfullscreen="$allowfullscreen" allowscriptaccess="$allowscriptaccess" allownetworking="$allownetworking" flashvars="$flashvars" />
 </object>
 </div></div>
 $script
 
 EOS;
-	} # display_player()
+	} # display_video()
+
+	
+	/**
+	 * display_youtube()
+	 *
+	 * @param string $file
+	 * @return string $player
+	 **/
+
+	function display_youtube($file) {
+		global $player_width;
+		global $player_height;
+		static $count = 0;
+		
+		$width = $player_width;
+		$height = round($width * 340 / 560);
+		$height = round($width * 295 / 480);
+		
+		$id = 'm' . md5($file . '_' . $count++);
+		
+		$file = parse_url($file);
+		$file = $file['query'];
+		parse_str($file, $file);
+		
+		if ( empty($file['v']) )
+			return;
+		
+		$file = $file['v'];
+		$file = preg_replace("/[^a-z0-9_-]/i", '', $file);
+		
+		if ( !$file )
+			return;
+		
+		# adjust height for youtube control
+		$height += 4;
+		
+		$player = 'http://www.youtube.com/v/' . $file;
+		
+		$script = '';
+		
+		if ( !is_feed() )
+			$script = <<<EOS
+<script type="text/javascript">
+var params = {};
+params.allowfullscreen = "$allowfullscreen";
+params.allowscriptaccess = "$allowscriptaccess";
+params.allownetworking = "$allownetworking";
+
+swfobject.embedSWF("$player", "$id", "$width", "$height", "9.0.0", false, false, params);
+</script>
+EOS;
+		
+		return <<<EOS
+
+<div class="media_container"><div class="media" style="width: {$width}px; height: {$height}px;">
+<object id="$id" classid="clsid:D27CDB6E-AE6D-11cf-96B8-444553540000" width="$width" height="$height">
+<param name="movie" value="$player" />
+<param name="allowfullscreen" value="$allowfullscreen" />
+<param name="allowscriptaccess" value="$allowscriptaccess" />
+<param name="allownetworking" value="$allownetworking" />
+<embed src="$player" width="$width" height="$height" allowfullscreen="$allowfullscreen" allowscriptaccess="$allowscriptaccess" allownetworking="$allownetworking" />
+</object>
+</div></div>
+$script
+
+EOS;
+	} # display_youtube()
 
 
 	/**
@@ -655,12 +621,10 @@ EOS;
 	 * @return string $player
 	 **/
 
-	function display_quicktime($file, $width, $height) {
+	function display_quicktime($file) {
 		if ( strpos($file, '/') === false ) {
 			$site_url = trailingslashit(site_url());
-
 			$path = mediacaster::get_path(get_the_ID());
-
 			$file = $site_url . $path . $file;
 		}
 		
@@ -679,7 +643,6 @@ EOS;
 		
 		switch ( strtolower($ext) ) {
 		case 'mov':
-		case 'mp4':
 			$site_url = trailingslashit(site_url());
 
 			$image = $file;
@@ -699,53 +662,47 @@ EOS;
 
 			break;
 		}
-
-		$id = md5($file . '_' . $GLOBALS['player_count']++);
 		
-		if ( !$image ) {
-			$height += 15; # controller
-		} else {
-			$image_size = getimagesize($image);
+		global $player_width;
+		global $player_height;
+		$width = $player_width;
+		$height = $player_height;
+		
+		static $count = 0;
+		$id = md5($file . '_' . $count++);
+		
+		$height += 16; # controller
+		$file = esc_url($file);
 
-			$width = $image_size[0];
-			$height = $image_size[1];
-		}
+		return <<<EOS
 
-		return '<div class="media_container">'
-			. '<div class="media">' . "\n"
-			. '<script type="text/javascript">' . "\n"
-			. 'var so = new QTObject("'
-				. ( $image ? esc_url($image) : esc_url($file) )
-				. '","' . $id . '","' . $width . '","' . $height . '");' . "\n"
-			. 'so.addParam("autoplay","false");' . "\n"
-			. 'so.addParam("loop","false");' . "\n"
-			. ( $image
-				? ( 'so.addParam("href", "' . esc_url($file) . '");' . "\n"
-					. 'so.addParam("target", "myself");' . "\n"
-					. 'so.addParam("controller","false");' . "\n"
-					)
-				: ( 'so.addParam("scale","tofit");' . "\n"
-					)
-				)
-			. 'so.write();' . "\n"
-			. '</script>' . "\n"
-			. '</div></div>' . "\n";
+<div class="media_container">
+<div class="media" style="width: {$width}px; height: {$height}px;">
+<script type="text/javascript">
+var so = new QTObject("$file", "$id", "$width", "$height");
+so.addParam("autoplay","false");
+so.addParam("loop","false");
+so.addParam("targetcache","true");
+so.write();
+</script>
+</div>
+</div>
+
+EOS;
 	} # display_quicktime()
 	
 	
 	/**
-	 * display_attachment()
+	 * display_file()
 	 *
 	 * @param string $file
 	 * @return string $attachment
 	 **/
 	
-	function display_attachment($file) {
+	function display_file($file) {
 		if ( strpos($file, '/') === false ) {
 			$site_url = trailingslashit(site_url());
-
 			$path = mediacaster::get_path(get_the_ID());
-
 			$file = $site_url . $path . $file;
 		}
 		
@@ -761,9 +718,9 @@ EOS;
 			. '</a>'
 			. '</div>'
 			. '</div>';
-	} # display_attachment()
-
-
+	} # display_file()
+	
+	
 	/**
 	 * catch_playlist()
 	 *
@@ -824,7 +781,7 @@ EOS;
 			$site_url = trailingslashit(site_url());
 
 			if ( $type == 'audio' ) {
-				$cover = mediacaster::get_cover($path);
+				$cover = mediacaster::get_cover();
 				if ( $cover )
 					$cover = $site_url . $cover;
 			}
@@ -953,16 +910,17 @@ EOS;
 	 **/
 
 	function get_files($path, $post_ID = null) {
-		$tag = $path . '_' . intval($post_ID);
-
-		if ( isset($GLOBALS['mediacaster_file_cache'][$tag]) ) {
-			return $GLOBALS['mediacaster_file_cache'][$tag];
-		}
+		$post_ID = (int) $post_ID;
+		
+		static $_files = array();
+		
+		if ( isset($_files[$post_ID]) )
+			return $files[$post_ID];
 
 		$site_url = trailingslashit(site_url());
 
 		if ( defined('GLOB_BRACE') ) {
-			$files = glob(ABSPATH . $path . '*.{mp3,flv,swf,m4a,mp4,m4v,mov,zip,pdf}', GLOB_BRACE);
+			$files = glob(ABSPATH . $path . '*.{mp3,flv,swf,m4a,mp4,m4v,mov,zip,gz,pdf}', GLOB_BRACE);
 		} else {
 			$files = array_merge(
 				glob(ABSPATH . $path . '*.mp3'),
@@ -992,15 +950,14 @@ EOS;
 			if ( $enclosures ) {
 				foreach ( (array) $enclosures as $enclosure ) {
 					$file = basename($enclosure);
-
 					$files[$file] = $enclosure;
 				}
 			}
 		}
 
 		ksort($files);
-
-		$GLOBALS['mediacaster_file_cache'][$tag] = $files;
+		
+		$_files[$post_ID] = $files;
 
 		return $files;
 	} # get_files()
@@ -1021,30 +978,23 @@ EOS;
 		foreach ( $files as $key => $file ) {
 			switch ( $type ) {
 			case 'flash_audios':
-				if ( strpos($key, '.mp3') !== false ) {
+				if ( strpos($key, '.mp3') !== false )
 					$podcasts[$key] = $file;
-				}
 				break;
 
 			case 'flash_videos':
-				if ( strpos($key, '.flv') !== false || strpos($key, '.swf') !== false ) {
+				if ( strpos($key, '.flv') !== false || strpos($key, '.mp4') !== false )
 					$podcasts[$key] = $file;
-				}
 				break;
 
 			case 'qt_audios':
-				if ( strpos($key, '.m4a') !== false ) {
+				if ( strpos($key, '.m4a') !== false )
 					$podcasts[$key] = $file;
-				}
 				break;
 
 			case 'qt_videos':
-				if ( strpos($key, '.m4v') !== false
-					|| strpos($key, '.mp4') !== false
-					|| strpos($key, '.mov') !== false
-					) {
+				if ( strpos($key, '.m4v') !== false || strpos($key, '.mov') !== false )
 					$podcasts[$key] = $file;
-				}
 				break;
 			}
 		}
@@ -1058,7 +1008,7 @@ EOS;
 				break;
 
 			case 'flash_videos':
-				$ext = '(?:flv|swf)';
+				$ext = '(?:flv|mp4)';
 				break;
 
 			case 'qt_audios':
@@ -1066,7 +1016,7 @@ EOS;
 				break;
 
 			case 'qt_videos':
-				$ext = '(?:mov|m4v|mp4)';
+				$ext = '(?:mov|m4v)';
 				break;
 			}
 
@@ -1084,15 +1034,13 @@ EOS;
 				$embeded
 				);
 
-			if ( $embeded ) {
+			if ( $embeded )
 				$embeded = end($embeded);
-			} else {
+			else
 				$embeded = array();
-			}
 
-			foreach ( $embeded as $key ) {
+			foreach ( $embeded as $key )
 				unset($podcasts[$key]);
-			}
 		}
 
 		return $podcasts;
@@ -1102,37 +1050,25 @@ EOS;
 	/**
 	 * get_cover()
 	 *
-	 * @param string $path
 	 * @return string $cover
 	 **/
 
-	function get_cover($path) {
-		$cover = false;
-
-		if ( !is_admin() ) {
-			$tag = get_the_ID();
-
-			if ( $GLOBALS['mediacaster_cover_cache'][$tag] ) {
-				return $GLOBALS['mediacaster_cover_cache'][$tag];
-			}
-		}
-
+	function get_cover() {
+		static $cover;
+		
+		if ( !is_admin() && isset($cover) )
+			return $cover;
+		
 		if ( defined('GLOB_BRACE') ) {
-			if ( $file = glob(ABSPATH . $path . 'cover.{jpg,jpeg,png}', GLOB_BRACE) ) {
-				$cover = $path . basename(current($file));
-			} elseif ( $file = glob(ABSPATH . 'media/cover{,-*}.{jpg,jpeg,png}', GLOB_BRACE) ) {
-				$cover = 'media/' . basename(current($file));
-			}
+			$cover = glob(ABSPATH . 'media/cover{,-*}.{jpg,jpeg,png}', GLOB_BRACE);
 		} else {
-			if ( $file = glob(ABSPATH . $path . 'cover.jpg') ) {
-				$cover = $path . basename(current($file));
-			} elseif ( $file = glob(ABSPATH . 'media/cover-*.jpg') ) {
-				$cover = 'media/' . basename(current($file));
-			}
+			$cover = glob(ABSPATH . 'media/cover-*.jpg');
 		}
-
-		if ( !is_admin() ) {
-			$GLOBALS['mediacaster_cover_cache'][$tag] = $cover;
+		
+		if ( $cover ) {
+			$cover = 'media/' . basename(current($cover));
+		} else {
+			$cover = false;
 		}
 
 		return $cover;
@@ -1146,9 +1082,9 @@ EOS;
 	 **/
 
 	function display_feed_ns() {
-		if ( !class_exists('podPress_class') && is_feed() ) {
-			echo 'xmlns:itunes="http://www.itunes.com/dtds/podcast-1.0.dtd"' . "\n\t";
-		}
+		if ( class_exists('podPress_class') || !is_feed() )
+		 	return;
+		echo 'xmlns:itunes="http://www.itunes.com/dtds/podcast-1.0.dtd"' . "\n\t";
 	} # display_feed_ns()
 
 
@@ -1159,61 +1095,53 @@ EOS;
 	 **/
 
 	function display_feed_header() {
-		if ( !class_exists('podPress_class') && is_feed() ) {
-			$options = get_option('mediacaster');
+		if ( class_exists('podPress_class') || !is_feed() )
+			return;
+		
+		$options = get_option('mediacaster');
 
-			if ( $options === false ) {
-				$options = mediacaster::regen_options();
-			}
+		$site_url = trailingslashit(site_url());
 
-			$site_url = trailingslashit(site_url());
+		echo "\n\t\t"
+			. '<copyright>&#xA9; ' . apply_filters('the_excerpt_rss', $options['itunes']['copyright']) . '</copyright>' . "\n\t\t"
+			. '<itunes:author>' . apply_filters('the_excerpt_rss', $options['itunes']['author']) . '</itunes:author>' . "\n\t\t"
+			. '<itunes:summary>' . apply_filters('the_excerpt_rss', $options['itunes']['summary']) . '</itunes:summary>' . "\n\t\t"
+			. '<itunes:explicit>' . apply_filters('the_excerpt_rss', $options['itunes']['explicit']) . '</itunes:explicit>' . "\n\t\t"
+			. '<itunes:block>' . apply_filters('the_excerpt_rss', $options['itunes']['block']) . '</itunes:block>' . "\n\t\t"
+			;
 
-			echo "\n\t\t"
-				. '<copyright>&#xA9; ' . apply_filters('the_excerpt_rss', $options['itunes']['copyright']) . '</copyright>' . "\n\t\t"
-				. '<itunes:author>' . apply_filters('the_excerpt_rss', $options['itunes']['author']) . '</itunes:author>' . "\n\t\t"
-				. '<itunes:summary>' . apply_filters('the_excerpt_rss', $options['itunes']['summary']) . '</itunes:summary>' . "\n\t\t"
-				#. '<itunes:owner>' . "\n\t\t"
-				#	. "\t" . '<itunes:name>' . $owner_name . '</itunes:name>' . "\n\t\t"
-				#	. "\t". '<itunes:email>' . $owner_email . '</itunes:email>' . "\n\t\t"
-				#. '</itunes:owner>' . "\n\t\t"
-				#. '<itunes:image href="' . $image . '" />' . "\n\t\t"
-				. '<itunes:explicit>' . apply_filters('the_excerpt_rss', $options['itunes']['explicit']) . '</itunes:explicit>' . "\n\t\t"
-				. '<itunes:block>' . apply_filters('the_excerpt_rss', $options['itunes']['block']) . '</itunes:block>' . "\n\t\t"
+		$image = 'wp-content/itunes/' . $options['itunes']['image']['name'];
+
+		if ( file_exists(ABSPATH . $image) ) {
+			echo '<itunes:image href="' . esc_url($site_url . 'wp-content/itunes/' . $options['itunes']['image']['name']) . '" />' . "\n\t\t"
 				;
+		}
 
-			$image = 'wp-content/itunes/' . $options['itunes']['image']['name'];
+		if ( $options['itunes']['category'] ) {
+			foreach ( (array) $options['itunes']['category'] as $category ) {
+				$cats = split('/', $category);
 
-			if ( file_exists(ABSPATH . $image) ) {
-				echo '<itunes:image href="' . esc_url($site_url . 'wp-content/itunes/' . $options['itunes']['image']['name']) . '" />' . "\n\t\t"
-					;
-			}
+				$cat = array_pop($cats);
 
-			if ( $options['itunes']['category'] ) {
-				foreach ( (array) $options['itunes']['category'] as $category ) {
-					$cats = split('/', $category);
+				$cat = trim($cat);
 
-					$cat = array_pop($cats);
+				if ( $cat ) {
+					$category = '<itunes:category text="' . apply_filters('the_excerpt_rss', $cat) . '" />' . "\n\t\t";
 
-					$cat = trim($cat);
+					if ( $cat = array_pop($cats) ) {
+						$cat = trim($cat);
 
-					if ( $cat ) {
-						$category = '<itunes:category text="' . apply_filters('the_excerpt_rss', $cat) . '" />' . "\n\t\t";
-
-						if ( $cat = array_pop($cats) ) {
-							$cat = trim($cat);
-
-							$category = '<itunes:category text="' . apply_filters('the_excerpt_rss', $cat) . '">' . "\n\t\t\t"
-								. $category
-								. '</itunes:category>' . "\n\t\t";
-						}
-
-						echo $category;
+						$category = '<itunes:category text="' . apply_filters('the_excerpt_rss', $cat) . '">' . "\n\t\t\t"
+							. $category
+							. '</itunes:category>' . "\n\t\t";
 					}
+
+					echo $category;
 				}
 			}
-
-			echo "\n";
 		}
+
+		echo "\n";
 	} # display_feed_header()
 
 
@@ -1332,12 +1260,12 @@ EOS;
 
 
 	/**
-	 * regen_options()
+	 * init_options()
 	 *
 	 * @return void
 	 **/
 
-	function regen_options() {
+	function init_options() {
 		global $wpdb;
 		$options = array();
 
@@ -1366,29 +1294,42 @@ EOS;
 		$options['player']['height'] = 180;
 		$options['player']['position'] = 'top';
 
-		$options['enclosures'] = '';
+		$options['compat'] = false;
 
 		update_option('mediacaster', $options);
+	} # init_options()
 
-		return $options;
-	} # regen_options()
-	
-	
+
 	/**
-	 * display_css()
+	 * admin_menu()
 	 *
 	 * @return void
 	 **/
+
+	function admin_menu() {
+		add_options_page(
+			__('Mediacaster'),
+			__('Mediacaster'),
+			'manage_options',
+			'mediacaster',
+			array('mediacaster_admin', 'edit_options')
+			);
+	} # admin_menu()
 	
-	function display_css() {
-		$folder = plugin_dir_url(__FILE__);
-		$css = $folder . 'mediacaster.css';
-		
-		wp_enqueue_style('mediacaster', $css, null, '1.6');
-	} # display_css()
+	
+	/**
+	 * meta_boxes()
+	 *
+	 * @return void
+	 **/
+
+	function meta_boxes() {
+		add_meta_box('mediacaster', 'Mediacaster', array('mediacaster_admin', 'edit_media'), 'post', 'normal');
+		add_meta_box('mediacaster', 'Mediacaster', array('mediacaster_admin', 'edit_media'), 'page', 'normal');
+	} # meta_boxes()
 } # mediacaster
 
-if ( is_admin() || strpos($_SERVER['REQUEST_URI'], 'wp-includes') !== false ) {
+function mediacaster_admin() {
 	include dirname(__FILE__) . '/mediacaster-admin.php';
 }
 
@@ -1398,6 +1339,11 @@ function load_multipart_entry() {
 }
 endif;
 
-foreach ( array('post.php', 'post-new.php', 'page.php', 'page-new.php') as $hook )
+foreach ( array('post.php', 'post-new.php', 'page.php', 'page-new.php') as $hook ) {
+	add_action("load-$hook", 'mediacaster_admin');
 	add_action("load-$hook", 'load_multipart_entry');
+	add_action("load-$hook", array('mediacaster_admin', 'init_editor'), 20);
+}
+
+add_action('load-settings_page_mediacaster', 'mediacaster_admin');
 ?>
