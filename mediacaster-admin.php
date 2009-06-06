@@ -234,7 +234,7 @@ class mediacaster_admin {
 			echo '<p style="margin-left: 2em;">[WordPressFolder]<strong>/' . $path . '</strong></p>';
 
 			$files = mediacaster::get_files($path);
-
+			
 			if ( $files ) {
 				echo '<p>'
 					. __('Media files currently include:')

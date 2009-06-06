@@ -27,7 +27,7 @@ http://www.opensource.org/licenses/gpl-2.0.php
  **/
 
 # audio:
-add_filter('the_content', array('mediacaster', 'display_players'), 0);
+add_filter('the_content', array('mediacaster', 'display_players'), 20);
 
 # playlists:
 add_filter('the_content', array('mediacaster', 'display_playlist'), 1000);
@@ -96,7 +96,7 @@ class mediacaster {
 	 **/
 
 	function disable($in = null) {
-		remove_filter('the_content', array('mediacaster', 'display_players'), 0);
+		remove_filter('the_content', array('mediacaster', 'display_players'), 20);
 		remove_filter('the_content', array('mediacaster', 'display_playlist'), 1000);
 		
 		return $in;
@@ -111,7 +111,7 @@ class mediacaster {
 	 **/
 	
 	function enable($in = null) {
-		add_filter('the_content', array('mediacaster', 'display_players'), 0);
+		add_filter('the_content', array('mediacaster', 'display_players'), 20);
 		add_filter('the_content', array('mediacaster', 'display_playlist'), 1000);
 		
 		return $in;
@@ -356,9 +356,6 @@ class mediacaster {
 	function get_flashvars($file, $image = false) {
 		$flashvars = array();
 		$flashvars['file'] = $file;
-		$flashvars['title'] = 'title';
-		$flashvars['description'] = 'description';
-		$flashvars['author'] = 'author';
 		
 		if ( $image )
 			$flashvars['image'] = $image;
@@ -397,6 +394,10 @@ class mediacaster {
 			
 			if ( $width < 360 )
 				$width = 360;
+			elseif ( $width > $player_width ) {
+				$height = round($height * $player_width / $width);
+				$width = $player_width;
+			}
 		} else {
 			$width = $player_width;
 			$height = 0;
@@ -424,25 +425,16 @@ class mediacaster {
 var params = {};
 params.allowfullscreen = "$allowfullscreen";
 params.allowscriptaccess = "$allowscriptaccess";
-//params.allownetworking = "$allownetworking";
+params.allownetworking = "$allownetworking";
 params.flashvars = "$flashvars";
-
 swfobject.embedSWF("$player", "$id", "$width", "$height", "9.0.0", false, false, params);
 </script>
 EOS;
 		
 		return <<<EOS
 
-<div class="media_container"><div class="media" style="width: {$width}px; height: {$height}px;">
-<object id="$id" classid="clsid:D27CDB6E-AE6D-11cf-96B8-444553540000" width="$width" height="$height">
-<param name="movie" value="$player" />
-<param name="allowfullscreen" value="$allowfullscreen" />
-<param name="allowscriptaccess" value="$allowscriptaccess" />
-<param name="allownetworking" value="$allownetworking" />
-<param name="flashvars" value="$flashvars" />
-<embed src="$player" width="$width" height="$height" allowfullscreen="$allowfullscreen" allowscriptaccess="$allowscriptaccess" allownetworking="$allownetworking" flashvars="$flashvars" />
-</object>
-</div></div>
+<div class="media_container"><div class="media" style="width: {$width}px; height: {$height}px;"><object id="$id" classid="clsid:D27CDB6E-AE6D-11cf-96B8-444553540000" width="$width" height="$height"><param name="movie" value="$player" /><param name="allowfullscreen" value="$allowfullscreen" /><param name="allowscriptaccess" value="$allowscriptaccess" /><param name="allownetworking" value="$allownetworking" /><param name="flashvars" value="$flashvars" /><embed src="$player" width="$width" height="$height" allowfullscreen="$allowfullscreen" allowscriptaccess="$allowscriptaccess" allownetworking="$allownetworking" flashvars="$flashvars" /></object></div></div>
+
 $script
 
 EOS;
@@ -522,23 +514,14 @@ params.allowfullscreen = "$allowfullscreen";
 params.allowscriptaccess = "$allowscriptaccess";
 params.allownetworking = "$allownetworking";
 params.flashvars = "$flashvars";
-
 swfobject.embedSWF("$player", "$id", "$width", "$height", "9.0.0", false, false, params);
 </script>
 EOS;
 		
 		return <<<EOS
 
-<div class="media_container"><div class="media" style="width: {$width}px; height: {$height}px;">
-<object id="$id" classid="clsid:D27CDB6E-AE6D-11cf-96B8-444553540000" width="$width" height="$height">
-<param name="movie" value="$player" />
-<param name="allowfullscreen" value="$allowfullscreen" />
-<param name="allowscriptaccess" value="$allowscriptaccess" />
-<param name="allownetworking" value="$allownetworking" />
-<param name="flashvars" value="$flashvars" />
-<embed src="$player" width="$width" height="$height" allowfullscreen="$allowfullscreen" allowscriptaccess="$allowscriptaccess" allownetworking="$allownetworking" flashvars="$flashvars" />
-</object>
-</div></div>
+<div class="media_container"><div class="media" style="width: {$width}px; height: {$height}px;"><object id="$id" classid="clsid:D27CDB6E-AE6D-11cf-96B8-444553540000" width="$width" height="$height"><param name="movie" value="$player" /><param name="allowfullscreen" value="$allowfullscreen" /><param name="allowscriptaccess" value="$allowscriptaccess" /><param name="allownetworking" value="$allownetworking" /><param name="flashvars" value="$flashvars" /><embed src="$player" width="$width" height="$height" allowfullscreen="$allowfullscreen" allowscriptaccess="$allowscriptaccess" allownetworking="$allownetworking" flashvars="$flashvars" /></object></div></div>
+
 $script
 
 EOS;
@@ -589,23 +572,14 @@ EOS;
 var params = {};
 params.allowfullscreen = "$allowfullscreen";
 params.allowscriptaccess = "$allowscriptaccess";
-params.allownetworking = "$allownetworking";
-
 swfobject.embedSWF("$player", "$id", "$width", "$height", "9.0.0", false, false, params);
 </script>
 EOS;
 		
 		return <<<EOS
 
-<div class="media_container"><div class="media" style="width: {$width}px; height: {$height}px;">
-<object id="$id" classid="clsid:D27CDB6E-AE6D-11cf-96B8-444553540000" width="$width" height="$height">
-<param name="movie" value="$player" />
-<param name="allowfullscreen" value="$allowfullscreen" />
-<param name="allowscriptaccess" value="$allowscriptaccess" />
-<param name="allownetworking" value="$allownetworking" />
-<embed src="$player" width="$width" height="$height" allowfullscreen="$allowfullscreen" allowscriptaccess="$allowscriptaccess" allownetworking="$allownetworking" />
-</object>
-</div></div>
+<div class="media_container"><div class="media" style="width: {$width}px; height: {$height}px;"><object id="$id" classid="clsid:D27CDB6E-AE6D-11cf-96B8-444553540000" width="$width" height="$height"><param name="movie" value="$player" /><param name="allowfullscreen" value="$allowfullscreen" /><param name="allowscriptaccess" value="$allowscriptaccess" /><embed src="$player" width="$width" height="$height" allowfullscreen="$allowfullscreen" allowscriptaccess="$allowscriptaccess" /></object></div></div>
+
 $script
 
 EOS;
@@ -673,18 +647,31 @@ EOS;
 		
 		$height += 16; # controller
 		$file = esc_url($file);
-
+		
+		$autoplay = 'false';
+		$loop = 'false';
+		$targetcache = 'true';
+		
+		$object = <<<EOS
+<object classid="clsid:02BF25D5-8C17-4B23-BC80-D3488ABDDC6B" width="$width" height="$height"><param name="src" value="$file" /><param name="autoplay" value="$autoplay" /><param name="loop" value="$loop" /><param name="loop" value="$targetcache" /><embed src="sample.mov" width="$width" height="$height" autoplay="$autoplay" loop="$loop" targetcache="$targetcache" pluginspage="http://www.apple.com/quicktime/download/" /></object>
+EOS;
+		
+		if ( !is_feed() )
+			$object = <<<EOS
+<script type="text/javascript">
+var so = new QTObject("$file", "$id", "$width", "$height");
+so.addParam("autoplay","$autoplay");
+so.addParam("loop","$loop");
+so.addParam("targetcache","$targetcache");
+so.write();
+</script><noscript>$object</noscript>
+EOS;
+		
 		return <<<EOS
 
 <div class="media_container">
 <div class="media" style="width: {$width}px; height: {$height}px;">
-<script type="text/javascript">
-var so = new QTObject("$file", "$id", "$width", "$height");
-so.addParam("autoplay","false");
-so.addParam("loop","false");
-so.addParam("targetcache","true");
-so.write();
-</script>
+$object
 </div>
 </div>
 
@@ -915,7 +902,7 @@ EOS;
 		static $_files = array();
 		
 		if ( isset($_files[$post_ID]) )
-			return $files[$post_ID];
+			return $_files[$post_ID];
 
 		$site_url = trailingslashit(site_url());
 
@@ -1181,6 +1168,9 @@ EOS;
 					break;
 				case 'mov':
 					$mime = 'video/quicktime';
+					break;
+				case 'flv':
+					$mime = 'video/x-flv';
 					break;
 				case 'pdf':
 					$mime = 'application/pdf';
