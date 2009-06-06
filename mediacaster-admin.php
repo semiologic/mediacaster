@@ -78,7 +78,7 @@ class mediacaster_admin {
 					. "</div>\n";
 			} else {
 				if ( defined('GLOB_BRACE') ) {
-					if ( $cover = glob(ABSPATH . 'uploads/cover{,-*}.{jpg,jpeg,png}', GLOB_BRACE) ) {
+					if ( $cover = glob(ABSPATH . 'media/cover{,-*}.{jpg,jpeg,png}', GLOB_BRACE) ) {
 						$cover = current($cover);
 						@unlink($cover);
 					}
