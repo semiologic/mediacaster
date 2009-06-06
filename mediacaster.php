@@ -3,7 +3,7 @@
 Plugin Name: Mediacaster
 Plugin URI: http://www.semiologic.com/software/mediacaster/
 Description: Lets you add podcasts and videos to your site's posts and pages.
-Version: 1.6 beta
+Version: 2.0 alpha
 Author: Denis de Bernardy
 Author URI: http://www.getsemiologic.com
 Text Domain: mediacaster-info
@@ -47,7 +47,6 @@ if ( !is_admin() ) {
 	add_action('wp_print_styles', array('mediacaster', 'styles'));
 } else {
 	add_action('admin_menu', array('mediacaster', 'admin_menu'));
-	add_action('admin_menu', array('mediacaster', 'meta_boxes'), 20);
 }
 
 add_filter('get_the_excerpt', array('mediacaster', 'disable'), 0);
@@ -56,18 +55,20 @@ add_filter('get_the_excerpt', array('mediacaster', 'enable'), 20);
 if ( get_option('mediacaster') === false )
 	mediacaster::init_options();
 
-add_action('init', array('mediacaster', 'init'));
-
 class mediacaster {
 	/**
-	 * init()
+	 * get_player_size()
 	 *
 	 * @return void
 	 **/
 
-	function init() {
-		global $player_width;
-		global $player_height;
+	function get_player_size() {
+		static $player_width;
+		static $player_height;
+		
+		if ( isset($player_width) && isset($player_height) )
+			return compact('player_width', 'player_height');
+		
 		global $content_width;
 		
 		$o = get_option('mediacaster');
@@ -85,7 +86,9 @@ class mediacaster {
 			else
 				$player_height = round($player_width * 3 / 4);
 		}
-	} # init()
+		
+		return compact('player_width', 'player_height');
+	} # get_player_size()
 	
 	
 	/**
@@ -384,7 +387,7 @@ class mediacaster {
 			$file = $site_url . $path . $file;
 		}
 		
-		global $player_width;
+		extract(mediacaster::get_player_size());
 		static $count = 0;
 		
 		if ( $cover = mediacaster::get_cover() ) {
@@ -401,6 +404,11 @@ class mediacaster {
 		} else {
 			$width = $player_width;
 			$height = 0;
+		}
+		
+		if ( $width > 420 ) {
+			$height = round($height * 420 / $width);
+			$width = 420;
 		}
 		
 		$height += 59;
@@ -455,8 +463,7 @@ EOS;
 			$file = $site_url . $path . $file;
 		}
 		
-		global $player_width;
-		global $player_height;
+		extract(mediacaster::get_player_size());
 		static $count = 0;
 		
 		$width = $player_width;
@@ -536,12 +543,10 @@ EOS;
 	 **/
 
 	function display_youtube($file) {
-		global $player_width;
-		global $player_height;
+		extract(mediacaster::get_player_size());
 		static $count = 0;
 		
 		$width = $player_width;
-		$height = round($width * 340 / 560);
 		$height = round($width * 295 / 480);
 		
 		$id = 'm' . md5($file . '_' . $count++);
@@ -637,8 +642,7 @@ EOS;
 			break;
 		}
 		
-		global $player_width;
-		global $player_height;
+		extract(mediacaster::get_player_size());
 		$width = $player_width;
 		$height = $player_height;
 		
@@ -1305,35 +1309,14 @@ EOS;
 			array('mediacaster_admin', 'edit_options')
 			);
 	} # admin_menu()
-	
-	
-	/**
-	 * meta_boxes()
-	 *
-	 * @return void
-	 **/
-
-	function meta_boxes() {
-		add_meta_box('mediacaster', 'Mediacaster', array('mediacaster_admin', 'edit_media'), 'post', 'normal');
-		add_meta_box('mediacaster', 'Mediacaster', array('mediacaster_admin', 'edit_media'), 'page', 'normal');
-	} # meta_boxes()
 } # mediacaster
 
 function mediacaster_admin() {
 	include dirname(__FILE__) . '/mediacaster-admin.php';
 }
 
-if ( !function_exists('load_multipart_entry') ) :
-function load_multipart_entry() {
-	include dirname(__FILE__) . '/multipart-entry/multipart-entry.php';
-}
-endif;
-
-foreach ( array('post.php', 'post-new.php', 'page.php', 'page-new.php') as $hook ) {
+foreach ( array('settings_page_mediacaster',
+	'post.php', 'post-new.php', 'page.php', 'page-new.php',
+	'media-upload.php', 'upload.php', 'async-upload.php', 'media.php') as $hook )
 	add_action("load-$hook", 'mediacaster_admin');
-	add_action("load-$hook", 'load_multipart_entry');
-	add_action("load-$hook", array('mediacaster_admin', 'init_editor'), 20);
-}
-
-add_action('load-settings_page_mediacaster', 'mediacaster_admin');
 ?>

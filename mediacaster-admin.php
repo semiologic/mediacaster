@@ -7,376 +7,11 @@
 
 add_action('settings_page_mediacaster', array('mediacaster_admin', 'save_options'), 0);
 
-add_action('save_post', array('mediacaster_admin', 'update_path'), 20);
-add_action('save_post', array('mediacaster_admin', 'save_media'), 30);
+add_filter('upload_mimes', array('mediacaster_admin', 'upload_mimes'));
+add_filter('attachment_fields_to_edit', array('mediacaster_admin', 'attachment_fields_to_edit'), 20, 2);
+add_filter('media_send_to_editor', array('mediacaster_admin', 'media_send_to_editor'), 20, 3);
 
 class mediacaster_admin {
-	/**
-	 * init_editor()
-	 *
-	 * @return void
-	 **/
-
-	function init_editor() {
-		add_action('admin_head', array('mediacaster_admin', 'display_js_files'), 0);
-		add_filter('admin_footer', array('mediacaster_admin', 'quicktag'));
-		add_filter('mce_external_plugins', array('mediacaster_admin', 'editor_plugin'));
-		add_filter('mce_buttons_4', array('mediacaster_admin', 'editor_button'));
-	} # init_editor()
-	
-	
-	/**
-	 * update_path()
-	 *
-	 * @param int $post_ID
-	 * @return void
-	 **/
-
-	function update_path($post_ID) {
-		$post = get_post($post_ID);
-		
-		if ( $post->post_type == 'revision' )
-			return;
-		
-		
-		$old = get_post_meta($post_ID, '_mediacaster_path', true);
-		$new = mediacaster::get_path($post_ID);
-
-		if ( $old && $old != $new ) {
-			mediacaster_admin::create_path(dirname($new));
-
-			@rename(ABSPATH . $old, ABSPATH . $new);
-			#die();
-		}
-
-		delete_post_meta($post_ID, '_mediacaster_path');
-		add_post_meta($post_ID, '_mediacaster_path', $new, true);
-
-		return $post_ID;
-	} # update_path()
-
-
-	/**
-	 * save_media()
-	 *
-	 * @param int $post_ID
-	 * @return void
-	 **/
-
-	function save_media($post_ID) {
-		$post = get_post($post_ID);
-		
-		if ( $post->post_type == 'revision' ) return;
-		
-		
-		global $wpdb;
-		
-		$path = mediacaster::get_path($post_ID);
-		mediacaster_admin::create_path($path);
-		#var_dump($path);
-		#die;
-
-		if ( current_user_can('upload_files') ) {
-			foreach ( array_keys((array) $_POST['delete_media']) as $key ) {
-				$key = @stripslashes(html_entity_decode(urldecode($key), ENT_COMPAT, get_option('blog_charset')));
-				
-				preg_match("/\.([^.]+)$/", $key, $ext); 
-				$ext = end($ext);
-
-				@unlink(ABSPATH . $path . $key);
-				unset($_POST['update_media'][$key]);
-
-				$post_content = $wpdb->get_var("
-						SELECT	post_content
-						FROM	$wpdb->posts
-						WHERE	ID = " . intval($post_ID) . "
-						");
-				
-				$post_content = str_replace('[media:' . $key . ']', '', $post_content);
-				
-				$wpdb->query("
-						UPDATE	$wpdb->posts
-						SET		post_content = '" . $wpdb->escape($post_content) . "'
-						WHERE	ID = " . intval($post_ID) . "
-						");
-
-				if ( in_array(strtolower($ext), array('flv', 'swf', 'mov', 'mp4', 'm4v', 'm4a')) ) {
-					$image = basename($key, '.' . $ext);
-
-					if ( defined('GLOB_BRACE') ) {
-						if ( $image = glob(ABSPATH . $path . $image . '.{jpg,jpeg,png}', GLOB_BRACE) ) {
-							$image = current($image);
-							@unlink($image);
-						}
-					} else {
-						if ( $image = glob(ABSPATH . $path . $image . '.jpg') ) {
-							$image = current($image);
-							@unlink($image);
-						}
-					}
-				}
-			}
-
-			foreach ( (array) $_POST['update_media'] as $old => $new ) {
-				$old = stripslashes(html_entity_decode(urldecode($old)));
-				$new = strip_tags(stripslashes($new));
-				$new = str_replace(array("<", ">", "&", "%", "/"), "", $new);
-				$new = preg_replace("/\s+/", " ", $new);
-				
-				if ( $old != $new ) {
-					@rename(ABSPATH . $path . $old, ABSPATH . $path . $new);
-					
-					$post_content = $wpdb->get_var("
-							SELECT	post_content
-							FROM	$wpdb->posts
-							WHERE	ID = " . intval($post_ID) . "
-							");
-					
-					$post_content = str_replace('[media:' . $old . ']', '[media:' . $new . ']', $post_content);
-					
-					$wpdb->query("
-							UPDATE	$wpdb->posts
-							SET		post_content = '" . $wpdb->escape($post_content) . "'
-							WHERE	ID = " . intval($post_ID) . "
-							");
-					
-					preg_match("/\.([^.]+)$/", $old, $ext); 
-					$ext = end($ext);
-
-					if ( in_array(strtolower($ext), array('flv', 'swf', 'mov', 'mp4', 'm4v', 'm4a')) ) {
-						$old_name = basename($old, '.' . $ext);
-						$new_name = basename($new, '.' . $ext);
-
-						if ( defined('GLOB_BRACE') ) {
-							if ( $image = glob(ABSPATH . $path . $old_name . '.{jpg,jpeg,png}', GLOB_BRACE) ) {
-								$image = current($image);
-								
-								preg_match("/\.([^.]+)$/", $image, $ext); 
-								$ext = end($ext);
-								$ext = strtolower($ext);
-
-								$old_name = basename($image, '.' . $ext);
-
-								@rename(ABSPATH . $path . $old_name . '.' . $ext, ABSPATH . $path . $new_name . '.' . $ext);
-							}
-						} else {
-							if ( $image = glob(ABSPATH . $path . $old_name . '.jpg') ) {
-								$image = current($image);
-
-								preg_match("/\.([^.]+)$/", $image, $ext); 
-								$ext = end($ext);
-								$ext = strtolower($ext);
-
-								$old_name = basename($image, '.' . $ext);
-
-								@rename(ABSPATH . $path . $old_name . '.' . $ext, ABSPATH . $path . $new_name . '.' . $ext);
-							}
-						}
-					}
-				}
-			}
-
-			if ( $_FILES['new_media'] ) {
-				$tmp_name = $_FILES['new_media']['tmp_name'];
-				$new_name = strip_tags(stripslashes($_FILES['new_media']['name']));
-				$new_name = str_replace(array("<", ">", "&", "%", "/"), "", $new_name);
-				$new_name = preg_replace("/\s+/", " ", $new_name);
-				$new_name = ABSPATH . $path . $new_name;
-				
-				preg_match("/\.([^.]+)$/", $new_name, $ext); 
-				$ext = end($ext);
-				$new_name = str_replace('.' . $ext, '.' . strtolower($ext), $new_name);
-				$ext = strtolower($ext);
-
-				if ( in_array(
-						$ext,
-						array(
-							'jpg', 'jpeg', 'png',
-							'mp3', 'm4a',
-							'mp4', 'm4v', 'mov', 'flv', 'swf',
-							'pdf', 'zip', 'gz'
-							)
-						)
-					) {
-					@move_uploaded_file($tmp_name, $new_name);
-					@chmod($new_name, 0666);
-				}
-			}
-
-			#echo '<pre>';
-			#var_dump($_POST['update_media']);
-			#var_dump($_FILES['new_media']);
-			#echo '</pre>';
-			#die;
-		}
-
-		return $post_ID;
-	} # save_media()
-
-
-	/**
-	 * edit_media()
-	 *
-	 * @param object $post
-	 * @return void
-	 **/
-
-	function edit_media($post) {
-		$post_ID = $post->ID;
-
-		if ( $post_ID > 0 ) {
-			echo '<p>'
-				. __('To attach media to this entry, either use the file uploader below or drop files into the following folder using ftp software:')
-				. '</p>';
-
-			$path = mediacaster::get_path($post_ID);
-
-			echo '<p style="margin-left: 2em;">[WordPressFolder]<strong>/' . $path . '</strong></p>';
-
-			$files = mediacaster::get_files($path);
-			
-			if ( $files ) {
-				echo '<p>'
-					. __('Media files currently include:')
-					. '</p>';
-
-				foreach ( (array) $files as $key => $file ) {
-					$name = $key;
-					$key = str_replace(
-							array("\\", "'"),
-							array("\\\\", "\\'"),
-							htmlentities($key)
-							);
-					$key = urlencode($key);
-					
-					preg_match("/\.([^.]+)$/", $name, $ext); 
-					$ext = end($ext);
-					
-					if ( in_array($ext, array('flv', 'swf', 'mov', 'mp4', 'm4a', 'm4v')) ) {
-						$file_name = basename($name, '.' . $ext);
-						
-						if ( defined('GLOB_BRACE') ) {
-							if ( $img_cover = glob(ABSPATH . $path . $file_name . '.{jpg,jpeg,png}', GLOB_BRACE) ) {
-								$img_cover = current($img_cover);
-							} else {
-								$img_cover = dirname(__FILE__) . '/tinymce/images/video.gif';
-							}
-						} else {
-							if ( $img_cover = glob(ABSPATH . $path . $file_name . '.jpg') ) {
-								$img_cover = current($img_cover);
-							} else {
-								$img_cover = dirname(__FILE__) . '/tinymce/images/video.gif';
-							}
-						}
-					} else {
-						$img_cover = false;
-					}
-
-					echo '<div style="margin: 1em 0px;">'
-						. ( $img_cover
-							? ( '<img src="'
-								. esc_url(str_replace(ABSPATH, trailingslashit(site_url()), $img_cover))
-								. '" />' . '<br />'
-								)
-							: ''
-							)
-						. '<input type="text" tabindex="4" style="width: 320px;"'
-							. ' name=update_media[' . $key . ']'
-							. ' value="' . esc_attr($name) . '"'
-							. ( !current_user_can('upload_files') ? ' disabled="disabled"' : '' )
-							. ' />'
-						. '&nbsp;'
-						. '<label>'
-							. '<input type="checkbox" tabindex="4"'
-								. ' name=delete_media[' . $key . ']'
-								. ( !current_user_can('upload_files') ? ' disabled="disabled"' : '' )
-								. ' />'
-							. '&nbsp;'
-							. __('Delete')
-							. '</label>'
-						. '</div>' . "\n";
-				}
-				
-				if ( current_user_can('upload_files') ) {
-					echo '<p>'
-						. '<input type="submit" name="save" class="button" tabindex="4"'
-						. ' value="' . esc_attr(__('Save')) . '"'
-						. ' />'
-						. '</p>';
-				}
-			} else {
-				mediacaster_admin::create_path($path);
-			}
-		}
-
-		if ( current_user_can('upload_files') ) {
-			echo '<p>'
-				. __('Enter a file to add new media (this can take a while if the file is large)') . ':'
-				. '</p>';
-
-			echo '<ul class="ul-square">'
-				. '<li>'
-					. '<input type="file" tabindex="4"'
-					. ' id="new_media" name="new_media"'
-					. ' />'
-					. ' '
-					. '<input type="submit" name="save" class="button" tabindex="4"'
-					. ' value="' . esc_attr(__('Save')) . '"'
-					. ' />'
-				. '</li>'
-				. '</ul>';
-
-			echo '<p>'
-				. __('Tips') . ':'
-				. '</p>'
-				. '<ul class="ul-square">'
-				. '<li>'
-				. __('Supported formats include .mp3, .flv, .swf, .m4a, .mp4, .m4v, .mov, .pdf, .zip and .gz.')
-				. '</li>'
-				. '<li>'
-				. __('Upload a .jpg or .png image named after your video to use it as the cover for that video. <i>e.g.</i> myvideo.jpg for myvideo.swf or myvideo.mov.')
-				. '</li>'
-				. '<li>'
-				. __('Your media folder must be writable by the server for any of this to work at all.')
-				. '</li>'
-				. '<li>'
-				. sprintf(__('Maximum file size is %s based on your server\'s configuration.'), wp_convert_bytes_to_hr(apply_filters('import_upload_size_limit', wp_max_upload_size())))
-				. '</li>'
-				. '<li>'
-				. __('If you\'re uploading <a href="http://go.semiologic.com/camtasia">Camtasia</a> videos, upload <em>only</em> the video file (swf, flv, mov...). The other files created by Camtasia are for use in a standalone web page.')
-				. '</li>'
-				. '</ul>';
-
-			if ( !defined('GLOB_BRACE') ) {
-				echo '<p>' . __('Notice: GLOB_BRACE is an undefined constant on your server. Non .jpg images will be ignored.') . '</p>';
-			}
-		}
-	} # edit_media()
-
-
-	/**
-	 * create_path()
-	 *
-	 * @param string $path
-	 * @return void
-	 **/
-
-	function create_path($path) {
-		if ( $path ) {
-			if ( !file_exists(ABSPATH . $path) ) {
-				$parent = dirname($path);
-
-				mediacaster_admin::create_path($parent);
-
-				if ( is_writable(ABSPATH . $parent) ) {
-					@mkdir(ABSPATH . $path);
-					@chmod(ABSPATH . $path, 0777);
-				}
-			}
-		}
-	} # create_path()
-
-
 	/**
 	 * strip_tags_rec()
 	 *
@@ -420,48 +55,9 @@ class mediacaster_admin {
 			}
 		}
 
-		if ( isset($_POST['delete_itunes']) ) {
-			$options = get_option('mediacaster');
-
-			$itunes_image = WP_CONTENT_DIR . '/itunes/' . $options['itunes']['image']['name'];
-
-			@unlink($itunes_image);
-		}
-
 		$options = $_POST['mediacaster'];
 
 		$options = mediacaster_admin::strip_tags_rec($options);
-		
-		if ( @ $_FILES['mediacaster']['name']['itunes']['image']['new'] ) {
-			$name =& $_FILES['mediacaster']['name']['itunes']['image']['new'];
-			$tmp_name =& $_FILES['mediacaster']['tmp_name']['itunes']['image']['new'];
-			
-			$name = strip_tags(stripslashes($name));
-			
-			preg_match("/\.([^.]+)$/", $name, $ext); 
-			$ext = end($ext);
-			
-			if ( !in_array(strtolower($ext), array('jpg', 'jpeg', 'png')) ) {
-				echo '<div class="error">'
-					. "<p>"
-						. "<strong>"
-						. __('Invalid File Type.')
-						. "</strong>"
-					. "</p>\n"
-					. "</div>\n";
-			} else {
-				$options['itunes']['image']['counter'] = $options['itunes']['image']['counter'] + 1;
-				$options['itunes']['image']['name'] = $options['itunes']['image']['counter'] . '_' . $name;
-
-				$new_name = WP_CONTENT_DIR . '/itunes/' . $options['itunes']['image']['name'];
-
-				@mkdir(WP_CONTENT_DIR . '/itunes');
-				@chmod(WP_CONTENT_DIR . '/itunes', 0777);
-
-				@move_uploaded_file($tmp_name, $new_name);
-				@chmod($new_name, 0666);
-			}
-		}
 
 		if ( @ $_FILES['new_cover']['name'] ) {
 			$name =& $_FILES['new_cover']['name'];
@@ -482,7 +78,7 @@ class mediacaster_admin {
 					. "</div>\n";
 			} else {
 				if ( defined('GLOB_BRACE') ) {
-					if ( $cover = glob(ABSPATH . 'media/cover{,-*}.{jpg,jpeg,png}', GLOB_BRACE) ) {
+					if ( $cover = glob(ABSPATH . 'uploads/cover{,-*}.{jpg,jpeg,png}', GLOB_BRACE) ) {
 						$cover = current($cover);
 						@unlink($cover);
 					}
@@ -502,13 +98,11 @@ class mediacaster_admin {
 				$new_name = ABSPATH . 'media/cover-' . $entropy . '.' . $ext;
 
 				@move_uploaded_file($tmp_name, $new_name);
-				@chmod($new_name, 0666);
+				$stat = stat(dirname($new_name));
+				$perms = $stat['mode'] & 0000666;
+				@chmod($new_name, $perms);
 			}
 		}
-
-		#echo '<pre>';
-		#var_dump($options);
-		#echo '</pre>';
 		
 		update_option('mediacaster', $options);
 		
@@ -662,26 +256,6 @@ class mediacaster_admin {
 		echo '</td>'
 			. '</tr>';
 		
-		echo '<tr valign="top">'
-			. '<th scope="row">'
-			. __('Compatibility Mode')
-			. '</th>'
-			. '<td>'
-			. '<label>'
-			. '<input type="checkbox"'
-				. ' name="mediacaster[compat]"'
-				. ' value="top"'
-				. ( !isset($options['compat']) || isset($options['compat']) && $options['compat']
-					? ' checked="checked"'
-					: ''
-					)
-				. ' />'
-			. '&nbsp;'
-			. esc_html(__('Process code inserted using the Audio Player and FLV Player plugins'))
-			. '</label>'
-			. '</td>'
-			. '</tr>' . "\n";
-		
 		echo '</table>';
 
 		echo '<p class="submit">'
@@ -733,7 +307,7 @@ class mediacaster_admin {
 				. '</tr>' . "\n";
 
 
-			echo '<tr valign="rop">'
+			echo '<tr valign="top">'
 				. '<th scope="row">'
 					. __('Categories')
 				. '</th>'
@@ -763,58 +337,6 @@ class mediacaster_admin {
 
 			echo '</td>'
 			 	. '</tr>' . "\n";
-
-
-			echo '<tr valign="top">'
-				. '<th scope="row">'
-					. __('Itunes Cover') . ':'
-				. '</th>'
-				. '<td>'
-				. '<input type="hidden"'
-					. ' id="mediacaster-itunes-image-counter" name="mediacaster[itunes][image][counter]"'
-					. ' value="' . intval($options['itunes']['image']['counter']) . '"'
-					. ' />' . "\n"
-				. '<input type="hidden"'
-					. ' id="mediacaster-itunes-image-name" name="mediacaster[itunes][image][name]"'
-					. ' value="' . esc_attr($options['itunes']['image']['name']) . '"'
-					. ' />' . "\n";
-			
-			if ( file_exists(WP_CONTENT_DIR . '/itunes/' . $options['itunes']['image']['name']) ) {
-				echo '<div style="margin-bottom: 6px;">';
-
-				echo '<img src="'
-							. esc_url($site_url
-								. 'wp-content/itunes/'
-								. $options['itunes']['image']['name'])
-							. '"'
-						. ' />' . '<br />' . "\n";
-				
-				if ( is_writable(WP_CONTENT_DIR . '/itunes/' . $options['itunes']['image']['name']) ) {
-					echo '<label for="delete_itunes">'
-						. '<input type="checkbox"'
-							. ' id="delete_itunes" name="delete_itunes"'
-							. ' style="text-align: left; width: auto;"'
-							. ' />'
-						. '&nbsp;'
-						. __('Delete')
-						. '</label>';
-				} elseif ( file_exists(WP_CONTENT_DIR . '/itunes/' . $options['itunes']['image']['name']) ) {
-					echo __('This cover is not writable by the server.');
-				}
-				
-				echo '</div>';
-			}
-
-			echo '<label for="mediacaster-itunes-image-new">'
-					. __('New Image (jpg or png)') . ':'
-					. '</label>'
-				. '<br />' . "\n"
-				. '<input type="file"'
-					. ' id="mediacaster-itunes-image-new" name="mediacaster[itunes][image][new]"'
-					. ' />' . "\n";
-			
-			echo '</td>'
-				. '</tr>';
 			
 
 			echo '<tr valign="top">'
@@ -1126,5 +648,142 @@ document.mediacasterFiles = mediacasterFiles;
 
 		return $plugin_array;
 	} # editor_plugin()
+	
+	
+	/**
+	 * upload_mimes()
+	 *
+	 * @param array $mines
+	 * @return array $mines
+	 **/
+
+	function upload_mimes($mimes) {
+		if ( !isset($mimes['flv']) )
+			$mimes['flv'] = 'video/x-flv';
+		return $mimes;
+	} # upload_mimes()
+	
+	
+	/**
+	 * attachment_fields_to_edit()
+	 *
+	 * @param array $post_fields
+	 * @param object $post
+	 * @return array $post_fields
+	 **/
+
+	function attachment_fields_to_edit($post_fields, $post) {
+		$file_url = wp_get_attachment_url($post->ID);
+		
+		if ( !preg_match("/\.([^\.]+)$/", $file_url, $ext) )
+			return $post_fields;
+		$ext = esc_attr(strtolower(end($ext)));
+		
+		switch ( $post->post_mime_type ) {
+		case 'audio/mpeg':
+		case 'video/mpeg':
+		case 'video/x-flv':
+			unset($post_fields['post_excerpt']);
+			if ( !in_array($ext, array('mp3', 'mp4', 'flv')) ) {
+				unset($post_fields['url']);
+				break;
+			}
+			
+			$post_fields['url']['html'] = preg_split("/<br/", $post_fields['url']['html']);
+			$post_fields['url']['html'] = $post_fields['url']['html'][0];
+			$bad_urls = array();
+			$bad_urls[] = $file_url;
+			$bad_urls[] = get_permalink($post->ID);
+			if ( $post->post_parent )
+				$bad_urls[] = get_permalink($post->post_parent);
+			foreach ( $bad_urls as $k => $bad_url )
+				$bad_urls[$k] = " value='" . esc_url($bad_url) . "'";
+			$post_fields['url']['html'] = str_replace($bad_urls, " value=''", $post_fields['url']['html']);
+			$post_fields['url']['helps'] = 'The link URL to which the player should direct users to (e.g. an affiliate link).';
+			break;
+		
+		case 'video/quicktime':
+			unset($post_fields['post_excerpt']);
+			unset($post_fields['url']);
+			break;
+		
+		default:
+			if ( !preg_match("/^(?:application|text)\//", $post->post_mime_type) )
+				break;
+			unset($post_fields['post_excerpt']);
+			unset($post_fields['url']);
+		}
+		
+		return $post_fields;
+	} # attachment_fields_to_edit()
+	
+	
+	/**
+	 * media_send_to_editor()
+	 *
+	 * @param string $html
+	 * @param int $send_id
+	 * @param array $attachment
+	 * @return string $html
+	 **/
+
+	function media_send_to_editor($html, $send_id, $attachment) {
+		if ( preg_match("/^\[/", $html) )
+			return $html;
+		
+		$send_id = intval($send_id);
+		$post = get_post($send_id);
+		
+		$file_url = wp_get_attachment_url($post->ID);
+		if ( !preg_match("/\.([^\.]+)$/", $file_url, $ext) )
+			return $html;
+		$ext = esc_attr(strtolower(end($ext)));
+		
+		$add_link = !empty($attachment['url'])
+			&& !preg_match("/^" . preg_quote(get_option('home'), '/') . "$/ix", $attachment['url']);
+		
+		if ( $add_link )
+			$link = ' link="' . esc_url_raw($attachment['url']) . '"';
+		else
+			$link = '';
+		
+		switch ( $post->post_mime_type ) {
+		case 'audio/mpeg':
+			if ( $ext == 'mp3' )
+				$html = '[media id="' . $send_id . '" type="mp3"' . $link . ']'
+					. $attachment['post_title'] . '[/media]';
+			else
+				$html = '[media id="' . $send_id . '" type="m4a"]'
+					. $attachment['post_title'] . '[/media]';
+			break;
+		
+		case 'video/mpeg':
+			if ( $ext == 'mp4' )
+				$html = '[media id="' . $send_id . '" type="mp4"' . $link . ']'
+					. $attachment['post_title'] . '[/media]';
+			else
+				$html = '[media id="' . $send_id . '" type="m4v"]'
+					. $attachment['post_title'] . '[/media]';
+			break;
+		
+		case 'video/x-flv':
+			$html = '[media id="' . $send_id . '" type="flv"' . $link . ']'
+				. $attachment['post_title'] . '[/media]';
+			break;
+		
+		case 'video/quicktime':
+			$html = '[media id="' . $send_id . '" type="' . $ext . '"]'
+				. $attachment['post_title'] . '[/media]';
+			break;
+		
+		default:
+			if ( !preg_match("/^(?:application|text)\//", $post->post_mime_type) )
+				break;
+			$html = '[media id="' . $send_id . '" type="' . $ext . '"]'
+				. $attachment['post_title'] . '[/media]';
+		}
+		
+		return $html;
+	} # media_send_to_editor()
 } # mediacaster_admin
 ?>
