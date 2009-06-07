@@ -11,6 +11,12 @@ add_filter('upload_mimes', array('mediacaster_admin', 'upload_mimes'));
 add_filter('attachment_fields_to_edit', array('mediacaster_admin', 'attachment_fields_to_edit'), 20, 2);
 add_filter('media_send_to_editor', array('mediacaster_admin', 'media_send_to_editor'), 20, 3);
 
+add_filter('type_url_form_audio', array('mediacaster_admin', 'type_url_form_audio'));
+add_filter('audio_send_to_editor_url', array('mediacaster_admin', 'audio_send_to_editor_url'), 10, 3);
+
+add_filter('type_url_form_video', array('mediacaster_admin', 'type_url_form_video'));
+add_filter('video_send_to_editor_url', array('mediacaster_admin', 'video_send_to_editor_url'), 10, 3);
+
 class mediacaster_admin {
 	/**
 	 * strip_tags_rec()
@@ -543,7 +549,7 @@ class mediacaster_admin {
 	function attachment_fields_to_edit($post_fields, $post) {
 		$file_url = wp_get_attachment_url($post->ID);
 		
-		if ( !preg_match("/\.([^\.]+)$/", $file_url, $ext) )
+		if ( !preg_match("/\.([a-z0-9]+)$/i", $file_url, $ext) )
 			return $post_fields;
 		$ext = esc_attr(strtolower(end($ext)));
 		
@@ -603,9 +609,9 @@ class mediacaster_admin {
 		$post = get_post($send_id);
 		
 		$file_url = wp_get_attachment_url($post->ID);
-		if ( !preg_match("/\.([^\.]+)$/", $file_url, $ext) )
+		if ( !preg_match("/\.([a-z0-9]+)$/i", $file_url, $ext) )
 			return $html;
-		$ext = esc_attr(strtolower(end($ext)));
+		$ext = strtolower(end($ext));
 		
 		$add_link = !empty($attachment['url'])
 			&& !preg_match("/^" . preg_quote(get_option('home'), '/') . "$/ix", $attachment['url']);
@@ -653,5 +659,174 @@ class mediacaster_admin {
 		
 		return $html;
 	} # media_send_to_editor()
+	
+	
+	/**
+	 * type_url_form_audio()
+	 *
+	 * @param string $html
+	 * @return string $html
+	 **/
+
+	function type_url_form_audio($html) {
+			return '
+			<table class="describe"><tbody>
+				<tr>
+					<th valign="top" scope="row" class="label">
+						<span class="alignleft"><label for="insertonly[href]">' . __('Audio File URL') . '</label></span>
+						<span class="alignright"><abbr title="required" class="required">*</abbr></span>
+					</th>
+					<td class="field"><input id="insertonly[href]" name="insertonly[href]" value="" type="text" aria-required="true"></td>
+				</tr>
+				<tr>
+					<th valign="top" scope="row" class="label">
+						<span class="alignleft"><label for="insertonly[title]">' . __('Title') . '</label></span>
+						<span class="alignright"><abbr title="required" class="required">*</abbr></span>
+					</th>
+					<td class="field"><input id="insertonly[title]" name="insertonly[title]" value="" type="text" aria-required="true"></td>
+				</tr>
+				<tr><td></td><td class="help">' . __('Link text, e.g. &#8220;Still Alive by Jonathan Coulton&#8221;') . '</td></tr>
+				<tr>
+				<tr>
+					<th valign="top" scope="row" class="label">
+						<span class="alignleft"><label for="insertonly[url]">' . __('Link URL') . '</label></span>
+					</th>
+					<td class="field"><input id="insertonly[url]" name="insertonly[url]" value="" type="text"></td>
+				</tr>
+				<tr><td></td><td class="help">' . __('The link URL to which the player should direct users to (e.g. an affiliate link). (Applies to mp3 files and playlists only.)') . '</td></tr>
+				<tr>
+					<td></td>
+					<td>
+						<input type="submit" class="button" name="insertonlybutton" value="' . esc_attr__('Insert into Post') . '" />
+					</td>
+				</tr>
+			</tbody></table>
+		';
+	} # type_url_form_audio()
+	
+	
+	/**
+	 * audio_send_to_editor_url()
+	 *
+	 * @param string $html
+	 * @param string $href
+	 * @param string $title
+	 * @return string $html
+	 **/
+
+	function audio_send_to_editor_url($html, $href, $title) {
+		$title = stripslashes($_POST['insertonly']['title']);
+		$href = esc_url_raw(stripslashes($_POST['insertonly']['href']));
+
+		if ( preg_match("/\bm4a\b/i", $href) ) {
+			$html = '[media href="' . $href . '" type="m4a"]' . $title . '[/media]';
+		} elseif ( preg_match("/\b(mp3|rss2?|xml)\b/i", $href) ) {
+			$link = trim(stripslashes($_POST['insertonly']['url']));
+			$link = $link ? ( ' link="' . esc_url_raw($link) . '"' ) : '';
+			$html = '[media href="' . $href . '" type="mp3"' . $link . ']' . $title . '[/media]';
+		}
+		
+		return $html;
+	} # audio_send_to_editor_url()
+	
+	
+	/**
+	 * type_url_form_video()
+	 *
+	 * @param string $html
+	 * @return string $html
+	 **/
+
+	function type_url_form_video($html) {
+			return '
+			<table class="describe"><tbody>
+				<tr>
+					<th valign="top" scope="row" class="label">
+						<span class="alignleft"><label for="insertonly[href]">' . __('Video URL') . '</label></span>
+						<span class="alignright"><abbr title="required" class="required">*</abbr></span>
+					</th>
+					<td class="field"><input id="insertonly[href]" name="insertonly[href]" value="" type="text" aria-required="true"></td>
+				</tr>
+				<tr>
+					<th valign="top" scope="row" class="label">
+						<span class="alignleft"><label for="insertonly[title]">' . __('Title') . '</label></span>
+						<span class="alignright"><abbr title="required" class="required">*</abbr></span>
+					</th>
+					<td class="field"><input id="insertonly[title]" name="insertonly[title]" value="" type="text" aria-required="true"></td>
+				</tr>
+				<tr><td></td><td class="help">' . __('Link text, e.g. &#8220;Lucy on YouTube&#8220;') . '</td></tr>
+				<tr>
+					<th valign="top" scope="row" class="label">
+						<span class="alignleft"><label for="insertonly[url]">' . __('Link URL') . '</label></span>
+					</th>
+					<td class="field"><input id="insertonly[url]" name="insertonly[url]" value="" type="text"></td>
+				</tr>
+				<tr><td></td><td class="help">' . __('The link URL to which the player should direct users to (e.g. an affiliate link). (Applies to flv and mp4 files only.)') . '</td></tr>
+				<tr>
+					<td></td>
+					<td>
+						<input type="submit" class="button" name="insertonlybutton" value="' . esc_attr__('Insert into Post') . '" />
+					</td>
+				</tr>
+			</tbody></table>
+		';
+	} # type_url_form_video()
+	
+	
+	/**
+	 * video_send_to_editor_url()
+	 *
+	 * @param string $html
+	 * @param string $href
+	 * @param string $title
+	 * @return string $html
+	 **/
+
+	function video_send_to_editor_url($html, $href, $title) {
+		$title = stripslashes($_POST['insertonly']['title']);
+		$href = esc_url_raw(stripslashes($_POST['insertonly']['href']));
+		
+		if ( preg_match("/^https?:\/\/(?:www\.)youtube.com\//i", $href) ) {
+			$href = parse_url($href);
+			$v = $href['query'];
+			parse_str($v, $v);
+			if ( empty($v['v']) )
+				return $html;
+			$html = '[media href="' . $href . '" type="youtube"]' . $title . '[/media]';
+		} elseif ( preg_match("/\bm4v\b/i", $href) ) {
+			$html = '[media href="' . $href . '" type="m4v"]' . $title . '[/media]';
+		} elseif ( preg_match("/\b(mp4|rss2?|xml)\b/i", $href) ) {
+			$link = trim(stripslashes($_POST['insertonly']['url']));
+			$link = $link ? ( ' link="' . esc_url_raw($link) . '"' ) : '';
+			$html = '[media href="' . $href . '" type="mp4"' . $link . ']' . $title . '[/media]';
+		}
+		
+		return $html;
+	} # video_send_to_editor_url()
+	
+	
+	/**
+	 * file_send_to_editor_url()
+	 *
+	 * @param string $html
+	 * @param string $href
+	 * @param string $title
+	 * @return string $html
+	 **/
+
+	function file_send_to_editor_url($html, $href, $title) {
+		$title = stripslashes($_POST['insertonly']['title']);
+		$href = esc_url_raw(stripslashes($_POST['insertonly']['href']));
+		
+		if ( preg_match("/\.[a-z0-9]+$/i", $href, $ext) ) {
+			$type = ' type="' . strtolower(end($ext)) . '"';
+		} else {
+			$type = '';
+		}
+		
+		$html = '[media href="' . $href . '"' . $type . ']' . $title . '[/media]';
+		
+		return $html = '[media href="' . $href . '" type=""]' . $title . '[/media]';
+	} # file_send_to_editor_url()
 } # mediacaster_admin
 ?>
