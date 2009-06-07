@@ -717,7 +717,9 @@ class mediacaster_admin {
 	function audio_send_to_editor_url($html, $href, $title) {
 		$title = stripslashes($_POST['insertonly']['title']);
 		$href = esc_url_raw(stripslashes($_POST['insertonly']['href']));
-
+		if ( !$title )
+			$title = basename($href, '.' . $ext);
+		
 		if ( preg_match("/\bm4a\b/i", $href) ) {
 			$html = '[media href="' . $href . '" type="m4a"]' . $title . '[/media]';
 		} elseif ( preg_match("/\b(mp3|rss2?|xml)\b/i", $href) ) {
@@ -785,6 +787,8 @@ class mediacaster_admin {
 	function video_send_to_editor_url($html, $href, $title) {
 		$title = stripslashes($_POST['insertonly']['title']);
 		$href = esc_url_raw(stripslashes($_POST['insertonly']['href']));
+		if ( !$title )
+			$title = basename($href, '.' . $ext);
 		
 		if ( preg_match("/^https?:\/\/(?:www\.)youtube.com\//i", $href) ) {
 			$href = parse_url($href);
@@ -819,9 +823,14 @@ class mediacaster_admin {
 		$href = esc_url_raw(stripslashes($_POST['insertonly']['href']));
 		
 		if ( preg_match("/\.[a-z0-9]+$/i", $href, $ext) ) {
-			$type = ' type="' . strtolower(end($ext)) . '"';
+			$ext = end($ext);
+			$type = ' type="' . strtolower($ext) . '"';
+			if ( !$title )
+				$title = basename($href, '.' . $ext);
 		} else {
 			$type = '';
+			if ( !$title )
+				$title = basename($href);
 		}
 		
 		$html = '[media href="' . $href . '"' . $type . ']' . $title . '[/media]';
