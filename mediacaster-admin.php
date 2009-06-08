@@ -536,15 +536,56 @@ class mediacaster_admin {
 
 	function attachment_fields_to_edit($post_fields, $post) {
 		$file_url = wp_get_attachment_url($post->ID);
-		
 		if ( !preg_match("/\.([a-z0-9]+)$/i", $file_url, $ext) )
 			return $post_fields;
 		$ext = esc_attr(strtolower(end($ext)));
 		
+		global $content_width;
+		$o = get_option('mediacaster');
+		$default_width = $content_width ? intval($content_width) : 420;
+		if ( $o['format'] == '4/3' )
+			$default_height = round($default_width * 3 / 4);
+		else
+			$default_height = round($default_width * 9 / 16);
+		
 		switch ( $post->post_mime_type ) {
-		case 'audio/mpeg':
 		case 'video/mpeg':
 		case 'video/x-flv':
+			static $scripts;
+			if ( !isset($scripts) ) {
+				$scripts = '<script type="text/javascript">
+var mc = {
+	set_default: function(post_id) {
+		jQuery("#attachments-width-" + post_id).val(' . $default_width . ');
+		jQuery("#attachments-height-" + post_id).val(' . $default_height . ');
+		return false;
+	},
+
+	set_16_9: function(post_id) {
+		jQuery("#attachments-height-" + post_id).val(Math.round(jQuery("#attachments-width-" + post_id).val() * 9 / 16));
+		return false;
+	},
+
+	set_4_3: function(post_id) {
+		jQuery("#attachments-height-" + post_id).val(Math.round(jQuery("#attachments-width-" + post_id).val() * 3 / 4));
+		return false;
+	}
+};
+</script>';
+			} else {
+				$scripts = false;
+			}
+				
+			$post_fields['format'] = array(
+				'label' => __('Width x Height'),
+				'input' => 'html',
+				'html' => $scripts . '<input id="attachments-width-' . $post->ID . '" name="attachments[' . $post->ID . '][width]" value="' . $default_width . '" type="text" size="3" style="width: 40px;"> x <input id="attachments-height-' . $post->ID . '" name="attachments[' . $post->ID . '][height]" value="' . $default_height . '" type="text" size="3" style="width: 40px;">
+	<button type="button" class="button" onclick="return mc.set_default(' . $post->ID . ');">' . __('Default') . '</button>
+	<button type="button" class="button" onclick="return mc.set_16_9(' . $post->ID . ');">' . __('16/9') . '</button>
+	<button type="button" class="button" onclick="return mc.set_4_3(' . $post->ID . ');">' . __('4/3') . '</button>',
+				);
+			
+		case 'audio/mpeg':
 			unset($post_fields['post_excerpt']);
 			$post_fields['url']['html'] = preg_split("/<br/", $post_fields['url']['html']);
 			$post_fields['url']['html'] = $post_fields['url']['html'][0];
@@ -599,28 +640,36 @@ class mediacaster_admin {
 		else
 			$link = '';
 		
+		$width = !empty($attachment['width']) ? ( ' width="' . intval($attachment['width']) . '"' ) : '';
+		$height = !empty($attachment['height']) ? ( ' height="' . intval($attachment['height']) . '"' ) : '';
+		
 		switch ( $post->post_mime_type ) {
 		case 'audio/mpeg':
-			preg_match("/\b(mp3|m4a)\b/i", $href, $ext);
-			$html = '[media id="' . $send_id . '" type="' . $ext . '"' . $link . ']'
+			preg_match("/\b(mp3|m4a)\b/i", $file_url, $ext);
+			$ext = strtolower(end($ext));
+			
+			$html = '[media id="' . $send_id . '"' . $width . $height . ' type="' . $ext . '"' . $link . ']'
 					. $attachment['post_title'] . '[/media]';
 			break;
 		
 		case 'video/mpeg':
 		case 'video/x-flv':
-			preg_match("/\b(flv|mp4|m4v)\b/i", $href, $ext);
+			preg_match("/\b(flv|mp4|m4v)\b/i", $file_url, $ext);
 			$ext = strtolower(end($ext));
-			$html = '[media id="' . $send_id . '" type="' . $ext . '"' . $link . ']'
+			
+			$html = '[media id="' . $send_id . '"' . $width . $height . ' type="' . $ext . '"' . $link . ']'
 				. $attachment['post_title'] . '[/media]';
 			break;
 		
 		default:
 			if ( !preg_match("/^(?:application|text)\//", $post->post_mime_type) )
 				break;
-			if ( preg_match("/\.([a-z0-9])+$/i", $href, $ext) )
+			
+			if ( preg_match("/\.([a-z0-9]+)$/i", $file_url, $ext) )
 				$ext = strtolower(end($ext));
 			else
 				$ext = 'file';
+			
 			$html = '[media id="' . $send_id . '" type="' . $ext . '"]'
 				. $attachment['post_title'] . '[/media]';
 		}
@@ -720,8 +769,8 @@ class mediacaster_admin {
 <script type="text/javascript">
 var mc = {
 	set_default: function() {
-		jQuery("#insertonly-width").val("' . $default_width . '");
-		jQuery("#insertonly-height").val("' . $default_height . '");
+		jQuery("#insertonly-width").val(' . $default_width . ');
+		jQuery("#insertonly-height").val(' . $default_height . ');
 		return false;
 	},
 	
@@ -755,7 +804,7 @@ var mc = {
 					<th valign="top" scope="row" class="label">
 						<span class="alignleft"><label for="insertonly-width">' . __('Width x Height') . '</label></span>
 					</th>
-					<td class="field help"><input id="insertonly-width" name="insertonly[width]" value="' . $default_width . '" type="text" size="3" style="width: 40px;"> x <input id="insertonly-height" name="insertonly[height]" value="' . $default_height . '" type="text" size="3" style="width: 40px;">
+					<td class="field"><input id="insertonly-width" name="insertonly[width]" value="' . $default_width . '" type="text" size="3" style="width: 40px;"> x <input id="insertonly-height" name="insertonly[height]" value="' . $default_height . '" type="text" size="3" style="width: 40px;">
 					<button type="button" class="button" onclick="return mc.set_default();">' . __('Default') . '</button>
 					<button type="button" class="button" onclick="return mc.set_16_9();">' . __('16/9') . '</button>
 					<button type="button" class="button" onclick="return mc.set_4_3();">' . __('4/3') . '</button></td>
