@@ -159,7 +159,7 @@ class mediacaster {
 		$flashvars['skin'] = plugin_dir_url(__FILE__) . 'player/kleur.swf';
 		
 		if ( isset($type) ) {
-			if ( in_array($type, array('mp3')) )
+			if ( in_array($type, array('mp3' )) )
 				$flashvars['type'] = 'sound';
 			else
 				$flashvars['type'] = 'video';
@@ -448,6 +448,32 @@ EOS;
 		
 		wp_enqueue_style('mediacaster', $css, null, '1.6');
 	} # styles()
+
+
+	/**
+	 * get_cover()
+	 *
+	 * @return string $cover
+	 **/
+
+	function get_cover() {
+		static $cover;
+		
+		if ( !is_admin() && isset($cover) )
+			return $cover;
+		
+		if ( defined('GLOB_BRACE') )
+			$cover = glob(ABSPATH . 'media/cover{,-*}.{jpg,jpeg,png}', GLOB_BRACE);
+		else
+			$cover = glob(ABSPATH . 'media/cover-*.jpg');
+		
+		if ( $cover )
+			$cover = 'media/' . basename(current($cover));
+		else
+			$cover = false;
+		
+		return $cover;
+	} # get_cover()
 	
 	
 	/**
@@ -564,6 +590,7 @@ EOS;
 		
 		echo '<trackList>' . "\n";
 		
+		$site_url = trailingslashit(get_option('home'));
 		$cover = mediacaster::get_cover();
 		
 		foreach ( $podcasts as $podcast ) {
@@ -575,7 +602,7 @@ EOS;
 			
 			if ( $cover ) {
 				echo '<image>'
-					. $cover
+					. $site_url . $cover
 					. '</image>' . "\n";
 			}
 
@@ -590,152 +617,6 @@ EOS;
 		
 		echo '</playlist>' . "\n";
 	} # display_playlist_xml()
-
-	
-	/**
-	 * get_path()
-	 *
-	 * @param mixed $post
-	 * @return string $path
-	 **/
-
-	function get_path($post) {
-		if ( is_numeric($post) ) {
-			$post = get_post(intval($post));
-		}
-
-		if ( !is_admin() && ( $path = get_post_meta($post->ID, '_mediacaster_path', true) ) ) {
-			return $path;
-		}
-
-		$post_ID = $post->ID;
-		
-		if ( $post->post_name == '' ) {
-			$post->post_name = sanitize_title($post->post_title);
-		}
-		if ( $post->post_name == '' ) {
-			$post->post_name = $post->ID;
-		}
-
-		$head = 'media/';
-
-		if ( @ $post->post_type == 'page' ) {
-			$tail = $post->post_name . '/';
-
-			if ( $post->post_parent != 0 ) {
-				while ( $post->post_parent != 0 ) {
-					$post = get_post($post->post_parent);
-
-					$tail = $post->post_name . '/' . $tail;
-				}
-			}
-
-			$path = $head . $tail;
-		} else {
-			if ( !$post->post_date || $post->post_date == '0000-00-00 00:00:00') {
-				$path = $head . date('Y/m/d', time()) . '/' . $post->post_name . '/';
-			} else {
-				$path = $head . date('Y/m/d', strtotime($post->post_date)) . '/' . $post->post_name . '/';
-			}
-		}
-
-		if ( !is_admin() ) {
-			delete_post_meta($post_ID, '_mediacaster_path');
-			add_post_meta($post_ID, '_mediacaster_path', $path, true);
-		}
-
-		return $path;
-	} # get_path()
-
-
-	/**
-	 * get_files()
-	 *
-	 * @param string $path
-	 * @param int $post_ID
-	 * @return void
-	 **/
-
-	function get_files($path, $post_ID = null) {
-		$post_ID = (int) $post_ID;
-		
-		static $_files = array();
-		
-		if ( isset($_files[$post_ID]) )
-			return $_files[$post_ID];
-
-		$site_url = trailingslashit(site_url());
-
-		if ( defined('GLOB_BRACE') ) {
-			$files = glob(ABSPATH . $path . '*.{mp3,flv,swf,m4a,mp4,m4v,mov,zip,gz,pdf}', GLOB_BRACE);
-		} else {
-			$files = array_merge(
-				glob(ABSPATH . $path . '*.mp3'),
-				glob(ABSPATH . $path . '*.flv'),
-				glob(ABSPATH . $path . '*.swf'),
-				glob(ABSPATH . $path . '*.m4a'),
-				glob(ABSPATH . $path . '*.mp4'),
-				glob(ABSPATH . $path . '*.m4v'),
-				glob(ABSPATH . $path . '*.mov'),
-				glob(ABSPATH . $path . '*.zip'),
-				glob(ABSPATH . $path . '*.gz'),
-				glob(ABSPATH . $path . '*.pdf')
-				);
-		}
-
-		foreach ( (array) $files as $key => $file ) {
-			unset($files[$key]);
-
-			$file = basename($file);
-
-			$files[$file] = $site_url . $path . $file;
-		}
-
-		if ( $post_ID ) {
-			$enclosures = get_post_meta($post_ID, 'enclosure');
-
-			if ( $enclosures ) {
-				foreach ( (array) $enclosures as $enclosure ) {
-					$file = basename($enclosure);
-					$files[$file] = $enclosure;
-				}
-			}
-		}
-
-		ksort($files);
-		
-		$_files[$post_ID] = $files;
-
-		return $files;
-	} # get_files()
-
-
-	/**
-	 * get_cover()
-	 *
-	 * @return string $cover
-	 **/
-
-	function get_cover() {
-		static $cover;
-		
-		if ( !is_admin() && isset($cover) )
-			return $cover;
-		
-		if ( defined('GLOB_BRACE') ) {
-			$cover = glob(ABSPATH . 'media/cover{,-*}.{jpg,jpeg,png}', GLOB_BRACE);
-		} else {
-			$cover = glob(ABSPATH . 'media/cover-*.jpg');
-		}
-		
-		if ( $cover ) {
-			$cover = 'media/' . basename(current($cover));
-		} else {
-			$cover = false;
-		}
-
-		return $cover;
-	} # get_cover()
 
 
 	/**
@@ -766,17 +647,17 @@ EOS;
 		$site_url = trailingslashit(site_url());
 
 		echo "\n\t\t"
-			. '<copyright>&#xA9; ' . apply_filters('the_excerpt_rss', $options['itunes']['copyright']) . '</copyright>' . "\n\t\t"
+			. '<copyright>' . apply_filters('the_excerpt_rss', $options['itunes']['copyright']) . '</copyright>' . "\n\t\t"
 			. '<itunes:author>' . apply_filters('the_excerpt_rss', $options['itunes']['author']) . '</itunes:author>' . "\n\t\t"
 			. '<itunes:summary>' . apply_filters('the_excerpt_rss', $options['itunes']['summary']) . '</itunes:summary>' . "\n\t\t"
 			. '<itunes:explicit>' . apply_filters('the_excerpt_rss', $options['itunes']['explicit']) . '</itunes:explicit>' . "\n\t\t"
 			. '<itunes:block>' . apply_filters('the_excerpt_rss', $options['itunes']['block']) . '</itunes:block>' . "\n\t\t"
 			;
-
-		$image = 'wp-content/itunes/' . $options['itunes']['image']['name'];
-
-		if ( file_exists(ABSPATH . $image) ) {
-			echo '<itunes:image href="' . esc_url($site_url . 'wp-content/itunes/' . $options['itunes']['image']['name']) . '" />' . "\n\t\t"
+		
+		$cover = mediacaster::get_cover();
+		
+		if ( $cover ) {
+			echo '<itunes:image href="' . esc_url($site_url . 'wp-content/itunes/' . $cover) . '" />' . "\n\t\t"
 				;
 		}
 
@@ -815,90 +696,48 @@ EOS;
 	 **/
 
 	function display_feed_enclosures() {
-		$site_url = trailingslashit(site_url());
-
-		global $post;
-
-		$path = mediacaster::get_path($post);
-
-		$files = mediacaster::get_files($path);
-
-		$add_itune_tags = false;
-
-		foreach ( $files as $key => $file ) {
-			preg_match("/\.([^.]+)$/", $key, $ext); 
-			$ext = end($ext);
-
-			switch ( strtolower($ext) ) {
-				case 'mp3':
-					$mime = 'audio/mpeg';
-					break;
-				case 'm4a':
-					$mime = 'audio/x-m4a';
-					break;
-				case 'mp4':
-					$mime = 'video/mp4';
-					break;
-				case 'm4v':
-					$mime = 'video/x-m4v';
-					break;
-				case 'mov':
-					$mime = 'video/quicktime';
-					break;
-				case 'flv':
-					$mime = 'video/x-flv';
-					break;
-				case 'pdf':
-					$mime = 'application/pdf';
-					break;
-				case 'zip':
-					$mime = 'application/gzip';
-					break;
-				case 'gz':
-					$mime = 'application/x-gzip';
-					break;
-				default:
-					$mime = 'audio/mpeg';
-					break;
-			}
-
-			$size = @filesize(ABSPATH . $path . $key);
-
+		if ( !in_the_loop() )
+			return;
+		else
+			$post_ID = get_the_ID();
+		
+		$enclosures = mediacaster::get_enclosures();
+		
+		if ( !$enclosures )
+			return;
+		
+		$add_itunes_tags = false;
+		
+		foreach ( $enclosures as $enclosure ) {
+			$file = get_attached_file($enclosure->ID);
+			$file_url = esc_url(wp_get_attachment_url($enclosure->ID));
+			$size = @filesize($file);
+			
 			echo "\n\t\t"
-				. '<enclosure'
-				. ' url="'
-					.  $file
-					. '"'
-				. ' length="' . $size . '"'
-				. ' type="' . $mime . '"'
-				. ' />';
-
+				. '<enclosure' . ' url="' .  $file_url . '" length="' . $size . '" type="' . $mime . '" />';
+			
 			$add_itunes_tags = true;
 		}
 
 		if ( $add_itunes_tags && !class_exists('podPress_class') && is_feed() ) {
 			$author = get_the_author();
 
-			$summary = get_post_meta(get_the_ID(), '_description', true);
+			$summary = get_post_meta($post_ID, '_description', true);
 			if ( !$summary ) {
 				$summary = get_the_excerpt();
 			}
 
-			$keywords = get_post_meta(get_the_ID(), '_keywords', true);
+			$keywords = get_post_meta($post_ID, '_keywords', true);
 			if ( !$keywords ) {
 				$keywords = array();
 
-				if ( $cats = get_the_category(get_the_ID()) ) {
-					foreach ( $cats as $cat ) {
+				if ( $cats = get_the_category($post_ID) )
+					foreach ( $cats as $cat )
 						$keywords[] = $cat->name;
-					}
-				}
 
-				if ( $tags = get_the_tags(get_the_ID()) ) {
-					foreach ( $tags as $tag ) {
+				if ( $tags = get_the_tags($post_ID) )
+					foreach ( $tags as $tag )
 						$keywords[] = $tag->name;
-					}
-				}
 
 				$keywords = array_unique($keywords);
 				$keywords = implode(', ', $keywords);
@@ -935,18 +774,7 @@ EOS;
 		global $wpdb;
 		$options = array();
 
-		$admin_user = $wpdb->get_row("
-			SELECT	$wpdb->users.*
-			FROM	$wpdb->users
-			INNER JOIN $wpdb->usermeta
-				ON $wpdb->usermeta.user_id = $wpdb->users.ID
-			WHERE	$wpdb->usermeta.meta_key = 'wp_capabilities'
-			AND		$wpdb->usermeta.meta_value LIKE '%administrator%'
-			ORDER BY $wpdb->users.ID ASC
-			LIMIT 1;
-			");
-
-		$options['itunes']['author'] = $admin_user->user_nicename;
+		$options['itunes']['author'] = '';
 
 		$options['itunes']['summary'] = get_option('blogdescription');
 
@@ -954,7 +782,7 @@ EOS;
 
 		$options['itunes']['block'] = 'No';
 
-		$options['itunes']['copyright'] = $options['itunes']['author'];
+		$options['itunes']['copyright'] = '';
 
 		$options['player']['width'] = 320;
 		$options['player']['height'] = 180;
