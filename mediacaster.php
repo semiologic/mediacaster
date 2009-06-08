@@ -26,9 +26,6 @@ http://www.opensource.org/licenses/gpl-2.0.php
  * @package Mediacaster
  **/
 
-# audio:
-add_filter('the_content', array('mediacaster', 'display_players'), 20);
-
 # playlists:
 add_filter('the_content', array('mediacaster', 'display_playlist'), 1000);
 add_action('template_redirect', array('mediacaster', 'catch_playlist'), 0);
@@ -42,23 +39,23 @@ add_action('atom_head', array('mediacaster', 'display_feed_header'));
 add_action('rss2_item', array('mediacaster', 'display_feed_enclosures'));
 add_action('atom_entry', array('mediacaster', 'display_feed_enclosures'));
 
+if ( get_option('mediacaster') === false )
+	mediacaster::init_options();
+
+add_filter('widget_text', 'do_shortcode', 11);
+add_shortcode('media', array('mediacaster', 'shortcode'));
+
+add_filter('upload_mimes', array('mediacaster', 'upload_mimes'));
+
+add_filter('get_the_excerpt', array('mediacaster', 'disable'), 0);
+add_filter('get_the_excerpt', array('mediacaster', 'enable'), 20);
+
 if ( !is_admin() ) {
 	add_action('wp_print_scripts', array('mediacaster', 'scripts'), 0);
 	add_action('wp_print_styles', array('mediacaster', 'styles'), 0);
 } else {
 	add_action('admin_menu', array('mediacaster', 'admin_menu'));
 }
-
-add_filter('get_the_excerpt', array('mediacaster', 'disable'), 0);
-add_filter('get_the_excerpt', array('mediacaster', 'enable'), 20);
-
-if ( get_option('mediacaster') === false )
-	mediacaster::init_options();
-
-add_shortcode('media', array('mediacaster', 'shortcode'));
-
-add_filter('upload_mimes', array('mediacaster', 'upload_mimes'));
-add_filter('widget_text', 'do_shortcode', 11);
 
 class mediacaster {
 	/**
@@ -406,7 +403,6 @@ EOS;
 	 **/
 
 	function disable($in = null) {
-		remove_filter('the_content', array('mediacaster', 'display_players'), 20);
 		remove_filter('the_content', array('mediacaster', 'display_playlist'), 1000);
 		
 		return $in;
@@ -421,7 +417,6 @@ EOS;
 	 **/
 	
 	function enable($in = null) {
-		add_filter('the_content', array('mediacaster', 'display_players'), 20);
 		add_filter('the_content', array('mediacaster', 'display_playlist'), 1000);
 		
 		return $in;
@@ -453,129 +448,6 @@ EOS;
 		
 		wp_enqueue_style('mediacaster', $css, null, '1.6');
 	} # styles()
-	
-	
-	/**
-	 * display_players()
-	 *
-	 * @param string $buffer
-	 * @return string $buffer
-	 **/
-
-	function display_players($buffer) {
-		$o = get_option('mediacaster');
-		
-		if ( !isset($o['compat']) || isset($o['compat']) && $o['compat'] )
-			$buffer = mediacaster::compat($buffer);
-		
-		$buffer = preg_replace_callback("/
-			(?:<p(?:\s[^>]*)?>)?
-			\[(?:audio|video|media)\s*:
-			([^\]]*)
-			\]
-			(?:<\s*\/\s*p\s*>)?
-			/ix",
-			array('mediacaster', 'display_player_callback'),
-			$buffer
-			);
-		
-		return $buffer;
-	} # display_players()
-
-	
-	/**
-	 * compat()
-	 *
-	 * @param string $buffer
-	 * @return string $buffer
-	 **/
-
-	function compat($buffer) {
-		# transform <!--podcast#file-->, <!--media#file--> and <!--videocast#file--> into [media:file]
-		
-		$buffer = preg_replace(
-			"/
-				(?:<p>\s*)?				# maybe a paragraph tag
-				(?:<br\s*\/>\s*)*		# and a couple br tags
-				<!--\s*(?:
-					media
-					|
-					podcast
-					|
-					videocast
-					)\s*
-					\#([^>#]*)			# the media file
-					(?:\#[^>]*)?		# and some junk
-				\s*
-				-->
-				(?:\s*<br\s*\/>)*		# maybe a couple of br tags
-				(?:<\/p>\s*)?			# and a close paragraph tag
-			/ix",
-			"[media:$1]",
-			$buffer
-			);
-
-		# transform <flv href="file" /> into [media:file]
-
-		$buffer = preg_replace(
-			"/
-				(?:<p>)?
-				<flv\s+
-				[^>]*
-				href=\"([^\">]*)\"
-				[^>]*
-				>
-				(?:<\/flv>)?
-				(?:<\/p>)?
-			/ix",
-			"[media:$1]",
-			$buffer
-			);
-
-		return $buffer;
-	} # compat()
-
-
-	/**
-	 * display_player_callback()
-	 *
-	 * @param array $input regex match
-	 * @return string $output
-	 **/
-
-	function display_player_callback($input) {
-		$file = $input[1];
-		
-		if ( preg_match("/^https?:\/\/(?:www\.)youtube\.com\/watch\?/ix", $file, $match) )
-			return mediacaster::display_youtube($file);
-		
-		preg_match("/\.([^.]+)$/", $file, $ext); 
-		$ext = end($ext);
-		
-		switch ( strtolower($ext) ) {
-		case 'pdf':
-		case 'zip':
-		case 'gz':
-			return mediacaster::display_file($file);
-			break;
-			
-		case 'mov':
-		case 'm4v':
-		case 'm4a':
-			return mediacaster::display_quicktime($file);
-			break;
-
-		case 'flv':
-		case 'mp4':
-			return mediacaster::display_video($file);
-			break;
-
-		case 'mp3':
-		default:
-			return mediacaster::display_audio($file);
-			break;
-		}
-	} # display_player_callback()
 
 
 	/**
@@ -652,31 +524,6 @@ EOS;
 
 		return $content;
 	} # display_playlist()
-	
-	
-	/**
-	 * get_flashvars()
-	 *
-	 * @param string $file
-	 * @param string $image
-	 * @return array $flashvars
-	 **/
-
-	function get_flashvars($file, $image = false) {
-		$flashvars = array();
-		$flashvars['file'] = $file;
-		
-		if ( $image )
-			$flashvars['image'] = $image;
-		
-		$flashvars['skin'] = plugin_dir_url(__FILE__) . 'player/kleur.swf';
-		$flashvars['plugins'] = 'quickkeys-1,viral-1';
-		
-		$flashvars['viral.onpause'] = 'false';
-		$flashvars['viral.link'] = in_the_loop() ? get_permalink() : get_option('home');
-		
-		return apply_filters('mediacaster_flashvars', $flashvars);
-	} # get_flashvars()
 	
 	
 	/**
