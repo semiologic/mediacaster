@@ -82,8 +82,17 @@ class mediacaster {
 	 **/
 
 	function shortcode($args, $content = '') {
-		if ( !isset($args['type']) ) {
-			if ( isset($args['href']) && preg_match("/^https?:\/\/(?:www\.)?youtube.com\//i", $args['href']) ) {
+		if ( empty($args['href']) ) {
+			if ( empty($args['id']) )
+				return '';
+			
+			$args['href'] = wp_get_attachment_url($args['id']);
+		} else {
+			$args['href'] = esc_url_raw($args['href']);
+		}
+		
+		if ( empty($args['type']) ) {
+			if ( preg_match("/^https?:\/\/(?:www\.)?youtube.com\//i", $args['href']) ) {
 				$args['type'] = 'youtube';
 			} elseif ( preg_match("/\b(rss2?|xml|feed|atom)\b/i", $args['href']) ) {
 				$args['type'] = 'audio';

@@ -549,8 +549,12 @@ class mediacaster_admin {
 			$default_height = round($default_width * 9 / 16);
 		
 		switch ( $post->post_mime_type ) {
+		case 'audio/mpeg':
 		case 'video/mpeg':
 		case 'video/x-flv':
+			if ( !in_array($ext, array('mp4', 'm4a', 'm4v', 'flv')) )
+				break;
+			
 			static $scripts;
 			if ( !isset($scripts) ) {
 				$scripts = '<script type="text/javascript">
@@ -575,7 +579,6 @@ var mc = {
 			} else {
 				$scripts = false;
 			}
-				
 			$post_fields['format'] = array(
 				'label' => __('Width x Height'),
 				'input' => 'html',
@@ -584,8 +587,14 @@ var mc = {
 	<button type="button" class="button" onclick="return mc.set_16_9(' . $post->ID . ');">' . __('16/9') . '</button>
 	<button type="button" class="button" onclick="return mc.set_4_3(' . $post->ID . ');">' . __('4/3') . '</button>',
 				);
-			
+		}
+		
+		switch ( $post->post_mime_type ) {
 		case 'audio/mpeg':
+		case 'video/mpeg':
+		case 'video/x-flv':
+			if ( !in_array($ext, array('mp3', 'mp4', 'm4a', 'm4v', 'flv')) )
+				break;
 			unset($post_fields['post_excerpt']);
 			$post_fields['url']['html'] = preg_split("/<br/", $post_fields['url']['html']);
 			$post_fields['url']['html'] = $post_fields['url']['html'][0];
@@ -645,8 +654,10 @@ var mc = {
 		
 		switch ( $post->post_mime_type ) {
 		case 'audio/mpeg':
-			preg_match("/\b(mp3|m4a)\b/i", $file_url, $ext);
-			$ext = strtolower(end($ext));
+			if ( preg_match("/\b(mp3|m4a)\b/i", $file_url, $ext) )
+				$ext = strtolower(end($ext));
+			else
+				$ext = 'audio';
 			
 			$html = '[media id="' . $send_id . '"' . $width . $height . ' type="' . $ext . '"' . $link . ']'
 					. $attachment['post_title'] . '[/media]';
@@ -654,8 +665,10 @@ var mc = {
 		
 		case 'video/mpeg':
 		case 'video/x-flv':
-			preg_match("/\b(flv|mp4|m4v)\b/i", $file_url, $ext);
-			$ext = strtolower(end($ext));
+			if ( preg_match("/\b(flv|mp4|m4v)\b/i", $file_url, $ext) )
+				$ext = strtolower(end($ext));
+			else
+				$ext = 'video';
 			
 			$html = '[media id="' . $send_id . '"' . $width . $height . ' type="' . $ext . '"' . $link . ']'
 				. $attachment['post_title'] . '[/media]';
