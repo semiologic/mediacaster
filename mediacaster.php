@@ -27,7 +27,7 @@ http://www.opensource.org/licenses/gpl-2.0.php
  **/
 
 # playlists:
-add_filter('the_content', array('mediacaster', 'display_playlist'), 1000);
+add_filter('the_content', array('mediacaster', 'podcasts'), 1000);
 add_action('template_redirect', array('mediacaster', 'catch_playlist'), 0);
 
 add_action('rss2_ns', array('mediacaster', 'display_feed_ns'));
@@ -403,7 +403,7 @@ EOS;
 	 **/
 
 	function disable($in = null) {
-		remove_filter('the_content', array('mediacaster', 'display_playlist'), 1000);
+		remove_filter('the_content', array('mediacaster', 'podcasts'), 1000);
 		
 		return $in;
 	} # disable()
@@ -417,7 +417,7 @@ EOS;
 	 **/
 	
 	function enable($in = null) {
-		add_filter('the_content', array('mediacaster', 'display_playlist'), 1000);
+		add_filter('the_content', array('mediacaster', 'podcasts'), 1000);
 		
 		return $in;
 	} # enable()
@@ -448,82 +448,82 @@ EOS;
 		
 		wp_enqueue_style('mediacaster', $css, null, '1.6');
 	} # styles()
+	
+	
+	/**
+	 * get_enclosures()
+	 *
+	 * @param bool $podcasts
+	 * @return array $enclosures
+	 **/
+
+	function get_enclosures($podcasts = false, $post_ID = null) {
+		if ( !in_the_loop() && !$post_ID )
+			return array();
+		
+		global $post;
+		
+		if ( $post_ID )
+			$post = get_post($post_ID);
+		
+		$enclosures = get_children(array(
+			'post_parent' => $post->ID,
+			'post_type' => 'attachment',
+			'order_by' => 'menu_order ID',
+			));
+		
+		if ( !$enclosures )
+			return array();
+		
+		$enclosed = get_post_meta($post->ID, '_mc_enclosed', true);
+		
+		if ( !is_array($enclosed) )
+			$enclosed = array();
+		
+		foreach ( $enclosures as $key => $enclosure ) {
+			if ( $podcasts ) {
+				if ( $enclosure->post_mime_type != 'audio/mpeg' || in_array($enclosure->ID, $enclosed) )
+					unset($enclosures[$key]);
+			} else {
+				if ( preg_match("/^image\//i", $post->post_mime_type) )
+					unset($enclosures[$key]);
+			}
+		}
+		
+		return $enclosures;
+	} # get_enclosures()
 
 
 	/**
-	 * display_playlist()
+	 * podcasts()
 	 *
 	 * @param string $content
 	 * @return string $content
 	 **/
 
-	function display_playlist($content) {
+	function podcasts($content) {
 		if ( !in_the_loop() )
 			return $content;
 		
-		global $wpdb;
-		$post_ID = get_the_ID();
+		$podcasts = mediacaster::get_enclosures(true);
 		
-		if ( $post_ID <= 0 )
-			return;
-
+		if ( !$podcasts )
+			return $content;
+		
+		global $post;
+		
+		$o = get_option('mediacaster');
 		$out = '';
-
-		$path = mediacaster::get_path($post_ID);
-
-		$files = mediacaster::get_files($path, $post_ID);
-
-		foreach ( array('flash_audios', 'flash_videos', 'qt_audios', 'qt_videos') as $var )
-			$$var = mediacaster::extract_podcasts($files, $post_ID, $var);
-
-		if ( $flash_audios ) {
-			$site_url = trailingslashit(site_url());
-
-			# cover
-			$cover = mediacaster::get_cover();
-
-			if ( $cover ) {
-				$cover_size = getimagesize(ABSPATH . $cover);
-
-				$cover_width = $cover_size[0];
-				$cover_height = $cover_size[1];
-
-				$mp3_width = $cover_width;
-
-				$height = $height + $cover_height;
-			} else {
-				$mp3_width = $width;
-			}
-
-			$file = $site_url . '?podcasts=' . $post_ID;
-
-			# insert player
-			$out .= mediacaster::display_audio($file) . "\n";
-		}
 		
-		if ( $flash_videos ) {
-			$site_url = trailingslashit(site_url());
-			$file = $site_url . '?videos=' . $post_ID;
-			$out .= mediacaster::display_video($file) . "\n";
-		}
-
-		if ( $qt_audios ) {
-			foreach ( $qt_audios as $file )
-				$out .= mediacaster::display_quicktime($file) . "\n";
-		}
-
-		if ( $qt_videos ) {
-			foreach ( $qt_videos as $file )
-				$out .= mediacaster::display_quicktime($file) . "\n";
-		}
-
+		$out = mediacaster::audio(array('href' => get_option('home') . '?podcasts=' . $post->ID));
+		
 		if ( $options['player']['position'] != 'bottom' )
 			$content = $out . $content;
 		else
 			$content = $content . $out;
-
+		
 		return $content;
-	} # display_playlist()
+	} # podcasts()
 	
 	
 	/**
@@ -533,11 +533,8 @@ EOS;
 	 **/
 
 	function catch_playlist() {
-		if ( isset($_GET['podcasts']) ) {
+		if ( isset($_GET['podcasts']) && intval($_GET['podcasts']) ) {
 			mediacaster::display_playlist_xml($_GET['podcasts'], 'audio');
-			die;
-		} elseif ( isset($_GET['videos']) ) {
-			mediacaster::display_playlist_xml($_GET['videos'], 'video');
 			die;
 		}
 	} # catch_playlist()
@@ -552,101 +549,46 @@ EOS;
 	 **/
 
 	function display_playlist_xml($post_ID, $type = 'audio') {
-		global $wpdb;
-
-		$path = mediacaster::get_path($post_ID);
-
-		$files = mediacaster::get_files($path, $post_ID);
-
-		switch ( $type ) {
-		case 'audio':
-			$files = mediacaster::extract_podcasts($files, $post_ID, 'flash_audios');
-			break;
-
-		case 'video':
-			$files = mediacaster::extract_podcasts($files, $post_ID, 'flash_videos');
-			break;
-
-		default:
-			die;
-		}
-
+		$post_ID = intval($post_ID);
+		
+		$podcasts = mediacaster::get_enclosures(true, $post_ID);
+		
+		# Reset WP
 		$GLOBALS['wp_filter'] = array();
-
 		while ( @ob_end_clean() );
-
-		ob_start();
-
-		header( 'Content-Type:text/xml; charset=' . get_option('blog_charset') ) ;
+		
+		header('Content-Type:text/xml; charset=' . get_option('blog_charset'));
 
 		echo '<?xml version="1.0" encoding="' . get_option('blog_charset') . '"?>' . "\n"
 			. '<playlist version="1" xmlns="http://xspf.org/ns/0/">' . "\n";
-
-		if ( $files ) {
-			$site_url = trailingslashit(site_url());
-
-			if ( $type == 'audio' ) {
-				$cover = mediacaster::get_cover();
-				if ( $cover )
-					$cover = $site_url . $cover;
+		
+		echo '<trackList>' . "\n";
+		
+		$cover = mediacaster::get_cover();
+		
+		foreach ( $podcasts as $podcast ) {
+			echo '<track>' . "\n";
+			
+			echo '<title>'
+				. $podcast->post_title
+				. '</title>' . "\n";
+			
+			if ( $cover ) {
+				echo '<image>'
+					. $cover
+					. '</image>' . "\n";
 			}
 
-			echo '<trackList>' . "\n";
+			echo '<location>'
+				. wp_get_attachment_url($podcast->ID)
+				. '</location>' . "\n";
 
-			foreach ( $files as $key => $file ) {
-				switch ( $type ) {
-				case 'audio':
-					$title = preg_replace("/\.mp3$/i", "", $key);
-					break;
-
-				case 'video':
-					$title = preg_replace("/\.(flv|swf)$/i", "", $key);
-
-					preg_match("/\.([^.]+)$/", $key, $ext); 
-					$ext = end($ext);
-
-					$image = $file;
-					$image = str_replace($site_url, '', $image);
-					$image = str_replace('.' . $ext, '', $image);
-
-					if ( defined('GLOB_BRACE') ) {
-						$image = glob(ABSPATH . $image . '.{jpg,jpeg,png}', GLOB_BRACE);
-					} else {
-						$image = glob(ABSPATH . $image . '.jpg');
-					}
-
-					if ( $image ) {
-						$image = current($image);
-						$cover = str_replace(ABSPATH, $site_url, $image);
-					} else {
-						$cover = false;
-					}
-					break;
-				}
-
-				echo '<track>' . "\n";
-
-				echo '<title>'
-					. $title
-					. '</title>' . "\n";
-
-				if ( $cover ) {
-					echo '<image>'
-						. $cover
-						. '</image>' . "\n";
-				}
-
-				echo '<location>'
-					. $file
-					. '</location>' . "\n";
-
-				echo '</track>' . "\n";
-			}
-
-			echo '</trackList>' . "\n";
+			echo '</track>' . "\n";
 		}
 
-		echo '</playlist>';
+		echo '</trackList>' . "\n";
+		
+		echo '</playlist>' . "\n";
 	} # display_playlist_xml()
 
 	
@@ -766,90 +708,6 @@ EOS;
 
 		return $files;
 	} # get_files()
-
-
-	/**
-	 * extract_podcasts()
-	 *
-	 * @param array $files
-	 * @param int $post_ID
-	 * @param string $type
-	 * @return void
-	 **/
-
-	function extract_podcasts($files, $post_ID, $type = 'flash_audios') {
-		$podcasts = array();
-
-		foreach ( $files as $key => $file ) {
-			switch ( $type ) {
-			case 'flash_audios':
-				if ( strpos($key, '.mp3') !== false )
-					$podcasts[$key] = $file;
-				break;
-
-			case 'flash_videos':
-				if ( strpos($key, '.flv') !== false || strpos($key, '.mp4') !== false )
-					$podcasts[$key] = $file;
-				break;
-
-			case 'qt_audios':
-				if ( strpos($key, '.m4a') !== false )
-					$podcasts[$key] = $file;
-				break;
-
-			case 'qt_videos':
-				if ( strpos($key, '.m4v') !== false || strpos($key, '.mov') !== false )
-					$podcasts[$key] = $file;
-				break;
-			}
-		}
-
-		if ( $podcasts ) {
-			$post = get_post(intval($post_ID));
-
-			switch ( $type ) {
-			case 'flash_audios':
-				$ext = 'mp3';
-				break;
-
-			case 'flash_videos':
-				$ext = '(?:flv|mp4)';
-				break;
-
-			case 'qt_audios':
-				$ext = 'm4a';
-				break;
-
-			case 'qt_videos':
-				$ext = '(?:mov|m4v)';
-				break;
-			}
-
-			preg_match_all("/
-				(?:<!--|\[)
-				(?:media)
-				(?:\#|:)
-				(
-					[^>\]]+
-					\.$ext
-				)
-				(?:-->|\])
-				/ix",
-				$post->post_content,
-				$embeded
-				);
-
-			if ( $embeded )
-				$embeded = end($embeded);
-			else
-				$embeded = array();
-
-			foreach ( $embeded as $key )
-				unset($podcasts[$key]);
-		}
-
-		return $podcasts;
-	} # extract_podcasts()
 
 
 	/**
