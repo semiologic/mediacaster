@@ -692,8 +692,8 @@ class mediacaster_admin {
 			$link = trim(stripslashes($_POST['insertonly']['url']));
 			$link = $link ? ( ' link="' . esc_url_raw($link) . '"' ) : '';
 			$ext = strtolower(end($ext));
-			$ext = in_array($ext, array('mp3', 'm4a')) ? $ext : 'audio';
-			$html = '[media href="' . $href . '" type="audio"' . $link . ']' . $title . '[/media]';
+			$type = in_array($ext, array('mp3', 'm4a')) ? $ext : 'audio';
+			$html = '[media href="' . $href . '" type="' . $type . '"' . $link . ']' . $title . '[/media]';
 		}
 		
 		return $html;
@@ -810,8 +810,10 @@ var mc = {
 			$link = trim(stripslashes($_POST['insertonly']['url']));
 			$link = $link ? ( ' link="' . esc_url_raw($link) . '"' ) : '';
 			$ext = strtolower(end($ext));
-			$ext = in_array($ext, array('flv', 'mp4', 'm4v')) ? $ext : 'video';
-			$html = '[media href="' . $href . '" width="' . $width . '" height="' . $height . '" type="' . $ext . '"' . $link . ']' . $title . '[/media]';
+			$type = in_array($ext, array('flv', 'mp4', 'm4v')) ? $ext : 'video';
+			$width = intval($_POST['insertonly']['width']);
+			$height = intval($_POST['insertonly']['height']);
+			$html = '[media href="' . $href . '" width="' . $width . '" height="' . $height . '" type="' . $type . '"' . $link . ']' . $title . '[/media]';
 		}
 		
 		return $html;

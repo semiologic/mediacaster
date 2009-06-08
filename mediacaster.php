@@ -85,6 +85,8 @@ class mediacaster {
 		if ( !isset($args['type']) ) {
 			if ( isset($args['href']) && preg_match("/^https?:\/\/(?:www\.)?youtube.com\//i", $args['href']) ) {
 				$args['type'] = 'youtube';
+			} elseif ( preg_match("/\b(rss2?|xml|feed|atom)\b/i", $args['href']) ) {
+				$args['type'] = 'audio';
 			} else {
 				$type = wp_check_filetype($args['href']);
 				$args['type'] = $type['ext'];
@@ -128,18 +130,15 @@ class mediacaster {
 			$width = $cover_size[0];
 			$height = $cover_size[1];
 			
-			if ( $width < $min_player_width )
-				$width = $min_player_width;
-			elseif ( $max_player_width && $width > $max_player_width ) {
+			if ( $max_player_width && $width > $max_player_width ) {
 				$height = round($height * $max_player_width / $width);
 				$width = $player_width;
 			}
 		} else {
-			$width = min($min_player_width, $player_width);
+			if ( empty($width) )
+				$width = min($player_width, $min_player_width);
 			$height = 0;
 		}
-		
-		$height += 59;
 		
 		$id = 'm' . md5($href . '_' . $count++);
 		
@@ -159,22 +158,33 @@ class mediacaster {
 			else
 				$flashvars['type'] = 'video';
 		}
-			
 		
 		if ( isset($link) )
 			$flashvars['link'] = esc_url_raw($link);
 		
-		if ( $image ) {
+		$flashvars['plugins'] = array('quickkeys-1');
+		
+		if ( $image )
 			$flashvars['image'] = esc_url_raw($image);
-			$flashvars['plugins'] = array('quickkeys-1', 'viral-1');
-
+		
+		if ( $width >= $min_player_width ) {
+			$height += 59;
+			if ( isset($link) )
+				$flashvars['link'] = esc_url_raw($link);
+			
+			$flashvars['plugins'][] = 'viral-1';
 			$flashvars['viral.onpause'] = 'false';
 			$flashvars['viral.link'] = in_the_loop() ? get_permalink() : get_option('home');
 		} else {
-			$flashvars['plugins'] = array('quickkeys-1');
+			if ( $width < 200 ) {
+				$width = max($width, 50);
+				$height = max($height, 50);
+				$flashvars['controlbar'] = 'none';
+			}
 		}
 		
 		$flashvars = apply_filters('mediacaster_audio', $flashvars);
+		$flashvars['plugins'] = implode(',', $flashvars['plugins']);
 		$flashvars = http_build_query($flashvars, null, '&');
 		
 		$script = '';
@@ -214,10 +224,10 @@ EOS;
 		extract(mediacaster::defaults(), EXTR_SKIP);
 		static $count = 0;
 		
-		if ( !isset($width) ) {
+		if ( empty($width) ) {
 			$width = $player_width;
 			$height = $player_height;
-		} elseif ( !isset($height)) {
+		} elseif ( empty($height)) {
 			if ( $player_format == '4/3' )
 				$height = round($width * 3 / 4);
 			else
