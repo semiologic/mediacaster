@@ -637,7 +637,7 @@ class mediacaster_admin {
 	 **/
 
 	function type_url_form_audio($html) {
-			return '
+		return '
 			<table class="describe"><tbody>
 				<tr>
 					<th valign="top" scope="row" class="label">
@@ -660,7 +660,7 @@ class mediacaster_admin {
 					</th>
 					<td class="field"><input id="insertonly[url]" name="insertonly[url]" value="" type="text"></td>
 				</tr>
-				<tr><td></td><td class="help">' . __('The link URL to which the player should direct users to (e.g. an affiliate link). (Only applicable for mp3 and m4a files, and playlists.)') . '</td></tr>
+				<tr><td></td><td class="help">' . __('The link URL to which the player should direct users to (e.g. an affiliate link). Only applicable for mp3 and m4a files.') . '</td></tr>
 				<tr>
 					<td></td>
 					<td>
@@ -708,7 +708,34 @@ class mediacaster_admin {
 	 **/
 
 	function type_url_form_video($html) {
-			return '
+		global $content_width;
+		$o = get_option('mediacaster');
+		$default_width = $content_width ? intval($content_width) : 420;
+		if ( $o['format'] == '4/3' )
+			$default_height = round($default_width * 3 / 4);
+		else
+			$default_height = round($default_width * 9 / 16);
+		
+		return '
+<script type="text/javascript">
+var mc = {
+	set_default: function() {
+		jQuery("#insertonly-width").val("' . $default_width . '");
+		jQuery("#insertonly-height").val("' . $default_height . '");
+		return false;
+	},
+	
+	set_16_9: function() {
+		jQuery("#insertonly-height").val(Math.round(jQuery("#insertonly-width").val() * 9 / 16));
+		return false;
+	},
+	
+	set_4_3: function() {
+		jQuery("#insertonly-height").val(Math.round(jQuery("#insertonly-width").val() * 3 / 4));
+		return false;
+	}
+};
+</script>
 			<table class="describe"><tbody>
 				<tr>
 					<th valign="top" scope="row" class="label">
@@ -723,14 +750,23 @@ class mediacaster_admin {
 					</th>
 					<td class="field"><input id="insertonly[title]" name="insertonly[title]" value="" type="text"></td>
 				</tr>
-				<tr><td></td><td class="help">' . __('Link text, e.g. &#8220;Lucy on YouTube&#8220;') . '</td></tr>
+				<tr><td></td><td class="help">' . __('Link text, e.g. &#8220;Lucy on YouTube&#8221;') . '</td></tr>
+				<tr>
+					<th valign="top" scope="row" class="label">
+						<span class="alignleft"><label for="insertonly-width">' . __('Width x Height') . '</label></span>
+					</th>
+					<td class="field help"><input id="insertonly-width" name="insertonly[width]" value="' . $default_width . '" type="text" size="3" style="width: 40px;"> x <input id="insertonly-height" name="insertonly[height]" value="' . $default_height . '" type="text" size="3" style="width: 40px;">
+					<button type="button" class="button" onclick="return mc.set_default();">' . __('Default') . '</button>
+					<button type="button" class="button" onclick="return mc.set_16_9();">' . __('16/9') . '</button>
+					<button type="button" class="button" onclick="return mc.set_4_3();">' . __('4/3') . '</button></td>
+				</tr>
 				<tr>
 					<th valign="top" scope="row" class="label">
 						<span class="alignleft"><label for="insertonly[url]">' . __('Link URL') . '</label></span>
 					</th>
 					<td class="field"><input id="insertonly[url]" name="insertonly[url]" value="" type="text"></td>
 				</tr>
-				<tr><td></td><td class="help">' . __('The link URL to which the player should direct users to (e.g. an affiliate link). (Only applicable for flv, mp4, m4v, and youtube files, and playlists.)') . '</td></tr>
+				<tr><td></td><td class="help">' . __('The link URL to which the player should direct users to (e.g. an affiliate link). Only applicable for flv, mp4, m4a, m4v and YouTube files.') . '</td></tr>
 				<tr>
 					<td></td>
 					<td>
@@ -755,24 +791,27 @@ class mediacaster_admin {
 		$title = stripslashes($_POST['insertonly']['title']);
 		$href = esc_url_raw(stripslashes($_POST['insertonly']['href']));
 		
-		if ( !$title )
-			$title = basename($href);
-		
 		if ( preg_match("/^https?:\/\/(?:www\.)?youtube.com\//i", $href) ) {
 			$v = parse_url($href);
 			$v = $v['query'];
 			parse_str($v, $v);
 			if ( empty($v['v']) ) // invalid video url
 				return $html;
+			if ( !$title )
+				$title = __('YouTube Video');
 			$link = trim(stripslashes($_POST['insertonly']['url']));
 			$link = $link ? ( ' link="' . esc_url_raw($link) . '"' ) : '';
-			$html = '[media href="' . $href . '" type="youtube"]' . $title . '[/media]';
-		} elseif ( preg_match("/\b(flv|mp4|m4v|rss2?|xml|feed|atom)\b/i", $href, $ext) ) {
+			$width = intval($_POST['insertonly']['width']);
+			$height = intval($_POST['insertonly']['height']);
+			$html = '[media href="' . $href . '" width="' . $width . '" height="' . $height . '" type="youtube"' . $link . ']' . $title . '[/media]';
+		} elseif ( preg_match("/\b(flv|mp4|m4a|m4v|rss2?|xml|feed|atom)\b/i", $href, $ext) ) {
+			if ( !$title )
+				$title = basename($href);
 			$link = trim(stripslashes($_POST['insertonly']['url']));
 			$link = $link ? ( ' link="' . esc_url_raw($link) . '"' ) : '';
 			$ext = strtolower(end($ext));
 			$ext = in_array($ext, array('flv', 'mp4', 'm4v')) ? $ext : 'video';
-			$html = '[media href="' . $href . '" type="' . $ext . '"' . $link . ']' . $title . '[/media]';
+			$html = '[media href="' . $href . '" width="' . $width . '" height="' . $height . '" type="' . $ext . '"' . $link . ']' . $title . '[/media]';
 		}
 		
 		return $html;
@@ -787,7 +826,7 @@ class mediacaster_admin {
 	 **/
 
 	function type_url_form_file($html) {
-			return '
+		return '
 			<table class="describe"><tbody>
 				<tr>
 					<th valign="top" scope="row" class="label">
@@ -802,7 +841,7 @@ class mediacaster_admin {
 					</th>
 					<td class="field"><input id="insertonly[title]" name="insertonly[title]" value="" type="text"></td>
 				</tr>
-				<tr><td></td><td class="help">' . __('Link text, e.g. &#8220;Lucy on YouTube&#8220;') . '</td></tr>
+				<tr><td></td><td class="help">' . __('Link text, e.g. &#8220;Ransom Demands (PDF)&#8221;') . '</td></tr>
 				<tr>
 					<th valign="top" scope="row" class="label">
 						<span class="alignleft"><label for="insertonly[url]">' . __('Link URL') . '</label></span>

@@ -58,6 +58,7 @@ if ( get_option('mediacaster') === false )
 add_shortcode('media', array('mediacaster', 'shortcode'));
 
 add_filter('upload_mimes', array('mediacaster', 'upload_mimes'));
+add_filter('widget_text', 'do_shortcode', 11);
 
 class mediacaster {
 	/**
@@ -119,7 +120,7 @@ class mediacaster {
 
 	function audio($args, $content = '') {
 		extract($args, EXTR_SKIP);
-		extract(mediacaster::defaults());
+		extract(mediacaster::defaults(), EXTR_SKIP);
 		static $count = 0;
 		
 		if ( $image = mediacaster::get_cover() ) {
@@ -127,14 +128,14 @@ class mediacaster {
 			$width = $cover_size[0];
 			$height = $cover_size[1];
 			
-			if ( $width < 360 )
-				$width = 360;
-			elseif ( $width > $player_width ) {
-				$height = round($height * $player_width / $width);
+			if ( $width < $min_player_width )
+				$width = $min_player_width;
+			elseif ( $max_player_width && $width > $max_player_width ) {
+				$height = round($height * $max_player_width / $width);
 				$width = $player_width;
 			}
 		} else {
-			$width = min(360, $player_width);
+			$width = min($min_player_width, $player_width);
 			$height = 0;
 		}
 		
@@ -210,13 +211,23 @@ EOS;
 
 	function video($args, $content = '') {
 		extract($args, EXTR_SKIP);
-		extract(mediacaster::defaults());
+		extract(mediacaster::defaults(), EXTR_SKIP);
 		static $count = 0;
 		
-		$width = $player_width;
-		$height = $player_height;
+		if ( !isset($width) ) {
+			$width = $player_width;
+			$height = $player_height;
+		} elseif ( !isset($height)) {
+			if ( $player_format == '4/3' )
+				$height = round($width * 3 / 4);
+			else
+				$height = round($width * 9 / 16);
+		}
 		
-		$height += 59;
+		if ( $max_player_width && $width > $max_player_width ) {
+			$height = round($height * $max_player_width / $width);
+			$width = $max_player_width;
+		}
 		
 		preg_match("/\.([^.]+)$/", $file, $ext); 
 		$ext = end($ext);
@@ -238,16 +249,23 @@ EOS;
 		if ( isset($type) && in_array($type, array('flv', 'mp4', 'm4v')) )
 			$flashvars['type'] = 'video';
 		
-		if ( isset($link) )
-			$flashvars['link'] = esc_url_raw($link);
-		
 		if ( $image )
 			$flashvars['image'] = esc_url_raw($image);
 		
-		$flashvars['plugins'] = array('quickkeys-1', 'viral-1');
+		$flashvars['plugins'] = array('quickkeys-1');
 
-		$flashvars['viral.onpause'] = 'false';
-		$flashvars['viral.link'] = in_the_loop() ? get_permalink() : get_option('home');
+		if ( $width >= $min_player_width ) {
+			$height += 59;
+			
+			if ( isset($link) )
+				$flashvars['link'] = esc_url_raw($link);
+			
+			$flashvars['plugins'][] = 'viral-1';
+			$flashvars['viral.onpause'] = 'false';
+			$flashvars['viral.link'] = in_the_loop() ? get_permalink() : get_option('home');
+		} else {
+			$flashvars['controlbar'] = 'none';
+		}
 		
 		$flashvars = apply_filters('mediacaster_video', $flashvars);
 		$flashvars['plugins'] = implode(',', $flashvars['plugins']);
@@ -319,29 +337,31 @@ EOS;
 	function defaults() {
 		static $player_width;
 		static $player_height;
+		static $player_format;
+		static $min_player_width = 320;
+		static $max_player_width;
 		
-		if ( isset($player_width) && isset($player_height) )
-			return compact('player_width', 'player_height');
+		if ( isset($player_format) )
+			return compact('player_width', 'player_height', 'player_format', 'min_player_width', 'max_player_width');
 		
 		global $content_width;
 		
 		$o = get_option('mediacaster');
 		
-		if ( !isset($player_width) ) {
-			if ( isset($content_width) )
-				$player_width = $content_width;
-			else
-				$player_width = 420;
-		}
+		$player_format = $o['player']['format'];
+		$max_player_width = intval($content_width);
 		
-		if ( !isset($player_height) ) {
-			if ( $o['player']['format'] == '16/9' )
-				$player_height = round($player_width * 9 / 16);
-			else
-				$player_height = round($player_width * 3 / 4);
-		}
+		if ( $max_player_width )
+			$player_width = $max_player_width;
+		else
+			$player_width = 420;
 		
-		return compact('player_width', 'player_height');
+		if ( $player_format == '4/3' )
+			$player_height = round($player_width * 3 / 4);
+		else
+			$player_height = round($player_width * 9 / 16);
+		
+		return compact('player_width', 'player_height', 'player_format', 'min_player_width', 'max_player_width');
 	} # defaults()
 	
 	

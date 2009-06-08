@@ -1,7 +1,7 @@
 .media_container {
 	overflow: hidden;
-	clear: both;
 	width: 100%;
+	clear: both;
 }
 
 .media_container a {
