@@ -7,7 +7,6 @@
 
 add_action('settings_page_mediacaster', array('mediacaster_admin', 'save_options'), 0);
 
-add_filter('upload_mimes', array('mediacaster_admin', 'upload_mimes'));
 add_filter('attachment_fields_to_edit', array('mediacaster_admin', 'attachment_fields_to_edit'), 20, 2);
 add_filter('media_send_to_editor', array('mediacaster_admin', 'media_send_to_editor'), 20, 3);
 
@@ -33,7 +32,7 @@ class mediacaster_admin {
 		} else {
 			$input = strip_tags($input);
 		}
-
+		
 		return $input;
 	} # strip_tags_rec()
 
@@ -528,20 +527,6 @@ class mediacaster_admin {
 	
 	
 	/**
-	 * upload_mimes()
-	 *
-	 * @param array $mines
-	 * @return array $mines
-	 **/
-
-	function upload_mimes($mimes) {
-		if ( !isset($mimes['flv']) )
-			$mimes['flv'] = 'video/x-flv';
-		return $mimes;
-	} # upload_mimes()
-	
-	
-	/**
 	 * attachment_fields_to_edit()
 	 *
 	 * @param array $post_fields
@@ -561,11 +546,6 @@ class mediacaster_admin {
 		case 'video/mpeg':
 		case 'video/x-flv':
 			unset($post_fields['post_excerpt']);
-			if ( !in_array($ext, array('mp3', 'mp4', 'flv')) ) {
-				unset($post_fields['url']);
-				break;
-			}
-			
 			$post_fields['url']['html'] = preg_split("/<br/", $post_fields['url']['html']);
 			$post_fields['url']['html'] = $post_fields['url']['html'][0];
 			$bad_urls = array();
@@ -577,11 +557,6 @@ class mediacaster_admin {
 				$bad_urls[$k] = " value='" . esc_url($bad_url) . "'";
 			$post_fields['url']['html'] = str_replace($bad_urls, " value=''", $post_fields['url']['html']);
 			$post_fields['url']['helps'] = 'The link URL to which the player should direct users to (e.g. an affiliate link).';
-			break;
-		
-		case 'video/quicktime':
-			unset($post_fields['post_excerpt']);
-			unset($post_fields['url']);
 			break;
 		
 		default:
@@ -626,36 +601,26 @@ class mediacaster_admin {
 		
 		switch ( $post->post_mime_type ) {
 		case 'audio/mpeg':
-			if ( $ext == 'mp3' )
-				$html = '[media id="' . $send_id . '" type="mp3"' . $link . ']'
-					. $attachment['post_title'] . '[/media]';
-			else
-				$html = '[media id="' . $send_id . '" type="m4a"]'
+			preg_match("/\b(mp3|m4a)\b/i", $href, $ext);
+			$html = '[media id="' . $send_id . '" type="' . $ext . '"' . $link . ']'
 					. $attachment['post_title'] . '[/media]';
 			break;
 		
 		case 'video/mpeg':
-			if ( $ext == 'mp4' )
-				$html = '[media id="' . $send_id . '" type="mp4"' . $link . ']'
-					. $attachment['post_title'] . '[/media]';
-			else
-				$html = '[media id="' . $send_id . '" type="m4v"]'
-					. $attachment['post_title'] . '[/media]';
-			break;
-		
 		case 'video/x-flv':
-			$html = '[media id="' . $send_id . '" type="flv"' . $link . ']'
-				. $attachment['post_title'] . '[/media]';
-			break;
-		
-		case 'video/quicktime':
-			$html = '[media id="' . $send_id . '" type="' . $ext . '"]'
+			preg_match("/\b(flv|mp4|m4v)\b/i", $href, $ext);
+			$ext = strtolower(end($ext));
+			$html = '[media id="' . $send_id . '" type="' . $ext . '"' . $link . ']'
 				. $attachment['post_title'] . '[/media]';
 			break;
 		
 		default:
 			if ( !preg_match("/^(?:application|text)\//", $post->post_mime_type) )
 				break;
+			if ( preg_match("/\.([a-z0-9])+$/i", $href, $ext) )
+				$ext = strtolower(end($ext));
+			else
+				$ext = 'file';
 			$html = '[media id="' . $send_id . '" type="' . $ext . '"]'
 				. $attachment['post_title'] . '[/media]';
 		}
@@ -695,7 +660,7 @@ class mediacaster_admin {
 					</th>
 					<td class="field"><input id="insertonly[url]" name="insertonly[url]" value="" type="text"></td>
 				</tr>
-				<tr><td></td><td class="help">' . __('The link URL to which the player should direct users to (e.g. an affiliate link). (Applies to mp3 files and playlists only.)') . '</td></tr>
+				<tr><td></td><td class="help">' . __('The link URL to which the player should direct users to (e.g. an affiliate link). (Only applicable for mp3 and m4a files, and playlists.)') . '</td></tr>
 				<tr>
 					<td></td>
 					<td>
@@ -720,20 +685,15 @@ class mediacaster_admin {
 		$title = stripslashes($_POST['insertonly']['title']);
 		$href = esc_url_raw(stripslashes($_POST['insertonly']['href']));
 		
-		if ( !$title ) {
-			if ( preg_match("/\.[a-z0-9]+$/i", $href, $ext) ) {
-				$title = basename($href, '.' . end($ext));
-			} else {
-				$title = basename($href);
-			}
-		}
+		if ( !$title )
+			$title = basename($href);
 		
-		if ( $ext == 'm4a' || preg_match("/\bm4a\b/i", $href) ) {
-			$html = '[media href="' . $href . '" type="m4a"]' . $title . '[/media]';
-		} elseif ( preg_match("/\b(mp3|rss2?|xml)\b/i", $href) ) {
+		if ( preg_match("/\b(mp3|m4a|rss2?|xml|feed|atom)\b/i", $href, $ext) ) {
 			$link = trim(stripslashes($_POST['insertonly']['url']));
 			$link = $link ? ( ' link="' . esc_url_raw($link) . '"' ) : '';
-			$html = '[media href="' . $href . '" type="mp3"' . $link . ']' . $title . '[/media]';
+			$ext = strtolower(end($ext));
+			$ext = in_array($ext, array('mp3', 'm4a')) ? $ext : 'audio';
+			$html = '[media href="' . $href . '" type="' . $ext . '"' . $link . ']' . $title . '[/media]';
 		}
 		
 		return $html;
@@ -770,7 +730,7 @@ class mediacaster_admin {
 					</th>
 					<td class="field"><input id="insertonly[url]" name="insertonly[url]" value="" type="text"></td>
 				</tr>
-				<tr><td></td><td class="help">' . __('The link URL to which the player should direct users to (e.g. an affiliate link). (Applies to flv and mp4 files only.)') . '</td></tr>
+				<tr><td></td><td class="help">' . __('The link URL to which the player should direct users to (e.g. an affiliate link). (Only applicable for flv, mp4 and m4v files, and playlists.)') . '</td></tr>
 				<tr>
 					<td></td>
 					<td>
@@ -795,28 +755,22 @@ class mediacaster_admin {
 		$title = stripslashes($_POST['insertonly']['title']);
 		$href = esc_url_raw(stripslashes($_POST['insertonly']['href']));
 		
-		if ( !$title ) {
-			if ( preg_match("/\.[a-z0-9]+$/i", $href, $ext) ) {
-				$title = basename($href, '.' . end($ext));
-			} else {
-				$title = basename($href);
-			}
-		}
+		if ( !$title )
+			$title = basename($href);
 		
 		if ( preg_match("/^https?:\/\/(?:www\.)youtube.com\//i", $href) ) {
-			$href = parse_url($href);
-			$v = $href['query'];
+			$v = parse_url($href);
+			$v = $v['query'];
 			parse_str($v, $v);
 			if ( empty($v['v']) )
 				return $html;
 			$html = '[media href="' . $href . '" type="youtube"]' . $title . '[/media]';
-		} elseif ( preg_match("/\b(mp4|rss2?|xml)\b/i", $href) ) {
+		} elseif ( preg_match("/\b(flv|mp4|m4v|rss2?|xml|feed|atom)\b/i", $href, $ext) ) {
 			$link = trim(stripslashes($_POST['insertonly']['url']));
 			$link = $link ? ( ' link="' . esc_url_raw($link) . '"' ) : '';
-			$html = '[media href="' . $href . '" type="mp4"' . $link . ']' . $title . '[/media]';
-		} elseif ( preg_match("/\b(m4v|mov|qt)\b/i", $href, $ext) ) {
 			$ext = strtolower(end($ext));
-			$html = '[media href="' . $href . '" type="' . $ext . '"]' . $title . '[/media]';
+			$ext = in_array($ext, array('flv', 'mp4', 'm4v')) ? $ext : 'video';
+			$html = '[media href="' . $href . '" type="' . $ext . '"' . $link . ']' . $title . '[/media]';
 		}
 		
 		return $html;
@@ -853,7 +807,7 @@ class mediacaster_admin {
 					</th>
 					<td class="field"><input id="insertonly[url]" name="insertonly[url]" value="" type="text"></td>
 				</tr>
-				<tr><td></td><td class="help">' . __('The link URL to which the player should direct users to (e.g. an affiliate link). (Applies to flv and mp4 files only.)') . '</td></tr>
+				<tr><td></td><td class="help">' . __('The link URL to which the player should direct users to (e.g. an affiliate link). (Only applicable for flv, mp4, and m4v files, and playlists.)') . '</td></tr>
 				<tr>
 					<td></td>
 					<td>
@@ -878,20 +832,7 @@ class mediacaster_admin {
 		$title = stripslashes($_POST['insertonly']['title']);
 		$href = esc_url_raw(stripslashes($_POST['insertonly']['href']));
 		
-		if ( preg_match("/\.[a-z0-9]+$/i", $href, $ext) ) {
-			$ext = end($ext);
-			$type = ' type="' . strtolower($ext) . '"';
-			if ( !$title )
-				$title = basename($href, '.' . $ext) . ' (' . strtolower($ext) . ')';
-		} else {
-			$type = '';
-			if ( !$title )
-				$title = basename($href);
-		}
-		
-		$html = '[media href="' . $href . '"' . $type . ']' . $title . '[/media]';
-		
-		return $html = '[media href="' . $href . '" type=""]' . $title . '[/media]';
+		return '[media href="' . $href . '" type="file"]' . $title . '[/media]';
 	} # file_send_to_editor_url()
 } # mediacaster_admin
 ?>

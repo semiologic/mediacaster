@@ -4,12 +4,13 @@
 	width: 100%;
 }
 
-.media_attachment {
-	border-top: solid 1px ForestGreen;
-	border-bottom: solid 1px ForestGreen;
-    background: #ddffdd;
+.media_container a {
+	display: block;
+	border-top: solid 1px #228b22;
+	border-bottom: solid 1px #228b22;
+    background: #ddffdd 10px center no-repeat;
 	width: 100%;
-	padding: 20px 50px 20px 50px;
+	padding: 30px 10px 30px 65px;
 	margin: 6px 0px;
 }
 

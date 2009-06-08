@@ -43,8 +43,8 @@ add_action('rss2_item', array('mediacaster', 'display_feed_enclosures'));
 add_action('atom_entry', array('mediacaster', 'display_feed_enclosures'));
 
 if ( !is_admin() ) {
-	add_action('wp_print_scripts', array('mediacaster', 'scripts'));
-	add_action('wp_print_styles', array('mediacaster', 'styles'));
+	add_action('wp_print_scripts', array('mediacaster', 'scripts'), 0);
+	add_action('wp_print_styles', array('mediacaster', 'styles'), 0);
 } else {
 	add_action('admin_menu', array('mediacaster', 'admin_menu'));
 }
@@ -55,14 +55,319 @@ add_filter('get_the_excerpt', array('mediacaster', 'enable'), 20);
 if ( get_option('mediacaster') === false )
 	mediacaster::init_options();
 
+add_shortcode('media', array('mediacaster', 'shortcode'));
+
+add_filter('upload_mimes', array('mediacaster', 'upload_mimes'));
+
 class mediacaster {
 	/**
-	 * get_player_size()
+	 * upload_mimes()
+	 *
+	 * @param array $mines
+	 * @return array $mines
+	 **/
+
+	function upload_mimes($mimes) {
+		if ( !isset($mimes['flv']) )
+			$mimes['flv'] = 'video/x-flv';
+		return $mimes;
+	} # upload_mimes()
+	
+	
+	/**
+	 * shortcode()
+	 *
+	 * @return string $player
+	 **/
+
+	function shortcode($args, $content = '') {
+		$args = wp_parse_args($args, array('type' => 'file'));
+		switch ( $args['type'] ) {
+		case 'youtube':
+			return mediacaster::youtube($args, $content);
+		
+		case 'mp3':
+		case 'm4a':
+		case 'audio':
+			return mediacaster::audio($args, $content);
+		
+		case 'mp4':
+		case 'm4v':
+		case 'video':
+			return mediacaster::video($args, $content);
+		
+		default:
+			return mediacaster::file($args, $content);
+		}
+	} # shortcode()
+
+	
+	/**
+	 * youtube()
+	 *
+	 * @param array $args
+	 * @param string $content
+	 * @return string $player
+	 **/
+
+	function youtube($args, $content) {
+		extract($args, EXTR_SKIP);
+		extract(mediacaster::defaults());
+		static $count = 0;
+		
+		$width = $player_width;
+		$height = round($width * 295 / 480);
+		
+		$id = 'm' . md5($href . '_' . $count++);
+		
+		$file = parse_url($href);
+		$file = $file['query'];
+		parse_str($file, $file);
+		
+		if ( empty($file['v']) )
+			return;
+		
+		$file = $file['v'];
+		$file = preg_replace("/[^a-z0-9_-]/i", '', $file);
+		
+		if ( !$file )
+			return;
+		
+		# adjust height for youtube control
+		$height += 4;
+		
+		$player = 'http://www.youtube.com/v/' . $file;
+		
+		$script = '';
+		
+		if ( !is_feed() )
+			$script = <<<EOS
+<script type="text/javascript">
+var params = {};
+params.allowfullscreen = "$allowfullscreen";
+params.allowscriptaccess = "$allowscriptaccess";
+swfobject.embedSWF("$player", "$id", "$width", "$height", "9.0.0", false, false, params);
+</script>
+EOS;
+		
+		return <<<EOS
+
+<div class="media_container"><div class="media" style="width: {$width}px; height: {$height}px;"><object id="$id" classid="clsid:D27CDB6E-AE6D-11cf-96B8-444553540000" width="$width" height="$height"><param name="movie" value="$player" /><param name="allowfullscreen" value="$allowfullscreen" /><param name="allowscriptaccess" value="$allowscriptaccess" /><embed src="$player" pluginspage="http://www.macromedia.com/go/getflashplayer" width="$width" height="$height" allowfullscreen="$allowfullscreen" allowscriptaccess="$allowscriptaccess" /></object></div></div>
+
+$script
+
+EOS;
+	} # youtube()
+	
+	
+	/**
+	 * audio()
+	 *
+	 * @param string $content
+	 * @param array $args
+	 * @return string $player
+	 **/
+
+	function audio($args, $content = '') {
+		extract($args, EXTR_SKIP);
+		extract(mediacaster::defaults());
+		static $count = 0;
+		
+		if ( $image = mediacaster::get_cover() ) {
+			$cover_size = getimagesize(ABSPATH . $image);
+			$width = $cover_size[0];
+			$height = $cover_size[1];
+			
+			if ( $width < 360 )
+				$width = 360;
+			elseif ( $width > $player_width ) {
+				$height = round($height * $player_width / $width);
+				$width = $player_width;
+			}
+		} else {
+			$width = min(360, $player_width);
+			$height = 0;
+		}
+		
+		$height += 59;
+		
+		$id = 'm' . md5($href . '_' . $count++);
+		
+		$player = plugin_dir_url(__FILE__) . 'player/player-viral.swf';
+		
+		$allowfullscreen = 'true';
+		$allowscriptaccess = 'always';
+		$allownetworking = 'all';
+		
+		$flashvars = array();
+		$flashvars['file'] = $href;
+		$flashvars['skin'] = plugin_dir_url(__FILE__) . 'player/kleur.swf';
+		
+		if ( isset($type) ) {
+			if ( in_array($type, array('mp3')) )
+				$flashvars['type'] = 'sound';
+			else
+				$flashvars['type'] = 'video';
+		}
+			
+		
+		if ( isset($link) )
+			$flashvars['link'] = esc_url_raw($link);
+		
+		if ( $image ) {
+			$flashvars['image'] = esc_url_raw($image);
+			$flashvars['plugins'] = array('quickkeys-1', 'viral-1');
+
+			$flashvars['viral.onpause'] = 'false';
+			$flashvars['viral.link'] = in_the_loop() ? get_permalink() : get_option('home');
+		} else {
+			$flashvars['plugins'] = array('quickkeys-1');
+		}
+		
+		$flashvars = apply_filters('mediacaster_audio', $flashvars);
+		$flashvars = http_build_query($flashvars, null, '&');
+		
+		$script = '';
+		
+		if ( !is_feed() )
+			$script = <<<EOS
+<script type="text/javascript">
+var params = {};
+params.allowfullscreen = "$allowfullscreen";
+params.allowscriptaccess = "$allowscriptaccess";
+params.allownetworking = "$allownetworking";
+params.flashvars = "$flashvars";
+swfobject.embedSWF("$player", "$id", "$width", "$height", "9.0.0", false, false, params);
+</script>
+EOS;
+		
+		return <<<EOS
+
+<div class="media_container"><div class="media" style="width: {$width}px; height: {$height}px;"><object id="$id" classid="clsid:D27CDB6E-AE6D-11cf-96B8-444553540000" width="$width" height="$height"><param name="movie" value="$player" /><param name="allowfullscreen" value="$allowfullscreen" /><param name="allowscriptaccess" value="$allowscriptaccess" /><param name="allownetworking" value="$allownetworking" /><param name="flashvars" value="$flashvars" /><embed src="$player" pluginspage="http://www.macromedia.com/go/getflashplayer" width="$width" height="$height" allowfullscreen="$allowfullscreen" allowscriptaccess="$allowscriptaccess" allownetworking="$allownetworking" flashvars="$flashvars" /></object></div></div>
+
+$script
+
+EOS;
+	} # audio()
+	
+	
+	/**
+	 * video()
+	 *
+	 * @param string $content
+	 * @param array $args
+	 * @return string $player
+	 **/
+
+	function video($args, $content = '') {
+		extract($args, EXTR_SKIP);
+		extract(mediacaster::defaults());
+		static $count = 0;
+		
+		$width = $player_width;
+		$height = $player_height;
+		
+		$height += 59;
+		
+		preg_match("/\.([^.]+)$/", $file, $ext); 
+		$ext = end($ext);
+		
+		$image = false;
+		
+		$id = 'm' . md5($file . '_' . $count++);
+		
+		$player = plugin_dir_url(__FILE__) . 'player/player-viral.swf';
+		
+		$allowfullscreen = 'true';
+		$allowscriptaccess = 'always';
+		$allownetworking = 'all';
+		
+		$flashvars = array();
+		$flashvars['file'] = $href;
+		$flashvars['skin'] = plugin_dir_url(__FILE__) . 'player/kleur.swf';
+		
+		if ( isset($type) && in_array($type, array('flv', 'mp4', 'm4v')) )
+			$flashvars['type'] = 'video';
+		
+		if ( isset($link) )
+			$flashvars['link'] = esc_url_raw($link);
+		
+		if ( $image )
+			$flashvars['image'] = esc_url_raw($image);
+		
+		$flashvars['plugins'] = array('quickkeys-1', 'viral-1');
+
+		$flashvars['viral.onpause'] = 'false';
+		$flashvars['viral.link'] = in_the_loop() ? get_permalink() : get_option('home');
+		
+		$flashvars = apply_filters('mediacaster_video', $flashvars);
+		$flashvars['plugins'] = implode(',', $flashvars['plugins']);
+		$flashvars = http_build_query($flashvars, null, '&');
+		
+		$script = '';
+		
+		if ( !is_feed() )
+			$script = <<<EOS
+<script type="text/javascript">
+var params = {};
+params.allowfullscreen = "$allowfullscreen";
+params.allowscriptaccess = "$allowscriptaccess";
+params.allownetworking = "$allownetworking";
+params.flashvars = "$flashvars";
+swfobject.embedSWF("$player", "$id", "$width", "$height", "9.0.0", false, false, params);
+</script>
+EOS;
+		
+		return <<<EOS
+
+<div class="media_container"><div class="media" style="width: {$width}px; height: {$height}px;"><object id="$id" classid="clsid:D27CDB6E-AE6D-11cf-96B8-444553540000" width="$width" height="$height"><param name="movie" value="$player" /><param name="allowfullscreen" value="$allowfullscreen" /><param name="allowscriptaccess" value="$allowscriptaccess" /><param name="allownetworking" value="$allownetworking" /><param name="flashvars" value="$flashvars" /><embed src="$player" pluginspage="http://www.macromedia.com/go/getflashplayer" width="$width" height="$height" allowfullscreen="$allowfullscreen" allowscriptaccess="$allowscriptaccess" allownetworking="$allownetworking" flashvars="$flashvars" /></object></div></div>
+
+$script
+
+EOS;
+	} # video()
+	
+	
+	/**
+	 * file()
+	 *
+	 * @param array $args
+	 * @param string $content
+	 * @return string $player
+	 **/
+
+	function file($args, $content = '') {
+		extract($args, EXTR_SKIP);
+		
+		$title = trim($content);
+		if ( !$title ) {
+			$title = basename($href);
+			if ( preg_match("/(.+)\.([a-z0-9]+)$/", $title, $_title) )
+				$title = $_title[1] . ' (' . strtolower($_title[2]) . ')';
+		}
+		
+		$mime = wp_check_filetype($href);
+		$icon = wp_mime_type_icon(wp_ext2type($mime['ext']));
+		
+		$href = esc_url($href);
+		
+		return <<<EOS
+<div class="media_container">
+<a class="no_icon" href="$href" style="background-image: url($icon);">
+$title
+</a>
+</div>
+EOS;
+	} # file()
+	
+	
+	/**
+	 * defaults()
 	 *
 	 * @return void
 	 **/
 
-	function get_player_size() {
+	function defaults() {
 		static $player_width;
 		static $player_height;
 		
@@ -88,7 +393,7 @@ class mediacaster {
 		}
 		
 		return compact('player_width', 'player_height');
-	} # get_player_size()
+	} # defaults()
 	
 	
 	/**
@@ -131,7 +436,6 @@ class mediacaster {
 		$folder = plugin_dir_url(__FILE__);
 		
 		wp_enqueue_script('swfobject');
-		wp_enqueue_script('qtobject', $folder . 'js/qtobject.js', false, '1.0.2');
 	} # scripts()
 	
 	
@@ -371,345 +675,6 @@ class mediacaster {
 		
 		return apply_filters('mediacaster_flashvars', $flashvars);
 	} # get_flashvars()
-
-
-	/**
-	 * display_audio()
-	 *
-	 * @param string $file
-	 * @return string $player
-	 **/
-
-	function display_audio($file) {
-		if ( strpos($file, '/') === false ) {
-			$site_url = trailingslashit(site_url());
-			$path = mediacaster::get_path(get_the_ID());
-			$file = $site_url . $path . $file;
-		}
-		
-		extract(mediacaster::get_player_size());
-		static $count = 0;
-		
-		if ( $cover = mediacaster::get_cover() ) {
-			$cover_size = getimagesize(ABSPATH . $cover);
-			$width = $cover_size[0];
-			$height = $cover_size[1];
-			
-			if ( $width < 360 )
-				$width = 360;
-			elseif ( $width > $player_width ) {
-				$height = round($height * $player_width / $width);
-				$width = $player_width;
-			}
-		} else {
-			$width = $player_width;
-			$height = 0;
-		}
-		
-		if ( $width > 420 ) {
-			$height = round($height * 420 / $width);
-			$width = 420;
-		}
-		
-		$height += 59;
-		
-		$id = 'm' . md5($file . '_' . $count++);
-		
-		$player = plugin_dir_url(__FILE__) . 'player/player-viral.swf';
-		
-		$allowfullscreen = 'true';
-		$allowscriptaccess = 'always';
-		$allownetworking = 'all';
-		
-		$flashvars = mediacaster::get_flashvars($file, $image);
-		$flashvars = apply_filters('mediacaster_audio_flashvars', $flashvars);
-		$flashvars = http_build_query($flashvars, null, '&');
-		
-		$script = '';
-		
-		if ( !is_feed() )
-			$script = <<<EOS
-<script type="text/javascript">
-var params = {};
-params.allowfullscreen = "$allowfullscreen";
-params.allowscriptaccess = "$allowscriptaccess";
-params.allownetworking = "$allownetworking";
-params.flashvars = "$flashvars";
-swfobject.embedSWF("$player", "$id", "$width", "$height", "9.0.0", false, false, params);
-</script>
-EOS;
-		
-		return <<<EOS
-
-<div class="media_container"><div class="media" style="width: {$width}px; height: {$height}px;"><object id="$id" classid="clsid:D27CDB6E-AE6D-11cf-96B8-444553540000" width="$width" height="$height"><param name="movie" value="$player" /><param name="allowfullscreen" value="$allowfullscreen" /><param name="allowscriptaccess" value="$allowscriptaccess" /><param name="allownetworking" value="$allownetworking" /><param name="flashvars" value="$flashvars" /><embed src="$player" width="$width" height="$height" allowfullscreen="$allowfullscreen" allowscriptaccess="$allowscriptaccess" allownetworking="$allownetworking" flashvars="$flashvars" /></object></div></div>
-
-$script
-
-EOS;
-	} # display_audio()
-
-
-	/**
-	 * display_video()
-	 *
-	 * @param string $file
-	 * @return string $player
-	 **/
-
-	function display_video($file) {
-		if ( strpos($file, '/') === false ) {
-			$site_url = trailingslashit(site_url());
-			$path = mediacaster::get_path(get_the_ID());
-			$file = $site_url . $path . $file;
-		}
-		
-		extract(mediacaster::get_player_size());
-		static $count = 0;
-		
-		$width = $player_width;
-		$height = $player_height;
-		
-		$height += 59;
-		
-		preg_match("/\.([^.]+)$/", $file, $ext); 
-		$ext = end($ext);
-		
-		$image = false;
-		
-		switch ( strtolower($ext) ) {
-		case 'flv':
-		case 'swf':
-			$site_url = trailingslashit(site_url());
-
-			$image = $file;
-			$image = str_replace($site_url, '', $image);
-			$image = str_replace('.' . $ext, '', $image);
-
-			if ( defined('GLOB_BRACE') ) {
-				$image = glob(ABSPATH . $image . '.{jpg,jpeg,png}', GLOB_BRACE);
-			} else {
-				$image = glob(ABSPATH . $image . '.jpg');
-			}
-
-			if ( $image ) {
-				$image = current($image);
-				$image = str_replace(ABSPATH, $site_url, $image);
-			}
-
-			break;
-		}
-		
-		$id = 'm' . md5($file . '_' . $count++);
-		
-		$player = plugin_dir_url(__FILE__) . 'player/player-viral.swf';
-		
-		$allowfullscreen = 'true';
-		$allowscriptaccess = 'always';
-		$allownetworking = 'all';
-		
-		$flashvars = mediacaster::get_flashvars($file, $image);
-		$flashvars = apply_filters('mediacaster_video_flashvars', $flashvars);
-		$flashvars = http_build_query($flashvars, null, '&');
-		
-		$script = '';
-		
-		if ( !is_feed() )
-			$script = <<<EOS
-<script type="text/javascript">
-var params = {};
-params.allowfullscreen = "$allowfullscreen";
-params.allowscriptaccess = "$allowscriptaccess";
-params.allownetworking = "$allownetworking";
-params.flashvars = "$flashvars";
-swfobject.embedSWF("$player", "$id", "$width", "$height", "9.0.0", false, false, params);
-</script>
-EOS;
-		
-		return <<<EOS
-
-<div class="media_container"><div class="media" style="width: {$width}px; height: {$height}px;"><object id="$id" classid="clsid:D27CDB6E-AE6D-11cf-96B8-444553540000" width="$width" height="$height"><param name="movie" value="$player" /><param name="allowfullscreen" value="$allowfullscreen" /><param name="allowscriptaccess" value="$allowscriptaccess" /><param name="allownetworking" value="$allownetworking" /><param name="flashvars" value="$flashvars" /><embed src="$player" width="$width" height="$height" allowfullscreen="$allowfullscreen" allowscriptaccess="$allowscriptaccess" allownetworking="$allownetworking" flashvars="$flashvars" /></object></div></div>
-
-$script
-
-EOS;
-	} # display_video()
-
-	
-	/**
-	 * display_youtube()
-	 *
-	 * @param string $file
-	 * @return string $player
-	 **/
-
-	function display_youtube($file) {
-		extract(mediacaster::get_player_size());
-		static $count = 0;
-		
-		$width = $player_width;
-		$height = round($width * 295 / 480);
-		
-		$id = 'm' . md5($file . '_' . $count++);
-		
-		$file = parse_url($file);
-		$file = $file['query'];
-		parse_str($file, $file);
-		
-		if ( empty($file['v']) )
-			return;
-		
-		$file = $file['v'];
-		$file = preg_replace("/[^a-z0-9_-]/i", '', $file);
-		
-		if ( !$file )
-			return;
-		
-		# adjust height for youtube control
-		$height += 4;
-		
-		$player = 'http://www.youtube.com/v/' . $file;
-		
-		$script = '';
-		
-		if ( !is_feed() )
-			$script = <<<EOS
-<script type="text/javascript">
-var params = {};
-params.allowfullscreen = "$allowfullscreen";
-params.allowscriptaccess = "$allowscriptaccess";
-swfobject.embedSWF("$player", "$id", "$width", "$height", "9.0.0", false, false, params);
-</script>
-EOS;
-		
-		return <<<EOS
-
-<div class="media_container"><div class="media" style="width: {$width}px; height: {$height}px;"><object id="$id" classid="clsid:D27CDB6E-AE6D-11cf-96B8-444553540000" width="$width" height="$height"><param name="movie" value="$player" /><param name="allowfullscreen" value="$allowfullscreen" /><param name="allowscriptaccess" value="$allowscriptaccess" /><embed src="$player" width="$width" height="$height" allowfullscreen="$allowfullscreen" allowscriptaccess="$allowscriptaccess" /></object></div></div>
-
-$script
-
-EOS;
-	} # display_youtube()
-
-
-	/**
-	 * display_quicktime()
-	 *
-	 * @param string $file
-	 * @param int $width
-	 * @param int $height
-	 * @return string $player
-	 **/
-
-	function display_quicktime($file) {
-		if ( strpos($file, '/') === false ) {
-			$site_url = trailingslashit(site_url());
-			$path = mediacaster::get_path(get_the_ID());
-			$file = $site_url . $path . $file;
-		}
-		
-		if ( is_feed() ) {
-			return '<div class="media">'
-				. '<a href="' . esc_url($file) . '">'
-				. basename($file)
-				. '</a>'
-				. '</div>';
-		}
-
-		$image = false;
-
-		preg_match("/\.([^.]+)$/", $file, $ext); 
-		$ext = end($ext);
-		
-		switch ( strtolower($ext) ) {
-		case 'mov':
-			$site_url = trailingslashit(site_url());
-
-			$image = $file;
-			$image = str_replace($site_url, '', $image);
-			$image = str_replace('.' . $ext, '', $image);
-
-			if ( defined('GLOB_BRACE') ) {
-				$image = glob(ABSPATH . $image . '.{jpg,jpeg,png}', GLOB_BRACE);
-			} else {
-				$image = glob(ABSPATH . $image . '.jpg');
-			}
-
-			if ( $image ) {
-				$image = current($image);
-				$image = str_replace(ABSPATH, $site_url, $image);
-			}
-
-			break;
-		}
-		
-		extract(mediacaster::get_player_size());
-		$width = $player_width;
-		$height = $player_height;
-		
-		static $count = 0;
-		$id = md5($file . '_' . $count++);
-		
-		$height += 16; # controller
-		$file = esc_url($file);
-		
-		$autoplay = 'false';
-		$loop = 'false';
-		$targetcache = 'true';
-		
-		$object = <<<EOS
-<object classid="clsid:02BF25D5-8C17-4B23-BC80-D3488ABDDC6B" width="$width" height="$height"><param name="src" value="$file" /><param name="autoplay" value="$autoplay" /><param name="loop" value="$loop" /><param name="loop" value="$targetcache" /><embed src="sample.mov" width="$width" height="$height" autoplay="$autoplay" loop="$loop" targetcache="$targetcache" pluginspage="http://www.apple.com/quicktime/download/" /></object>
-EOS;
-		
-		if ( !is_feed() )
-			$object = <<<EOS
-<script type="text/javascript">
-var so = new QTObject("$file", "$id", "$width", "$height");
-so.addParam("autoplay","$autoplay");
-so.addParam("loop","$loop");
-so.addParam("targetcache","$targetcache");
-so.write();
-</script><noscript>$object</noscript>
-EOS;
-		
-		return <<<EOS
-
-<div class="media_container">
-<div class="media" style="width: {$width}px; height: {$height}px;">
-$object
-</div>
-</div>
-
-EOS;
-	} # display_quicktime()
-	
-	
-	/**
-	 * display_file()
-	 *
-	 * @param string $file
-	 * @return string $attachment
-	 **/
-	
-	function display_file($file) {
-		if ( strpos($file, '/') === false ) {
-			$site_url = trailingslashit(site_url());
-			$path = mediacaster::get_path(get_the_ID());
-			$file = $site_url . $path . $file;
-		}
-		
-		$label = basename($file);
-
-		preg_match( "/(.+)\.([^\.]+)$/", $label, $label );
-		$label = $label[1] . ' (' . $label[2] . ')';
-		
-		return '<div class="media_container">'
-			. '<div class="media_attachment">'
-			. '<a href="' . esc_url($file) . '">'
-			. $label
-			. '</a>'
-			. '</div>'
-			. '</div>';
-	} # display_file()
 	
 	
 	/**
