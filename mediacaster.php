@@ -180,6 +180,8 @@ class mediacaster {
 				$width = max($width, 50);
 				$height = max($height, 50);
 				$flashvars['controlbar'] = 'none';
+			} else {
+				$height += 59;
 			}
 		}
 		
