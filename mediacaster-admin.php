@@ -693,7 +693,7 @@ class mediacaster_admin {
 			$link = $link ? ( ' link="' . esc_url_raw($link) . '"' ) : '';
 			$ext = strtolower(end($ext));
 			$ext = in_array($ext, array('mp3', 'm4a')) ? $ext : 'audio';
-			$html = '[media href="' . $href . '" type="' . $ext . '"' . $link . ']' . $title . '[/media]';
+			$html = '[media href="' . $href . '" type="audio"' . $link . ']' . $title . '[/media]';
 		}
 		
 		return $html;
@@ -730,7 +730,7 @@ class mediacaster_admin {
 					</th>
 					<td class="field"><input id="insertonly[url]" name="insertonly[url]" value="" type="text"></td>
 				</tr>
-				<tr><td></td><td class="help">' . __('The link URL to which the player should direct users to (e.g. an affiliate link). (Only applicable for flv, mp4 and m4v files, and playlists.)') . '</td></tr>
+				<tr><td></td><td class="help">' . __('The link URL to which the player should direct users to (e.g. an affiliate link). (Only applicable for flv, mp4, m4v, and youtube files, and playlists.)') . '</td></tr>
 				<tr>
 					<td></td>
 					<td>
@@ -758,12 +758,14 @@ class mediacaster_admin {
 		if ( !$title )
 			$title = basename($href);
 		
-		if ( preg_match("/^https?:\/\/(?:www\.)youtube.com\//i", $href) ) {
+		if ( preg_match("/^https?:\/\/(?:www\.)?youtube.com\//i", $href) ) {
 			$v = parse_url($href);
 			$v = $v['query'];
 			parse_str($v, $v);
-			if ( empty($v['v']) )
+			if ( empty($v['v']) ) // invalid video url
 				return $html;
+			$link = trim(stripslashes($_POST['insertonly']['url']));
+			$link = $link ? ( ' link="' . esc_url_raw($link) . '"' ) : '';
 			$html = '[media href="' . $href . '" type="youtube"]' . $title . '[/media]';
 		} elseif ( preg_match("/\b(flv|mp4|m4v|rss2?|xml|feed|atom)\b/i", $href, $ext) ) {
 			$link = trim(stripslashes($_POST['insertonly']['url']));
@@ -806,13 +808,6 @@ class mediacaster_admin {
 						<span class="alignleft"><label for="insertonly[url]">' . __('Link URL') . '</label></span>
 					</th>
 					<td class="field"><input id="insertonly[url]" name="insertonly[url]" value="" type="text"></td>
-				</tr>
-				<tr><td></td><td class="help">' . __('The link URL to which the player should direct users to (e.g. an affiliate link). (Only applicable for flv, mp4, and m4v files, and playlists.)') . '</td></tr>
-				<tr>
-					<td></td>
-					<td>
-						<input type="submit" class="button" name="insertonlybutton" value="' . esc_attr__('Insert into Post') . '" />
-					</td>
 				</tr>
 			</tbody></table>
 		';

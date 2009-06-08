@@ -81,18 +81,25 @@ class mediacaster {
 	 **/
 
 	function shortcode($args, $content = '') {
-		$args = wp_parse_args($args, array('type' => 'file'));
-		switch ( $args['type'] ) {
-		case 'youtube':
-			return mediacaster::youtube($args, $content);
+		if ( !isset($args['type']) ) {
+			if ( isset($args['href']) && preg_match("/^https?:\/\/(?:www\.)?youtube.com\//i", $args['href']) ) {
+				$args['type'] = 'youtube';
+			} else {
+				$type = wp_check_filetype($args['href']);
+				$args['type'] = $type['ext'];
+			}
+		}
 		
+		switch ( $args['type'] ) {
 		case 'mp3':
 		case 'm4a':
 		case 'audio':
 			return mediacaster::audio($args, $content);
 		
+		case 'flv':
 		case 'mp4':
 		case 'm4v':
+		case 'youtube':
 		case 'video':
 			return mediacaster::video($args, $content);
 		
@@ -100,64 +107,6 @@ class mediacaster {
 			return mediacaster::file($args, $content);
 		}
 	} # shortcode()
-
-	
-	/**
-	 * youtube()
-	 *
-	 * @param array $args
-	 * @param string $content
-	 * @return string $player
-	 **/
-
-	function youtube($args, $content) {
-		extract($args, EXTR_SKIP);
-		extract(mediacaster::defaults());
-		static $count = 0;
-		
-		$width = $player_width;
-		$height = round($width * 295 / 480);
-		
-		$id = 'm' . md5($href . '_' . $count++);
-		
-		$file = parse_url($href);
-		$file = $file['query'];
-		parse_str($file, $file);
-		
-		if ( empty($file['v']) )
-			return;
-		
-		$file = $file['v'];
-		$file = preg_replace("/[^a-z0-9_-]/i", '', $file);
-		
-		if ( !$file )
-			return;
-		
-		# adjust height for youtube control
-		$height += 4;
-		
-		$player = 'http://www.youtube.com/v/' . $file;
-		
-		$script = '';
-		
-		if ( !is_feed() )
-			$script = <<<EOS
-<script type="text/javascript">
-var params = {};
-params.allowfullscreen = "$allowfullscreen";
-params.allowscriptaccess = "$allowscriptaccess";
-swfobject.embedSWF("$player", "$id", "$width", "$height", "9.0.0", false, false, params);
-</script>
-EOS;
-		
-		return <<<EOS
-
-<div class="media_container"><div class="media" style="width: {$width}px; height: {$height}px;"><object id="$id" classid="clsid:D27CDB6E-AE6D-11cf-96B8-444553540000" width="$width" height="$height"><param name="movie" value="$player" /><param name="allowfullscreen" value="$allowfullscreen" /><param name="allowscriptaccess" value="$allowscriptaccess" /><embed src="$player" pluginspage="http://www.macromedia.com/go/getflashplayer" width="$width" height="$height" allowfullscreen="$allowfullscreen" allowscriptaccess="$allowscriptaccess" /></object></div></div>
-
-$script
-
-EOS;
-	} # youtube()
 	
 	
 	/**
