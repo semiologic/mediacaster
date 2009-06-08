@@ -176,11 +176,14 @@ class mediacaster {
 			$flashvars['viral.onpause'] = 'false';
 			$flashvars['viral.link'] = in_the_loop() ? get_permalink() : get_option('home');
 		} else {
-			if ( $width < 200 ) {
+			$min_width = isset($link) ? 200 : 170;
+			if ( $width < $min_width ) {
 				$width = max($width, 50);
 				$height = max($height, 50);
 				$flashvars['controlbar'] = 'none';
 			} else {
+				if ( isset($link) )
+					$flashvars['link'] = esc_url_raw($link);
 				$height += 59;
 			}
 		}
@@ -276,7 +279,16 @@ EOS;
 			$flashvars['viral.onpause'] = 'false';
 			$flashvars['viral.link'] = in_the_loop() ? get_permalink() : get_option('home');
 		} else {
-			$flashvars['controlbar'] = 'none';
+			$min_width = isset($link) ? 200 : 170;
+			if ( $width < $min_width ) {
+				$width = max($width, 50);
+				$height = max($height, 50);
+				$flashvars['controlbar'] = 'none';
+			} else {
+				if ( isset($link) )
+					$flashvars['link'] = esc_url_raw($link);
+				$height += 59;
+			}
 		}
 		
 		$flashvars = apply_filters('mediacaster_video', $flashvars);
