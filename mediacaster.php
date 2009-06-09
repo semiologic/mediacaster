@@ -156,8 +156,9 @@ class mediacaster {
 		extract(mediacaster::defaults(), EXTR_SKIP);
 		static $count = 0;
 		
-		if ( $image = mediacaster::get_cover() ) {
-			$cover_size = getimagesize(WP_CONTENT_DIR . $image);
+		if ( $cover ) {
+			$image = WP_CONTENT_URL . $cover;
+			$cover_size = getimagesize(WP_CONTENT_DIR . $cover);
 			$width = $cover_size[0];
 			$height = $cover_size[1];
 			
@@ -166,6 +167,7 @@ class mediacaster {
 				$width = $player_width;
 			}
 		} else {
+			$image = false;
 			if ( empty($width) )
 				$width = min($player_width, $min_player_width);
 			$height = 0;
@@ -183,39 +185,25 @@ class mediacaster {
 		$flashvars['file'] = $href;
 		$flashvars['skin'] = plugin_dir_url(__FILE__) . 'player/kleur.swf';
 		
-		if ( isset($type) ) {
-			if ( in_array($type, array('mp3' )) )
-				$flashvars['type'] = 'sound';
-			else
-				$flashvars['type'] = 'video';
-		}
-		
-		if ( isset($link) )
-			$flashvars['link'] = esc_url_raw($link);
+		if ( $image )
+			$flashvars['image'] = esc_url_raw($image);
 		
 		$flashvars['plugins'] = array('quickkeys-1');
 		
-		if ( $image ) {
-			$flashvars['image'] = esc_url_raw(WP_CONTENT_URL . $image);
-			$flashvars['plugins'][] = 'viral-1';
-			$flashvars['viral.onpause'] = 'false';
-			$flashvars['viral.link'] = in_the_loop() ? get_permalink() : get_option('home');
-		}
-		
 		if ( $width >= $min_player_width ) {
 			$height += 59;
-			if ( isset($link) )
+			if ( $link )
 				$flashvars['link'] = esc_url_raw($link);
 		} else {
-			$min_width = isset($link) ? 200 : 170;
+			$min_width = $link ? 200 : 170;
 			if ( $width < $min_width ) {
 				$width = max($width, 50);
 				$height = max($height, 50);
 				$flashvars['controlbar'] = 'none';
 			} else {
-				if ( isset($link) )
-					$flashvars['link'] = esc_url_raw($link);
 				$height += 59;
+				if ( $link )
+					$flashvars['link'] = esc_url_raw($link);
 			}
 		}
 		
@@ -292,9 +280,6 @@ EOS;
 		$flashvars['file'] = $href;
 		$flashvars['skin'] = plugin_dir_url(__FILE__) . 'player/kleur.swf';
 		
-		if ( isset($type) && in_array($type, array('flv', 'mp4', 'm4v')) )
-			$flashvars['type'] = 'video';
-		
 		if ( $image )
 			$flashvars['image'] = esc_url_raw($image);
 		
@@ -302,23 +287,18 @@ EOS;
 
 		if ( $width >= $min_player_width ) {
 			$height += 59;
-			
-			if ( isset($link) )
+			if ( $link )
 				$flashvars['link'] = esc_url_raw($link);
-			
-			$flashvars['plugins'][] = 'viral-1';
-			$flashvars['viral.onpause'] = 'false';
-			$flashvars['viral.link'] = in_the_loop() ? get_permalink() : get_option('home');
 		} else {
-			$min_width = isset($link) ? 200 : 170;
+			$min_width = $link ? 200 : 170;
 			if ( $width < $min_width ) {
 				$width = max($width, 50);
 				$height = max($height, 50);
 				$flashvars['controlbar'] = 'none';
 			} else {
-				if ( isset($link) )
-					$flashvars['link'] = esc_url_raw($link);
 				$height += 59;
+				if ( $link )
+					$flashvars['link'] = esc_url_raw($link);
 			}
 		}
 		
@@ -395,9 +375,10 @@ EOS;
 		static $player_format;
 		static $min_player_width = 320;
 		static $max_player_width;
+		static $cover;
 		
 		if ( isset($player_format) )
-			return compact('player_width', 'player_height', 'player_format', 'min_player_width', 'max_player_width');
+			return compact('player_width', 'player_height', 'player_format', 'min_player_width', 'max_player_width', 'cover');
 		
 		global $content_width;
 		
@@ -416,7 +397,9 @@ EOS;
 		else
 			$player_height = round($player_width * 9 / 16);
 		
-		return compact('player_width', 'player_height', 'player_format', 'min_player_width', 'max_player_width');
+		$cover = $o['player']['cover'];
+		
+		return compact('player_width', 'player_height', 'player_format', 'min_player_width', 'max_player_width', 'cover');
 	} # defaults()
 	
 	
@@ -473,25 +456,6 @@ EOS;
 		
 		wp_enqueue_style('mediacaster', $css, null, '2.0');
 	} # styles()
-
-
-	/**
-	 * get_cover()
-	 *
-	 * @return string $cover
-	 **/
-
-	function get_cover() {
-		static $cover;
-		
-		if ( !is_admin() && isset($cover) )
-			return $cover;
-		
-		$o = get_option('mediacaster');
-		$cover = $o['cover'];
-		
-		return $cover;
-	} # get_cover()
 	
 	
 	/**
@@ -526,7 +490,8 @@ EOS;
 		
 		foreach ( $enclosures as $key => $enclosure ) {
 			if ( $podcasts ) {
-				if ( $enclosure->post_mime_type != 'audio/mpeg' || in_array($enclosure->ID, $enclosed) )
+				if ( !in_array($enclosure->post_mime_type, array('audio/mpeg', 'audio/aac'))
+					|| in_array($enclosure->ID, $enclosed) )
 					unset($enclosures[$key]);
 			} else {
 				if ( preg_match("/^image\//i", $post->post_mime_type) )
@@ -536,17 +501,22 @@ EOS;
 		
 		return $enclosures;
 	} # get_enclosures()
-
-
+	
+	
 	/**
 	 * podcasts()
 	 *
 	 * @param string $content
 	 * @return string $content
 	 **/
-
+	
 	function podcasts($content) {
 		if ( !in_the_loop() )
+			return $content;
+		
+		$o = get_option('mediacaster');
+		
+		if ( $o['player']['position'] == 'none' )
 			return $content;
 		
 		$podcasts = mediacaster::get_enclosures(true);
@@ -554,12 +524,7 @@ EOS;
 		if ( !$podcasts )
 			return $content;
 		
-		global $post;
-		
-		$o = get_option('mediacaster');
-		$out = '';
-		
-		$out = mediacaster::audio(array('href' => get_option('home') . '?podcasts=' . $post->ID));
+		$out = mediacaster::audio(array('href' => get_option('home') . '?podcasts=' . get_the_ID()));
 		
 		if ( $options['player']['position'] != 'bottom' )
 			$content = $out . $content;
@@ -609,7 +574,8 @@ EOS;
 		echo '<trackList>' . "\n";
 		
 		$site_url = trailingslashit(get_option('home'));
-		$cover = mediacaster::get_cover();
+		$o = get_option('mediacaster');
+		$cover = $o['player']['cover'];
 		
 		foreach ( $podcasts as $podcast ) {
 			echo '<track>' . "\n";
@@ -672,7 +638,7 @@ EOS;
 			. '<itunes:block>' . apply_filters('the_excerpt_rss', $options['itunes']['block']) . '</itunes:block>' . "\n\t\t"
 			;
 		
-		$cover = mediacaster::get_cover();
+		$cover = $options['player']['cover'];
 		
 		if ( $cover ) {
 			echo '<itunes:image href="' . esc_url(WP_CONTENT_URL . $cover) . '" />' . "\n\t\t"
@@ -793,20 +759,14 @@ EOS;
 		$options = array();
 
 		$options['itunes']['author'] = '';
-
 		$options['itunes']['summary'] = get_option('blogdescription');
-
-		$options['itunes']['explicit'] = 'No';
-
-		$options['itunes']['block'] = 'No';
-
+		$options['itunes']['explicit'] = 'no';
+		$options['itunes']['block'] = 'no';
 		$options['itunes']['copyright'] = '';
 
-		$options['player']['width'] = 320;
-		$options['player']['height'] = 180;
+		$options['player']['format'] = '16/9';
 		$options['player']['position'] = 'top';
-
-		$options['compat'] = false;
+		$options['player']['cover'] = false;
 
 		update_option('mediacaster', $options);
 	} # init_options()

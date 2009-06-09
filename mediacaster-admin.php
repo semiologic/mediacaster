@@ -33,7 +33,7 @@ class mediacaster_admin {
 		check_admin_referer('mediacaster');
 		
 		$old_ops = get_option('mediacaster');
-		$cover = $old_ops['cover'];
+		$cover = $old_ops['player']['cover'];
 		
 		if ( isset($_POST['delete_cover']) && $cover ) {
 			if ( file_exists(WP_CONTENT_DIR . $cover) )
@@ -85,6 +85,7 @@ class mediacaster_admin {
 		$player['format'] = in_array($new_ops['player']['format'], array('16/9', '4/3'))
 			? $new_ops['player']['format']
 			: '16/9';
+		$player['cover'] = $cover;
 		
 		$itunes = array();
 		foreach ( array('author', 'summary', 'copyright') as $var )
@@ -98,7 +99,7 @@ class mediacaster_admin {
 			? $new_ops['itunes']['block']
 			: 'no';
 		
-		$options = compact('player', 'itunes', 'cover');
+		$options = compact('player', 'itunes');
 		update_option('mediacaster', $options);
 		
 		echo '<div class="updated fade">' . "\n"
@@ -141,7 +142,7 @@ class mediacaster_admin {
 		
 		echo '<tr valign="top">'
 			. '<th scope="row">'
-			. __('Player Position', 'mediacaster')
+			. __('Playlist Position', 'mediacaster')
 			. '</th>'
 			. '<td>'
 			. '<label for="mediacaster-player-position-top">'
@@ -184,7 +185,7 @@ class mediacaster_admin {
 			. '</label>'
 			. '</td>'
 			. '</tr>' . "\n";
-
+		
 		echo '<tr valign="top">'
 			. '<th scope="row">'
 			. __('Video Player Format', 'mediacaster')
@@ -218,13 +219,20 @@ class mediacaster_admin {
 			. '</td>' . "\n"
 			. '</tr>';
 
-		$cover = $options['cover'];
+		$cover = $options['player']['cover'];
 
 		echo '<tr valign="top">'
 			. '<th scope="row">'
 				. __('MP3 Playlist Cover', 'mediacaster')
 			. '</th>' . "\n"
 			. '<td>';
+		
+		if ( $cover && !is_file(WP_CONTENT_DIR . $cover) ) {
+			$options['player']['cover'] = false;
+			update_option('mediacaster', $options);
+			$cover = false;
+		}
+			
 		
 		if ( $cover ) {
 			echo '<div style="margin-botton: 6px;">';
@@ -242,7 +250,7 @@ class mediacaster_admin {
 					. __('Delete', 'mediacaster')
 					. '</label>';
 			} else {
-				echo __('This cover is not writable by the server.', 'mediacaster');
+				echo __('Your cover is not writable by the server.', 'mediacaster');
 			}
 			
 			echo '</div>';
