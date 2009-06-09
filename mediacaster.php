@@ -197,7 +197,6 @@ class mediacaster {
 		
 		$allowfullscreen = 'true';
 		$allowscriptaccess = 'always';
-		$allownetworking = 'all';
 		
 		$flashvars = array();
 		$flashvars['file'] = $href;
@@ -230,7 +229,6 @@ class mediacaster {
 var params = {};
 params.allowfullscreen = "$allowfullscreen";
 params.allowscriptaccess = "$allowscriptaccess";
-params.allownetworking = "$allownetworking";
 params.flashvars = "$flashvars";
 swfobject.embedSWF("$player", "$id", "$width", "$height", "9.0.0", false, false, params);
 </script>
@@ -238,7 +236,7 @@ EOS;
 		
 		return <<<EOS
 
-<div class="media_container"><div class="media" style="width: {$width}px; height: {$height}px;"><object id="$id" classid="clsid:D27CDB6E-AE6D-11cf-96B8-444553540000" width="$width" height="$height"><param name="movie" value="$player" /><param name="allowfullscreen" value="$allowfullscreen" /><param name="allowscriptaccess" value="$allowscriptaccess" /><param name="allownetworking" value="$allownetworking" /><param name="flashvars" value="$flashvars" /><embed src="$player" pluginspage="http://www.macromedia.com/go/getflashplayer" width="$width" height="$height" allowfullscreen="$allowfullscreen" allowscriptaccess="$allowscriptaccess" allownetworking="$allownetworking" flashvars="$flashvars" /></object></div></div>
+<div class="media_container"><div class="media" style="width: {$width}px; height: {$height}px;"><object id="$id" classid="clsid:D27CDB6E-AE6D-11cf-96B8-444553540000" width="$width" height="$height"><param name="movie" value="$player" /><param name="allowfullscreen" value="$allowfullscreen" /><param name="allowscriptaccess" value="$allowscriptaccess" /><param name="flashvars" value="$flashvars" /><embed src="$player" pluginspage="http://www.macromedia.com/go/getflashplayer" width="$width" height="$height" allowfullscreen="$allowfullscreen" allowscriptaccess="$allowscriptaccess" flashvars="$flashvars" /></object></div></div>
 
 $script
 
@@ -282,7 +280,6 @@ EOS;
 		
 		$allowfullscreen = 'true';
 		$allowscriptaccess = 'always';
-		$allownetworking = 'all';
 		
 		$flashvars = array();
 		$flashvars['file'] = $href;
@@ -315,7 +312,6 @@ EOS;
 var params = {};
 params.allowfullscreen = "$allowfullscreen";
 params.allowscriptaccess = "$allowscriptaccess";
-params.allownetworking = "$allownetworking";
 params.flashvars = "$flashvars";
 swfobject.embedSWF("$player", "$id", "$width", "$height", "9.0.0", false, false, params);
 </script>
@@ -323,7 +319,7 @@ EOS;
 		
 		return <<<EOS
 
-<div class="media_container"><div class="media" style="width: {$width}px; height: {$height}px;"><object id="$id" classid="clsid:D27CDB6E-AE6D-11cf-96B8-444553540000" width="$width" height="$height"><param name="movie" value="$player" /><param name="allowfullscreen" value="$allowfullscreen" /><param name="allowscriptaccess" value="$allowscriptaccess" /><param name="allownetworking" value="$allownetworking" /><param name="flashvars" value="$flashvars" /><embed src="$player" pluginspage="http://www.macromedia.com/go/getflashplayer" width="$width" height="$height" allowfullscreen="$allowfullscreen" allowscriptaccess="$allowscriptaccess" allownetworking="$allownetworking" flashvars="$flashvars" /></object></div></div>
+<div class="media_container"><div class="media" style="width: {$width}px; height: {$height}px;"><object id="$id" classid="clsid:D27CDB6E-AE6D-11cf-96B8-444553540000" width="$width" height="$height"><param name="movie" value="$player" /><param name="allowfullscreen" value="$allowfullscreen" /><param name="allowscriptaccess" value="$allowscriptaccess" /><param name="flashvars" value="$flashvars" /><embed src="$player" pluginspage="http://www.macromedia.com/go/getflashplayer" width="$width" height="$height" allowfullscreen="$allowfullscreen" allowscriptaccess="$allowscriptaccess" flashvars="$flashvars" /></object></div></div>
 
 $script
 
