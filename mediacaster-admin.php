@@ -64,7 +64,7 @@ class mediacaster_admin {
 			preg_match("/\.(jpg|jpeg|png)$/i", $name, $ext);
 			$ext = strtolower(end($ext));
 			
-			if ( !in_array($ext, mediacaster_admin::get_extensions('image')) ) {
+			if ( !in_array($ext, array('jpg', 'jpeg', 'png')) ) {
 				echo '<div class="error">'
 					. "<p>"
 						. "<strong>"
@@ -1008,7 +1008,6 @@ var mc = {
 	 **/
 
 	function get_extensions($type = null) {
-		$image = array('jpg', 'jpeg', 'png');
 		$audio = array('mp3', 'm4a', 'aac');
 		$video = array('flv', 'f4b', 'f4p', 'f4v', 'mp4', 'm4v', 'mov', '3pg', '3g2');
 		
