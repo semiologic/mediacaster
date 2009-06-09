@@ -195,16 +195,9 @@ class mediacaster {
 			if ( $link )
 				$flashvars['link'] = esc_url_raw($link);
 		} else {
-			$min_width = $link ? 200 : 170;
-			if ( $width < $min_width ) {
-				$width = max($width, 50);
-				$height = max($height, 50);
-				$flashvars['controlbar'] = 'none';
-			} else {
-				$height += 59;
-				if ( $link )
-					$flashvars['link'] = esc_url_raw($link);
-			}
+			$width = max($width, 50);
+			$height = max($height, 50);
+			$flashvars['controlbar'] = 'none';
 		}
 		
 		$flashvars = apply_filters('mediacaster_audio', $flashvars);
@@ -290,16 +283,9 @@ EOS;
 			if ( $link )
 				$flashvars['link'] = esc_url_raw($link);
 		} else {
-			$min_width = $link ? 200 : 170;
-			if ( $width < $min_width ) {
-				$width = max($width, 50);
-				$height = max($height, 50);
-				$flashvars['controlbar'] = 'none';
-			} else {
-				$height += 59;
-				if ( $link )
-					$flashvars['link'] = esc_url_raw($link);
-			}
+			$width = max($width, 50);
+			$height = max($height, 50);
+			$flashvars['controlbar'] = 'none';
 		}
 		
 		$flashvars = apply_filters('mediacaster_video', $flashvars);
