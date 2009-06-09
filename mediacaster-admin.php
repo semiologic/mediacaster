@@ -21,23 +21,6 @@ add_filter('file_send_to_editor_url', array('mediacaster_admin', 'file_send_to_e
 
 class mediacaster_admin {
 	/**
-	 * strip_tags_rec()
-	 *
-	 * @return void
-	 **/
-
-	function strip_tags_rec($input) {
-		if ( is_array($input) ) {
-			$input = array_map(array('mediacaster_admin', 'strip_tags_rec'), $input);
-		} else {
-			$input = strip_tags($input);
-		}
-		
-		return $input;
-	} # strip_tags_rec()
-
-	
-	/**
 	 * save_options()
 	 *
 	 * @return void
@@ -63,24 +46,20 @@ class mediacaster_admin {
 			}
 		}
 
-		$options = $_POST['mediacaster'];
-
-		$options = mediacaster_admin::strip_tags_rec($options);
-
 		if ( @ $_FILES['new_cover']['name'] ) {
 			$name =& $_FILES['new_cover']['name'];
 			$tmp_name =& $_FILES['new_cover']['tmp_name'];
 			
 			$name = strip_tags(stripslashes($name));
 
-			preg_match("/\.([^.]+)$/", $name, $ext); 
+			preg_match("/\.([^.]+)$/", $name, $ext);
 			$ext = end($ext);
 			
 			if ( !in_array(strtolower($ext), array('jpg', 'jpeg', 'png')) ) {
 				echo '<div class="error">'
 					. "<p>"
 						. "<strong>"
-						. __('Invalid File Type.')
+						. __('Invalid File Type.', 'mediacaster')
 						. "</strong>"
 					. "</p>\n"
 					. "</div>\n";
@@ -112,12 +91,35 @@ class mediacaster_admin {
 			}
 		}
 		
+		$new_ops = $_POST['mediacaster'];
+		
+		$player = array();
+		$player['position'] = in_array($new_ops['player']['position'], array('top', 'bottom', 'none'))
+			? $new_ops['player']['position']
+			: 'top';
+		$player['format'] = in_array($new_ops['player']['format'], array('16/9', '4/3'))
+			? $new_ops['player']['format']
+			: '16/9';
+		
+		$itunes = array();
+		foreach ( array('author', 'summary', 'copyright') as $var )
+			$itunes[$var] = stripslashes(strip_tags($new_ops['itunes'][$var]));
+		for ( $i = 1; $i <= 3; $i++ )
+			$itunes['category'][$i] = stripslashes(strip_tags($new_ops['itunes']['category'][$i]));
+		$itunes['explicit'] = in_array($new_ops['itunes']['explicit'], array('yes', 'no', 'clean'))
+			? $new_ops['itunes']['explicit']
+			: 'no';
+		$itunes['block'] = in_array($new_ops['itunes']['block'], array('yes', 'no'))
+			? $new_ops['itunes']['block']
+			: 'no';
+		
+		$options = compact('player', 'itunes');
 		update_option('mediacaster', $options);
 		
-		echo '<div class="updated">' . "\n"
+		echo '<div class="updated fade">' . "\n"
 			. '<p>'
 				. '<strong>'
-				. __('Settings saved.')
+				. __('Settings saved.', 'mediacaster')
 				. '</strong>'
 			. '</p>' . "\n"
 			. '</div>' . "\n";
@@ -142,32 +144,32 @@ class mediacaster_admin {
 		$site_url = trailingslashit(site_url());
 		
 		echo '<div class="wrap">' . "\n"
-			. '<h2>'. __('Mediacaster Settings') . '</h2>' . "\n";
+			. '<h2>'. __('Mediacaster Settings', 'mediacaster') . '</h2>' . "\n";
 
 		wp_nonce_field('mediacaster');
 
 		echo '<h3>'
-				. __('Media Player')
+				. __('Media Player', 'mediacaster')
 				. '</h3>' . "\n";
 
 		echo '<table class="form-table">';
 		
 		echo '<tr valign="top">'
 			. '<th scope="row">'
-			. __('Player Position')
+			. __('Player Position', 'mediacaster')
 			. '</th>'
 			. '<td>'
 			. '<label for="mediacaster-player-position-top">'
 			. '<input type="radio"'
 				. ' id="mediacaster-player-position-top" name="mediacaster[player][position]"'
 				. ' value="top"'
-				. ( $options['player']['position'] != 'bottom'
+				. ( $options['player']['position'] == 'top'
 					? ' checked="checked"'
 					: ''
 					)
 				. ' />'
 			. '&nbsp;'
-			. __('Top')
+			. __('Top', 'mediacaster')
 			. '</label>'
 			. ' &nbsp; '
 			. '<label for="mediacaster-player-position-bottom">'
@@ -180,14 +182,27 @@ class mediacaster_admin {
 					)
 				. ' />'
 			. '&nbsp;'
-			. __('Bottom')
+			. __('Bottom', 'mediacaster')
+			. '</label>'
+			. ' &nbsp; '
+			. '<label for="mediacaster-player-position-none">'
+			. '<input type="radio"'
+				. ' id="mediacaster-player-position-none" name="mediacaster[player][position]"'
+				. ' value="none"'
+				. ( $options['player']['position'] == 'none'
+					? ' checked="checked"'
+					: ''
+					)
+				. ' />'
+			. '&nbsp;'
+			. __('None', 'mediacaster')
 			. '</label>'
 			. '</td>'
 			. '</tr>' . "\n";
 
 		echo '<tr valign="top">'
 			. '<th scope="row">'
-			. __('Video Player Format')
+			. __('Video Player Format', 'mediacaster')
 			. '</th>'
 			. '<td>'
 			. '<label for="mediacaster-player-format-16-9">'
@@ -200,7 +215,7 @@ class mediacaster_admin {
 					)
 				. ' />'
 			. '&nbsp;'
-			. __('16/9')
+			. __('16/9', 'mediacaster')
 			. '</label>'
 			. ' &nbsp; '
 			. '<label for="mediacaster-player-format-4-3">'
@@ -213,7 +228,7 @@ class mediacaster_admin {
 					)
 				. ' />'
 			. '&nbsp;'
-			. __('4/3')
+			. __('4/3', 'mediacaster')
 			. '</label>'
 			. '</td>' . "\n"
 			. '</tr>';
@@ -222,7 +237,7 @@ class mediacaster_admin {
 
 		echo '<tr valign="top">'
 			. '<th scope="row">'
-				. __('MP3 Playlist Cover')
+				. __('MP3 Playlist Cover', 'mediacaster')
 			. '</th>' . "\n"
 			. '<td>';
 		
@@ -240,10 +255,10 @@ class mediacaster_admin {
 						. ' style="text-align: left; width: auto;"'
 						. ' />'
 					. '&nbsp;'
-					. __('Delete')
+					. __('Delete', 'mediacaster')
 					. '</label>';
 			} else {
-				echo __('This cover is not writable by the server.');
+				echo __('This cover is not writable by the server.', 'mediacaster');
 			}
 			
 			echo '</div>';
@@ -251,14 +266,14 @@ class mediacaster_admin {
 
 		echo '<div style="margin-botton: 6px;">'
 			. '<label for="new_cover">'
-				. __('New Image (jpg or png)') . ':'
+				. __('New Image (jpg or png)', 'mediacaster') . ':'
 			. '</label>'
 			. '<br />' . "\n"
 			. '<input type="file" id="new_cover" name="new_cover" />'
 			. '</div>' . "\n";
 
 		if ( !defined('GLOB_BRACE') ) {
-			echo '<p>' . __('Notice: GLOB_BRACE is an undefined constant on your server. Non .jpg images will be ignored.') . '</p>';
+			echo '<p>' . __('Notice: GLOB_BRACE is an undefined constant on your server. Non .jpg images will be ignored.', 'mediacaster') . '</p>';
 		}
 		
 		echo '</td>'
@@ -268,18 +283,18 @@ class mediacaster_admin {
 
 		echo '<p class="submit">'
 			. '<input type="submit"'
-				. ' value="' . esc_attr(__('Save Changes')) . '"'
+				. ' value="' . esc_attr(__('Save Changes', 'mediacaster')) . '"'
 				. ' />'
 			. '</p>' . "\n";
 
 
 		echo '<h3>'
-			. __('iTunes')
+			. __('iTunes', 'mediacaster')
 			. '</h3>' . "\n";
 
 		if ( class_exists('podPress_class') ) {
 			echo '<p>'
-				. __('PodPress was detected. Configure itunes-related fields in your PodPress options')
+				. __('PodPress was detected. Configure itunes-related settings using PodPress.', 'mediacaster')
 				. '</p>' . "\n";
 		} else {
 			echo '<table class="form-table">';
@@ -287,7 +302,7 @@ class mediacaster_admin {
 			echo '<tr valign="top">'
 				. '<th scope="row">'
 				. '<label for="mediacaster-itunes-author">'
-					. __('Author')
+					. __('Author', 'mediacaster')
 					. '</label>'
 				. '</th>'
 				. '<td>'
@@ -302,14 +317,14 @@ class mediacaster_admin {
 			echo '<tr valign="top">'
 				. '<th scope="row">'
 				. '<label for="mediacaster-itunes-summary">'
-					. __('Summary')
+					. __('Summary', 'mediacaster')
 					. '</label>'
 				. '</th>'
 				. '<td>'
 				. '<textarea class="widefat" cols="58" rows="3"'
 					. ' id="mediacaster-itunes-summary" name="mediacaster[itunes][summary]"'
 					. ' >' . "\n"
-					. $options['itunes']['summary']
+					. esc_html($options['itunes']['summary'])
 					. '</textarea>' . "\n"
 				. '</td>'
 				. '</tr>' . "\n";
@@ -317,25 +332,25 @@ class mediacaster_admin {
 
 			echo '<tr valign="top">'
 				. '<th scope="row">'
-					. __('Categories')
+					. __('Categories', 'mediacaster')
 				. '</th>'
 				. '<td>';
 
 			for ( $i = 1; $i <= 3; $i++ ) {
 				echo '<select name="mediacaster[itunes][category][' . $i . ']">' . "\n"
-					. '<option value="">' . __('-- Select --') . '</option>' . "\n";
+					. '<option value="">' . __('- Select -', 'mediacaster') . '</option>' . "\n";
 
-				foreach ( mediacaster_admin::get_itunes_categories() as $category ) {
+				foreach ( mediacaster_admin::get_itunes_categories() as $key => $category ) {
 					$category = $category;
 
 					echo '<option'
-						. ' value="' . esc_attr($category) . '"'
-						. ( ( $category == $options['itunes']['category'][$i] )
+						. ' value="' . esc_attr($key) . '"'
+						. ( ( $key == $options['itunes']['category'][$i] )
 							? ' selected="selected"'
 							: ''
 							)
 						. '>'
-						. esc_attr($category)
+						. esc_html($category)
 						. '</option>' . "\n";
 				} echo '</select>'
 				 	. '<br />'. "\n";
@@ -347,15 +362,19 @@ class mediacaster_admin {
 
 			echo '<tr valign="top">'
 				. '<th scope="row">'
-					. __('Explicit')
+					. __('Explicit', 'mediacaster')
 				. '</th>'
 				. '<td>';
 
-			foreach ( array(__('Yes'), __('No'), __('Clean')) as $answer ) {
+			foreach ( array(
+				'yes' => __('Yes', 'mediacaster'),
+				'no' => __('No', 'mediacaster'),
+				'clean' => __('Clean', 'mediacaster'),
+				) as $key => $answer ) {
 				echo '<label>'
 					. '<input type="radio" name="mediacaster[itunes][explicit]"'
-					. ' value="' . esc_attr($answer) . '"'
-					. ( ( $answer == $options['itunes']['explicit'] )
+					. ' value="' . esc_attr($key) . '"'
+					. ( ( $key == $options['itunes']['explicit'] )
 						? ' checked="checked"'
 						: ''
 						)
@@ -371,15 +390,18 @@ class mediacaster_admin {
 
 			echo '<tr valign="top">'
 				. '<th scope="row">'
-					. __('Block iTunes')
+					. __('Block iTunes', 'mediacaster')
 				. '</th>'
 				. '<td>';
 
-			foreach ( array(__('Yes'), __('No')) as $answer ) {
+			foreach ( array(
+				'yes' => __('Yes', 'mediacaster'),
+				'no' => __('No', 'mediacaster'),
+				) as $key => $answer ) {
 				echo '<label>'
 					. '<input type="radio" name="mediacaster[itunes][block]"'
-					. ' value="' . esc_attr($answer) . '"'
-					. ( ( $answer == $options['itunes']['block'] )
+					. ' value="' . esc_attr($key) . '"'
+					. ( ( $key == $options['itunes']['block'] )
 						? ' checked="checked"'
 						: ''
 						)
@@ -395,14 +417,14 @@ class mediacaster_admin {
 			echo '<tr valign="top">'
 				. '<th scope="row">'
 				. '<label for="mediacaster-itunes-copyright">'
-					. __('Copyright')
+					. __('Copyright', 'mediacaster')
 					. '</label>'
 				. '</th>'
 				. '<td>'
 				. '<textarea class="widefat" cols="58" rows="2"'
 					. ' id="mediacaster-itunes-copyright" name="mediacaster[itunes][copyright]"'
 					. ' >' . "\n"
-					. $options['itunes']['copyright']
+					. esc_html($options['itunes']['copyright'])
 					. '</textarea>' . "\n"
 				. '</td>'
 				. '</tr>' . "\n";
@@ -411,7 +433,7 @@ class mediacaster_admin {
 
 			echo '<p class="submit">'
 				. '<input type="submit"'
-					. ' value="' . esc_attr(__('Save Changes')) . '"'
+					. ' value="' . esc_attr(__('Save Changes', 'mediacaster')) . '"'
 					. ' />'
 				. '</p>' . "\n";;
 		}
@@ -430,88 +452,88 @@ class mediacaster_admin {
 
 	function get_itunes_categories() {
 		return array(
-			'Arts',
-			'Arts / Design',
-			'Arts / Fashion & Beauty',
-			'Arts / Food',
-			'Arts / Literature',
-			'Arts / Performing Arts',
-			'Arts / Visual Arts',
+			'Arts' => __('Arts', 'mediacaster'),
+			'Arts / Design' => __('Arts / Design', 'mediacaster'),
+			'Arts / Fashion & Beauty' => __('Arts / Fashion & Beauty', 'mediacaster'),
+			'Arts / Food' => __('Arts / Food', 'mediacaster'),
+			'Arts / Literature' => __('Arts / Literature', 'mediacaster'),
+			'Arts / Performing Arts' => __('Arts / Performing Arts', 'mediacaster'),
+			'Arts / Visual Arts' => __('Arts / Visual Arts', 'mediacaster'),
 
-			'Business',
-			'Business / Business News',
-			'Business / Careers',
-			'Business / Investing',
-			'Business / Management & Marketing',
-			'Business / Shopping',
+			'Business' => __('Business', 'mediacaster'),
+			'Business / Business News' => __('Business / Business News', 'mediacaster'),
+			'Business / Careers' => __('Business / Careers', 'mediacaster'),
+			'Business / Investing' => __('Business / Investing', 'mediacaster'),
+			'Business / Management & Marketing' => __('Business / Management & Marketing', 'mediacaster'),
+			'Business / Shopping' => __('Business / Shopping', 'mediacaster'),
 
-			'Comedy',
+			'Comedy' => __('Comedy', 'mediacaster'),
 
-			'Education',
-			'Education / Education Technology',
-			'Education / Higher Education',
-			'Education / K-12',
-			'Education / Language Courses',
-			'Education / Training',
+			'Education' => __('Education', 'mediacaster'),
+			'Education / Education Technology' => __('Education / Education Technology', 'mediacaster'),
+			'Education / Higher Education' => __('Education / Higher Education', 'mediacaster'),
+			'Education / K-12' => __('Education / K-12', 'mediacaster'),
+			'Education / Language Courses' => __('Education / Language Courses', 'mediacaster'),
+			'Education / Training' => __('Education / Training', 'mediacaster'),
 
-			'Games & Hobbies',
-			'Games & Hobbies / Automotive',
-			'Games & Hobbies / Aviation',
-			'Games & Hobbies / Hobbies',
-			'Games & Hobbies / Other Games',
-			'Games & Hobbies / Video Games',
+			'Games & Hobbies' => __('Games & Hobbies', 'mediacaster'),
+			'Games & Hobbies / Automotive' => __('Games & Hobbies / Automotive', 'mediacaster'),
+			'Games & Hobbies / Aviation' => __('Games & Hobbies / Aviation', 'mediacaster'),
+			'Games & Hobbies / Hobbies' => __('Games & Hobbies / Hobbies', 'mediacaster'),
+			'Games & Hobbies / Other Games' => __('Games & Hobbies / Other Games', 'mediacaster'),
+			'Games & Hobbies / Video Games' => __('Games & Hobbies / Video Games', 'mediacaster'),
 
-			'Government & Organizations',
-			'Government & Organizations / Local',
-			'Government & Organizations / National',
-			'Government & Organizations / Non-Profit',
-			'Government & Organizations / Regional',
+			'Government & Organizations' => __('Government & Organizations', 'mediacaster'),
+			'Government & Organizations / Local' => __('Government & Organizations / Local', 'mediacaster'),
+			'Government & Organizations / National' => __('Government & Organizations / National', 'mediacaster'),
+			'Government & Organizations / Non-Profit' => __('Government & Organizations / Non-Profit', 'mediacaster'),
+			'Government & Organizations / Regional' => __('Government & Organizations / Regional', 'mediacaster'),
 
-			'Health',
-			'Health / Alternative Health',
-			'Health / Fitness & Nutrition',
-			'Health / Self-Help',
-			'Health / Sexuality',
+			'Health' => __('Health', 'mediacaster'),
+			'Health / Alternative Health' => __('Health / Alternative Health', 'mediacaster'),
+			'Health / Fitness & Nutrition' => __('Health / Fitness & Nutrition', 'mediacaster'),
+			'Health / Self-Help' => __('Health / Self-Help', 'mediacaster'),
+			'Health / Sexuality' => __('Health / Sexuality', 'mediacaster'),
 
-			'Kids & Family',
+			'Kids & Family' => __('Kids & Family', 'mediacaster'),
 
-			'Music',
+			'Music' => __('Music', 'mediacaster'),
 
-			'News & Politics',
+			'News & Politics' => __('News & Politics', 'mediacaster'),
 
-			'Religion & Spirituality',
-			'Religion & Spirituality / Buddhism',
-			'Religion & Spirituality / Christianity',
-			'Religion & Spirituality / Hinduism',
-			'Religion & Spirituality / Islam',
-			'Religion & Spirituality / Judaism',
-			'Religion & Spirituality / Other',
-			'Religion & Spirituality / Spirituality',
+			'Religion & Spirituality' => __('Religion & Spirituality', 'mediacaster'),
+			'Religion & Spirituality / Buddhism' => __('Religion & Spirituality / Buddhism', 'mediacaster'),
+			'Religion & Spirituality / Christianity' => __('Religion & Spirituality / Christianity', 'mediacaster'),
+			'Religion & Spirituality / Hinduism' => __('Religion & Spirituality / Hinduism', 'mediacaster'),
+			'Religion & Spirituality / Islam' => __('Religion & Spirituality / Islam', 'mediacaster'),
+			'Religion & Spirituality / Judaism' => __('Religion & Spirituality / Judaism', 'mediacaster'),
+			'Religion & Spirituality / Other' => __('Religion & Spirituality / Other', 'mediacaster'),
+			'Religion & Spirituality / Spirituality' => __('Religion & Spirituality / Spirituality', 'mediacaster'),
 
-			'Science & Medicine',
-			'Science & Medicine / Medicine',
-			'Science & Medicine / Natural Sciences',
-			'Science & Medicine / Social Sciences',
+			'Science & Medicine' => __('Science & Medicine', 'mediacaster'),
+			'Science & Medicine / Medicine' => __('Science & Medicine / Medicine', 'mediacaster'),
+			'Science & Medicine / Natural Sciences' => __('Science & Medicine / Natural Sciences', 'mediacaster'),
+			'Science & Medicine / Social Sciences' => __('Science & Medicine / Social Sciences', 'mediacaster'),
 
-			'Society & Culture',
-			'Society & Culture / History',
-			'Society & Culture / Personal Journals',
-			'Society & Culture / Philosophy',
-			'Society & Culture / Places & Travel',
+			'Society & Culture' => __('Society & Culture', 'mediacaster'),
+			'Society & Culture / History' => __('Society & Culture / History', 'mediacaster'),
+			'Society & Culture / Personal Journals' => __('Society & Culture / Personal Journals', 'mediacaster'),
+			'Society & Culture / Philosophy' => __('Society & Culture / Philosophy', 'mediacaster'),
+			'Society & Culture / Places & Travel' => __('Society & Culture / Places & Travel', 'mediacaster'),
 
-			'Sports & Recreation',
-			'Sports & Recreation / Amateur',
-			'Sports & Recreation / College & High School',
-			'Sports & Recreation / Outdoor',
-			'Sports & Recreation / Professional',
+			'Sports & Recreation' => __('Sports & Recreation', 'mediacaster'),
+			'Sports & Recreation / Amateur' => __('Sports & Recreation / Amateur', 'mediacaster'),
+			'Sports & Recreation / College & High School' => __('Sports & Recreation / College & High School', 'mediacaster'),
+			'Sports & Recreation / Outdoor' => __('Sports & Recreation / Outdoor', 'mediacaster'),
+			'Sports & Recreation / Professional' => __('Sports & Recreation / Professional', 'mediacaster'),
 
-			'Technology',
-			'Technology / Gadgets',
-			'Technology / Tech News',
-			'Technology / Podcasting',
-			'Technology / Software How-To',
+			'Technology' => __('Technology', 'mediacaster'),
+			'Technology / Gadgets' => __('Technology / Gadgets', 'mediacaster'),
+			'Technology / Tech News' => __('Technology / Tech News', 'mediacaster'),
+			'Technology / Podcasting' => __('Technology / Podcasting', 'mediacaster'),
+			'Technology / Software How-To' => __('Technology / Software How-To', 'mediacaster'),
 
-			'TV & Film',
+			'TV & Film' => __('TV & Film', 'mediacaster'),
 		);
 	} # get_itunes_categories()
 	
@@ -570,12 +592,12 @@ var mc = {
 				$scripts = false;
 			}
 			$post_fields['format'] = array(
-				'label' => __('Width x Height'),
+				'label' => __('Width x Height', 'mediacaster'),
 				'input' => 'html',
 				'html' => $scripts . '<input id="attachments-width-' . $post->ID . '" name="attachments[' . $post->ID . '][width]" value="' . $default_width . '" type="text" size="3" style="width: 40px;"> x <input id="attachments-height-' . $post->ID . '" name="attachments[' . $post->ID . '][height]" value="' . $default_height . '" type="text" size="3" style="width: 40px;">
-	<button type="button" class="button" onclick="return mc.set_default(' . $post->ID . ');">' . __('Default') . '</button>
-	<button type="button" class="button" onclick="return mc.set_16_9(' . $post->ID . ');">' . __('16/9') . '</button>
-	<button type="button" class="button" onclick="return mc.set_4_3(' . $post->ID . ');">' . __('4/3') . '</button>',
+	<button type="button" class="button" onclick="return mc.set_default(' . $post->ID . ');">' . __('Default', 'mediacaster') . '</button>
+	<button type="button" class="button" onclick="return mc.set_16_9(' . $post->ID . ');">' . __('16/9', 'mediacaster') . '</button>
+	<button type="button" class="button" onclick="return mc.set_4_3(' . $post->ID . ');">' . __('4/3', 'mediacaster') . '</button>',
 				);
 		}
 		
@@ -596,7 +618,7 @@ var mc = {
 			foreach ( $bad_urls as $k => $bad_url )
 				$bad_urls[$k] = " value='" . esc_url($bad_url) . "'";
 			$post_fields['url']['html'] = str_replace($bad_urls, " value=''", $post_fields['url']['html']);
-			$post_fields['url']['helps'] = 'The link URL to which the player should direct users to (e.g. an affiliate link).';
+			$post_fields['url']['helps'] = __('The link URL to which the player should direct users to (e.g. an affiliate link).', 'mediacaster');
 			break;
 		
 		default:
@@ -693,30 +715,30 @@ var mc = {
 			<table class="describe"><tbody>
 				<tr>
 					<th valign="top" scope="row" class="label">
-						<span class="alignleft"><label for="insertonly[href]">' . __('Audio File URL') . '</label></span>
+						<span class="alignleft"><label for="insertonly[href]">' . __('Audio File URL', 'mediacaster') . '</label></span>
 						<span class="alignright"><abbr title="required" class="required">*</abbr></span>
 					</th>
 					<td class="field"><input id="insertonly[href]" name="insertonly[href]" value="" type="text" aria-required="true"></td>
 				</tr>
 				<tr>
 					<th valign="top" scope="row" class="label">
-						<span class="alignleft"><label for="insertonly[title]">' . __('Title') . '</label></span>
+						<span class="alignleft"><label for="insertonly[title]">' . __('Title', 'mediacaster') . '</label></span>
 					</th>
 					<td class="field"><input id="insertonly[title]" name="insertonly[title]" value="" type="text"></td>
 				</tr>
-				<tr><td></td><td class="help">' . __('Link text, e.g. &#8220;Still Alive by Jonathan Coulton&#8221;') . '</td></tr>
+				<tr><td></td><td class="help">' . __('Link text, e.g. &#8220;Still Alive by Jonathan Coulton&#8221;', 'mediacaster') . '</td></tr>
 				<tr>
 				<tr>
 					<th valign="top" scope="row" class="label">
-						<span class="alignleft"><label for="insertonly[url]">' . __('Link URL') . '</label></span>
+						<span class="alignleft"><label for="insertonly[url]">' . __('Link URL', 'mediacaster') . '</label></span>
 					</th>
 					<td class="field"><input id="insertonly[url]" name="insertonly[url]" value="" type="text"></td>
 				</tr>
-				<tr><td></td><td class="help">' . __('The link URL to which the player should direct users to (e.g. an affiliate link). Only applicable for mp3 and m4a files.') . '</td></tr>
+				<tr><td></td><td class="help">' . __('The link URL to which the player should direct users to (e.g. an affiliate link). Only applicable for mp3 and m4a files.', 'mediacaster') . '</td></tr>
 				<tr>
 					<td></td>
 					<td>
-						<input type="submit" class="button" name="insertonlybutton" value="' . esc_attr__('Insert into Post') . '" />
+						<input type="submit" class="button" name="insertonlybutton" value="' . esc_attr(__('Insert into Post', 'mediacaster')) . '" />
 					</td>
 				</tr>
 			</tbody></table>
@@ -791,38 +813,38 @@ var mc = {
 			<table class="describe"><tbody>
 				<tr>
 					<th valign="top" scope="row" class="label">
-						<span class="alignleft"><label for="insertonly[href]">' . __('Video URL') . '</label></span>
+						<span class="alignleft"><label for="insertonly[href]">' . __('Video URL', 'mediacaster') . '</label></span>
 						<span class="alignright"><abbr title="required" class="required">*</abbr></span>
 					</th>
 					<td class="field"><input id="insertonly[href]" name="insertonly[href]" value="" type="text" aria-required="true"></td>
 				</tr>
 				<tr>
 					<th valign="top" scope="row" class="label">
-						<span class="alignleft"><label for="insertonly[title]">' . __('Title') . '</label></span>
+						<span class="alignleft"><label for="insertonly[title]">' . __('Title', 'mediacaster') . '</label></span>
 					</th>
 					<td class="field"><input id="insertonly[title]" name="insertonly[title]" value="" type="text"></td>
 				</tr>
-				<tr><td></td><td class="help">' . __('Link text, e.g. &#8220;Lucy on YouTube&#8221;') . '</td></tr>
+				<tr><td></td><td class="help">' . __('Link text, e.g. &#8220;Lucy on YouTube&#8221;', 'mediacaster') . '</td></tr>
 				<tr>
 					<th valign="top" scope="row" class="label">
-						<span class="alignleft"><label for="insertonly-width">' . __('Width x Height') . '</label></span>
+						<span class="alignleft"><label for="insertonly-width">' . __('Width x Height', 'mediacaster') . '</label></span>
 					</th>
 					<td class="field"><input id="insertonly-width" name="insertonly[width]" value="' . $default_width . '" type="text" size="3" style="width: 40px;"> x <input id="insertonly-height" name="insertonly[height]" value="' . $default_height . '" type="text" size="3" style="width: 40px;">
-					<button type="button" class="button" onclick="return mc.set_default();">' . __('Default') . '</button>
-					<button type="button" class="button" onclick="return mc.set_16_9();">' . __('16/9') . '</button>
-					<button type="button" class="button" onclick="return mc.set_4_3();">' . __('4/3') . '</button></td>
+					<button type="button" class="button" onclick="return mc.set_default();">' . __('Default', 'mediacaster') . '</button>
+					<button type="button" class="button" onclick="return mc.set_16_9();">' . __('16/9', 'mediacaster') . '</button>
+					<button type="button" class="button" onclick="return mc.set_4_3();">' . __('4/3', 'mediacaster') . '</button></td>
 				</tr>
 				<tr>
 					<th valign="top" scope="row" class="label">
-						<span class="alignleft"><label for="insertonly[url]">' . __('Link URL') . '</label></span>
+						<span class="alignleft"><label for="insertonly[url]">' . __('Link URL', 'mediacaster') . '</label></span>
 					</th>
 					<td class="field"><input id="insertonly[url]" name="insertonly[url]" value="" type="text"></td>
 				</tr>
-				<tr><td></td><td class="help">' . __('The link URL to which the player should direct users to (e.g. an affiliate link). Only applicable for flv, mp4, m4a, m4v and YouTube files.') . '</td></tr>
+				<tr><td></td><td class="help">' . __('The link URL to which the player should direct users to (e.g. an affiliate link). Only applicable for flv, mp4, m4a, m4v and YouTube files.', 'mediacaster') . '</td></tr>
 				<tr>
 					<td></td>
 					<td>
-						<input type="submit" class="button" name="insertonlybutton" value="' . esc_attr__('Insert into Post') . '" />
+						<input type="submit" class="button" name="insertonlybutton" value="' . esc_attr(__('Insert into Post', 'mediacaster')) . '" />
 					</td>
 				</tr>
 			</tbody></table>
@@ -884,23 +906,29 @@ var mc = {
 			<table class="describe"><tbody>
 				<tr>
 					<th valign="top" scope="row" class="label">
-						<span class="alignleft"><label for="insertonly[href]">' . __('Video URL') . '</label></span>
+						<span class="alignleft"><label for="insertonly[href]">' . __('Video URL', 'mediacaster') . '</label></span>
 						<span class="alignright"><abbr title="required" class="required">*</abbr></span>
 					</th>
 					<td class="field"><input id="insertonly[href]" name="insertonly[href]" value="" type="text" aria-required="true"></td>
 				</tr>
 				<tr>
 					<th valign="top" scope="row" class="label">
-						<span class="alignleft"><label for="insertonly[title]">' . __('Title') . '</label></span>
+						<span class="alignleft"><label for="insertonly[title]">' . __('Title', 'mediacaster') . '</label></span>
 					</th>
 					<td class="field"><input id="insertonly[title]" name="insertonly[title]" value="" type="text"></td>
 				</tr>
-				<tr><td></td><td class="help">' . __('Link text, e.g. &#8220;Ransom Demands (PDF)&#8221;') . '</td></tr>
+				<tr><td></td><td class="help">' . __('Link text, e.g. &#8220;Ransom Demands (PDF)&#8221;', 'mediacaster') . '</td></tr>
 				<tr>
 					<th valign="top" scope="row" class="label">
-						<span class="alignleft"><label for="insertonly[url]">' . __('Link URL') . '</label></span>
+						<span class="alignleft"><label for="insertonly[url]">' . __('Link URL', 'mediacaster') . '</label></span>
 					</th>
 					<td class="field"><input id="insertonly[url]" name="insertonly[url]" value="" type="text"></td>
+				</tr>
+				<tr>
+					<td></td>
+					<td>
+						<input type="submit" class="button" name="insertonlybutton" value="' . esc_attr(__('Insert into Post', 'mediacaster')) . '" />
+					</td>
 				</tr>
 			</tbody></table>
 		';
