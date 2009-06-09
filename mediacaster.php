@@ -55,6 +55,7 @@ if ( !is_admin() ) {
 	add_action('wp_print_scripts', array('mediacaster', 'scripts'), 0);
 	add_action('wp_print_styles', array('mediacaster', 'styles'), 0);
 } else {
+	add_action('admin_print_scripts-media-upload.php', array('mediacaster', 'scripts'), 0);
 	add_action('admin_menu', array('mediacaster', 'admin_menu'));
 }
 
@@ -273,12 +274,9 @@ EOS;
 			$width = $max_player_width;
 		}
 		
-		preg_match("/\.([^.]+)$/", $file, $ext); 
-		$ext = end($ext);
-		
 		$image = false;
 		
-		$id = 'm' . md5($file . '_' . $count++);
+		$id = 'm' . md5($href . '_' . $count++);
 		
 		$player = plugin_dir_url(__FILE__) . 'player/player-viral.swf';
 		
@@ -441,8 +439,6 @@ EOS;
 	 **/
 
 	function scripts() {
-		$folder = plugin_dir_url(__FILE__);
-		
 		wp_enqueue_script('swfobject');
 	} # scripts()
 	
