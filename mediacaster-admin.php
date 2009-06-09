@@ -55,7 +55,7 @@ class mediacaster_admin {
 			preg_match("/\.([^.]+)$/", $name, $ext);
 			$ext = end($ext);
 			
-			if ( !in_array(strtolower($ext), array('jpg', 'jpeg', 'png')) ) {
+			if ( !in_array(strtolower($ext), mediacaster_admin::get_extensions('image')) ) {
 				echo '<div class="error">'
 					. "<p>"
 						. "<strong>"
@@ -561,10 +561,10 @@ class mediacaster_admin {
 			$default_height = round($default_width * 9 / 16);
 		
 		switch ( $post->post_mime_type ) {
-		case 'audio/mpeg':
 		case 'video/mpeg':
 		case 'video/x-flv':
-			if ( !in_array($ext, array('mp4', 'm4a', 'm4v', 'flv')) )
+		case 'video/quicktime':
+			if ( !in_array($ext, mediacaster_admin::get_extensions('video')) )
 				break;
 			
 			static $scripts;
@@ -603,9 +603,12 @@ var mc = {
 		
 		switch ( $post->post_mime_type ) {
 		case 'audio/mpeg':
+		case 'audio/aac':
 		case 'video/mpeg':
 		case 'video/x-flv':
-			if ( !in_array($ext, array('mp3', 'mp4', 'm4a', 'm4v', 'flv')) )
+		case 'video/quicktime':
+		case 'video/3gpp':
+			if ( !in_array($ext, mediacaster_admin::get_extensions()) )
 				break;
 			unset($post_fields['post_excerpt']);
 			$post_fields['url']['html'] = preg_split("/<br/", $post_fields['url']['html']);
@@ -666,23 +669,22 @@ var mc = {
 		
 		switch ( $post->post_mime_type ) {
 		case 'audio/mpeg':
-			if ( preg_match("/\b(mp3|m4a)\b/i", $file_url, $ext) )
-				$ext = strtolower(end($ext));
-			else
-				$ext = 'audio';
+		case 'audio/aac':
+			if ( !preg_match("/\b(?:" . implode('|', mediacaster_admin::get_extensions('audio')) . ")\b/i", $file_url) )
+				break;
 			
-			$html = '[media id="' . $send_id . '"' . $width . $height . ' type="' . $ext . '"' . $link . ']'
+			$html = '[media id="' . $send_id . '"' . $width . $height . ' type="audio"' . $link . ']'
 					. $attachment['post_title'] . '[/media]';
 			break;
 		
 		case 'video/mpeg':
 		case 'video/x-flv':
-			if ( preg_match("/\b(flv|mp4|m4v)\b/i", $file_url, $ext) )
-				$ext = strtolower(end($ext));
-			else
-				$ext = 'video';
+		case 'video/quicktime':
+		case 'video/3gpp':
+			if ( !preg_match("/\b(?:" . implode('|', mediacaster_admin::get_extensions('video')) . ")\b/i", $file_url) )
+				break;
 			
-			$html = '[media id="' . $send_id . '"' . $width . $height . ' type="' . $ext . '"' . $link . ']'
+			$html = '[media id="' . $send_id . '"' . $width . $height . ' type="video"' . $link . ']'
 				. $attachment['post_title'] . '[/media]';
 			break;
 		
@@ -690,12 +692,7 @@ var mc = {
 			if ( !preg_match("/^(?:application|text)\//", $post->post_mime_type) )
 				break;
 			
-			if ( preg_match("/\.([a-z0-9]+)$/i", $file_url, $ext) )
-				$ext = strtolower(end($ext));
-			else
-				$ext = 'file';
-			
-			$html = '[media id="' . $send_id . '" type="' . $ext . '"]'
+			$html = '[media id="' . $send_id . '" type="file"]'
 				. $attachment['post_title'] . '[/media]';
 		}
 		
@@ -734,7 +731,7 @@ var mc = {
 					</th>
 					<td class="field"><input id="insertonly[url]" name="insertonly[url]" value="" type="text"></td>
 				</tr>
-				<tr><td></td><td class="help">' . __('The link URL to which the player should direct users to (e.g. an affiliate link). Only applicable for mp3 and m4a files.', 'mediacaster') . '</td></tr>
+				<tr><td></td><td class="help">' . __('The link URL to which the player should direct users to (e.g. an affiliate link). Only applicable for mp3, m4a and aac files.', 'mediacaster') . '</td></tr>
 				<tr>
 					<td></td>
 					<td>
@@ -762,12 +759,10 @@ var mc = {
 		if ( !$title )
 			$title = basename($href);
 		
-		if ( preg_match("/\b(mp3|m4a|rss2?|xml|feed|atom)\b/i", $href, $ext) ) {
+		if ( preg_match("/\b(" . implode('|', mediacaster_admin::get_extensions('audio')) . "|rss2?|xml|feed|atom)\b/i", $href) ) {
 			$link = trim(stripslashes($_POST['insertonly']['url']));
 			$link = $link ? ( ' link="' . esc_url_raw($link) . '"' ) : '';
-			$ext = strtolower(end($ext));
-			$type = in_array($ext, array('mp3', 'm4a')) ? $ext : 'audio';
-			$html = '[media href="' . $href . '" type="' . $type . '"' . $link . ']' . $title . '[/media]';
+			$html = '[media href="' . $href . '" type="audio"' . $link . ']' . $title . '[/media]';
 		}
 		
 		return $html;
@@ -840,7 +835,7 @@ var mc = {
 					</th>
 					<td class="field"><input id="insertonly[url]" name="insertonly[url]" value="" type="text"></td>
 				</tr>
-				<tr><td></td><td class="help">' . __('The link URL to which the player should direct users to (e.g. an affiliate link). Only applicable for flv, mp4, m4a, m4v and YouTube files.', 'mediacaster') . '</td></tr>
+				<tr><td></td><td class="help">' . __('The link URL to which the player should direct users to (e.g. an affiliate link). Only applicable for flv, mp4, m4v, mov and YouTube files.', 'mediacaster') . '</td></tr>
 				<tr>
 					<td></td>
 					<td>
@@ -878,16 +873,15 @@ var mc = {
 			$width = intval($_POST['insertonly']['width']);
 			$height = intval($_POST['insertonly']['height']);
 			$html = '[media href="' . $href . '" width="' . $width . '" height="' . $height . '" type="youtube"' . $link . ']' . $title . '[/media]';
-		} elseif ( preg_match("/\b(flv|mp4|m4a|m4v|rss2?|xml|feed|atom)\b/i", $href, $ext) ) {
+		} elseif ( preg_match("/\b(" . implode('|', mediacaster_admin::get_extensions('video')) . "|rss2?|xml|feed|atom)\b/i", $href) ) {
 			if ( !$title )
 				$title = basename($href);
 			$link = trim(stripslashes($_POST['insertonly']['url']));
 			$link = $link ? ( ' link="' . esc_url_raw($link) . '"' ) : '';
 			$ext = strtolower(end($ext));
-			$type = in_array($ext, array('flv', 'mp4', 'm4v')) ? $ext : 'video';
 			$width = intval($_POST['insertonly']['width']);
 			$height = intval($_POST['insertonly']['height']);
-			$html = '[media href="' . $href . '" width="' . $width . '" height="' . $height . '" type="' . $type . '"' . $link . ']' . $title . '[/media]';
+			$html = '[media href="' . $href . '" width="' . $width . '" height="' . $height . '" type="video"' . $link . ']' . $title . '[/media]';
 		}
 		
 		return $html;
@@ -950,5 +944,20 @@ var mc = {
 		
 		return '[media href="' . $href . '" type="file"]' . $title . '[/media]';
 	} # file_send_to_editor_url()
+	
+	
+	/**
+	 * get_extensions()
+	 *
+	 * @return array $extensions
+	 **/
+
+	function get_extensions($type = null) {
+		$image = array('jpg', 'jpeg', 'png');
+		$audio = array('mp3', 'm4a', 'aac');
+		$video = array('flv', 'f4b', 'f4p', 'f4v', 'mp4', 'm4v', 'mov', '3pg', '3g2');
+		
+		return isset($type) ? $$type : array_merge($audio, $video);
+	} # get_extensions()
 } # mediacaster_admin
 ?>

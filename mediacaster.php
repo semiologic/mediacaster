@@ -45,6 +45,7 @@ if ( get_option('mediacaster') === false )
 add_filter('widget_text', 'do_shortcode', 11);
 add_shortcode('media', array('mediacaster', 'shortcode'));
 
+add_filter('ext2type', array('mediacaster', 'ext2type'));
 add_filter('upload_mimes', array('mediacaster', 'upload_mimes'));
 
 add_filter('get_the_excerpt', array('mediacaster', 'disable'), 0);
@@ -66,10 +67,27 @@ class mediacaster {
 	 **/
 
 	function upload_mimes($mimes) {
-		if ( !isset($mimes['flv']) )
-			$mimes['flv'] = 'video/x-flv';
+		if ( !isset($mimes['flv|f4b|f4p|f4v']) )
+			$mimes['flv|f4b|f4p|f4v'] = 'video/x-flv';
+		if ( !isset($mimes['aac']) )
+			$mimes['aac'] = 'audio/aac';
+		if ( !isset($mimes['3gp|3g2']) )
+			$mimes['3gp|3g2'] = 'video/3gpp';
 		return $mimes;
 	} # upload_mimes()
+	
+	
+	/**
+	 * ext2type()
+	 *
+	 * @param array $types
+	 * @return array $types
+	 **/
+
+	function ext2type($types) {
+		$types['video'] = array_merge($types['video'], array('flv', 'f4b', 'f4p', 'f4v', '3pg', '3g2'));
+		return $types;
+	} # ext2type()
 	
 	
 	/**
@@ -102,12 +120,14 @@ class mediacaster {
 		switch ( $args['type'] ) {
 		case 'mp3':
 		case 'm4a':
+		case 'aac':
 		case 'audio':
 			return mediacaster::audio($args, $content);
 		
 		case 'flv':
 		case 'mp4':
 		case 'm4v':
+		case 'mov':
 		case 'youtube':
 		case 'video':
 			return mediacaster::video($args, $content);
