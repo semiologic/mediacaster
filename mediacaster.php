@@ -464,18 +464,19 @@ EOS;
 	/**
 	 * get_enclosures()
 	 *
-	 * @param bool $podcasts
+	 * @param int $post_ID
+	 * @param bool $playlist
 	 * @return array $enclosures
 	 **/
 
-	function get_enclosures($podcasts = false, $post_ID = null) {
-		if ( !in_the_loop() && !$post_ID )
+	function get_enclosures($post_ID, $playlist = false) {
+		if ( !$post_ID )
 			return array();
 		
-		global $post;
+		$post = get_post($post_ID);
 		
-		if ( $post_ID )
-			$post = get_post($post_ID);
+		if ( !$post )
+			return array();
 		
 		$enclosures = get_children(array(
 			'post_parent' => $post->ID,
@@ -493,7 +494,7 @@ EOS;
 			$enclosed = array();
 		
 		foreach ( $enclosures as $key => $enclosure ) {
-			if ( $podcasts ) {
+			if ( $playlist ) {
 				if ( !in_array($enclosure->post_mime_type, array('audio/mpeg', 'audio/aac'))
 					|| in_array((int) $enclosure->ID, $enclosed) )
 					unset($enclosures[$key]);
@@ -523,7 +524,7 @@ EOS;
 		if ( $o['player']['position'] == 'none' )
 			return $content;
 		
-		$podcasts = mediacaster::get_enclosures(true);
+		$podcasts = mediacaster::get_enclosures(get_the_ID(), true);
 		
 		if ( !$podcasts )
 			return $content;
@@ -564,7 +565,7 @@ EOS;
 	function display_playlist_xml($post_ID, $type = 'audio') {
 		$post_ID = intval($post_ID);
 		
-		$podcasts = mediacaster::get_enclosures(true, $post_ID);
+		$podcasts = mediacaster::get_enclosures($post_ID, true);
 		
 		# Reset WP
 		$GLOBALS['wp_filter'] = array();
@@ -689,7 +690,7 @@ EOS;
 		else
 			$post_ID = get_the_ID();
 		
-		$enclosures = mediacaster::get_enclosures();
+		$enclosures = mediacaster::get_enclosures($post_ID);
 		
 		if ( !$enclosures )
 			return;
