@@ -43,7 +43,7 @@ if ( get_option('mediacaster') === false )
 	mediacaster::init_options();
 
 add_filter('widget_text', 'do_shortcode', 11);
-add_shortcode('media', array('mediacaster', 'shortcode'));
+add_shortcode('mc', array('mediacaster', 'shortcode'));
 
 add_filter('ext2type', array('mediacaster', 'ext2type'));
 add_filter('upload_mimes', array('mediacaster', 'upload_mimes'));
@@ -201,6 +201,7 @@ class mediacaster {
 		$flashvars = array();
 		$flashvars['file'] = $href;
 		$flashvars['skin'] = plugin_dir_url(__FILE__) . 'player/kleur.swf';
+		$flashvars['quality'] = 'true';
 		
 		if ( $image )
 			$flashvars['image'] = esc_url_raw($image);
@@ -284,6 +285,7 @@ EOS;
 		$flashvars = array();
 		$flashvars['file'] = $href;
 		$flashvars['skin'] = plugin_dir_url(__FILE__) . 'player/kleur.swf';
+		$flashvars['quality'] = 'true';
 		
 		if ( $image )
 			$flashvars['image'] = esc_url_raw($image);
@@ -607,7 +609,7 @@ EOS;
 	 **/
 
 	function display_feed_ns() {
-		if ( class_exists('podPress_class') || !is_feed() )
+		if ( !is_feed() )
 		 	return;
 		echo 'xmlns:itunes="http://www.itunes.com/dtds/podcast-1.0.dtd"' . "\n\t";
 	} # display_feed_ns()
@@ -620,7 +622,7 @@ EOS;
 	 **/
 
 	function display_feed_header() {
-		if ( class_exists('podPress_class') || !is_feed() )
+		if ( !is_feed() )
 			return;
 		
 		$options = get_option('mediacaster');
@@ -700,7 +702,7 @@ EOS;
 			$add_itunes_tags = true;
 		}
 
-		if ( $add_itunes_tags && !class_exists('podPress_class') && is_feed() ) {
+		if ( $add_itunes_tags && is_feed() ) {
 			$author = get_the_author();
 
 			$summary = get_post_meta($post_ID, '_description', true);

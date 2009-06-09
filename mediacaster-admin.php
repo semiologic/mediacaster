@@ -294,151 +294,145 @@ class mediacaster_admin {
 			. __('iTunes', 'mediacaster')
 			. '</h3>' . "\n";
 
-		if ( class_exists('podPress_class') ) {
-			echo '<p>'
-				. __('PodPress was detected. Configure itunes-related settings using PodPress.', 'mediacaster')
-				. '</p>' . "\n";
-		} else {
-			echo '<table class="form-table">';
-			
-			echo '<tr valign="top">'
-				. '<th scope="row">'
-				. '<label for="mediacaster-itunes-author">'
-					. __('Author', 'mediacaster')
-					. '</label>'
-				. '</th>'
-				. '<td>'
-				. '<input type="text" class="widefat"'
-					. ' id="mediacaster-itunes-author" name="mediacaster[itunes][author]"'
-					. ' value="' . esc_attr($options['itunes']['author']) . '"'
-					. ' />' . "\n"
-				. '</td>'
-				. '</tr>' . "\n";
+		echo '<table class="form-table">';
+		
+		echo '<tr valign="top">'
+			. '<th scope="row">'
+			. '<label for="mediacaster-itunes-author">'
+				. __('Author', 'mediacaster')
+				. '</label>'
+			. '</th>'
+			. '<td>'
+			. '<input type="text" class="widefat"'
+				. ' id="mediacaster-itunes-author" name="mediacaster[itunes][author]"'
+				. ' value="' . esc_attr($options['itunes']['author']) . '"'
+				. ' />' . "\n"
+			. '</td>'
+			. '</tr>' . "\n";
 
 
-			echo '<tr valign="top">'
-				. '<th scope="row">'
-				. '<label for="mediacaster-itunes-summary">'
-					. __('Summary', 'mediacaster')
-					. '</label>'
-				. '</th>'
-				. '<td>'
-				. '<textarea class="widefat" cols="58" rows="3"'
-					. ' id="mediacaster-itunes-summary" name="mediacaster[itunes][summary]"'
-					. ' >' . "\n"
-					. esc_html($options['itunes']['summary'])
-					. '</textarea>' . "\n"
-				. '</td>'
-				. '</tr>' . "\n";
+		echo '<tr valign="top">'
+			. '<th scope="row">'
+			. '<label for="mediacaster-itunes-summary">'
+				. __('Summary', 'mediacaster')
+				. '</label>'
+			. '</th>'
+			. '<td>'
+			. '<textarea class="widefat" cols="58" rows="3"'
+				. ' id="mediacaster-itunes-summary" name="mediacaster[itunes][summary]"'
+				. ' >' . "\n"
+				. esc_html($options['itunes']['summary'])
+				. '</textarea>' . "\n"
+			. '</td>'
+			. '</tr>' . "\n";
 
 
-			echo '<tr valign="top">'
-				. '<th scope="row">'
-					. __('Categories', 'mediacaster')
-				. '</th>'
-				. '<td>';
+		echo '<tr valign="top">'
+			. '<th scope="row">'
+				. __('Categories', 'mediacaster')
+			. '</th>'
+			. '<td>';
 
-			for ( $i = 1; $i <= 3; $i++ ) {
-				echo '<select name="mediacaster[itunes][category][' . $i . ']">' . "\n"
-					. '<option value="">' . __('- Select -', 'mediacaster') . '</option>' . "\n";
+		for ( $i = 1; $i <= 3; $i++ ) {
+			echo '<select name="mediacaster[itunes][category][' . $i . ']">' . "\n"
+				. '<option value="">' . __('- Select -', 'mediacaster') . '</option>' . "\n";
 
-				foreach ( mediacaster_admin::get_itunes_categories() as $key => $category ) {
-					$category = $category;
+			foreach ( mediacaster_admin::get_itunes_categories() as $key => $category ) {
+				$category = $category;
 
-					echo '<option'
-						. ' value="' . esc_attr($key) . '"'
-						. ( ( $key == $options['itunes']['category'][$i] )
-							? ' selected="selected"'
-							: ''
-							)
-						. '>'
-						. esc_html($category)
-						. '</option>' . "\n";
-				} echo '</select>'
-				 	. '<br />'. "\n";
-			}
-
-			echo '</td>'
-			 	. '</tr>' . "\n";
-			
-
-			echo '<tr valign="top">'
-				. '<th scope="row">'
-					. __('Explicit', 'mediacaster')
-				. '</th>'
-				. '<td>';
-
-			foreach ( array(
-				'yes' => __('Yes', 'mediacaster'),
-				'no' => __('No', 'mediacaster'),
-				'clean' => __('Clean', 'mediacaster'),
-				) as $key => $answer ) {
-				echo '<label>'
-					. '<input type="radio" name="mediacaster[itunes][explicit]"'
+				echo '<option'
 					. ' value="' . esc_attr($key) . '"'
-					. ( ( $key == $options['itunes']['explicit'] )
-						? ' checked="checked"'
+					. ( ( $key == $options['itunes']['category'][$i] )
+						? ' selected="selected"'
 						: ''
 						)
 					. '>'
-					. '&nbsp;'
-					. $answer
-					. '</label>' . " &nbsp; \n";
-			}
-
-			echo '</td>'
-				. '</tr>' . "\n";
-
-
-			echo '<tr valign="top">'
-				. '<th scope="row">'
-					. __('Block iTunes', 'mediacaster')
-				. '</th>'
-				. '<td>';
-
-			foreach ( array(
-				'yes' => __('Yes', 'mediacaster'),
-				'no' => __('No', 'mediacaster'),
-				) as $key => $answer ) {
-				echo '<label>'
-					. '<input type="radio" name="mediacaster[itunes][block]"'
-					. ' value="' . esc_attr($key) . '"'
-					. ( ( $key == $options['itunes']['block'] )
-						? ' checked="checked"'
-						: ''
-						)
-					. '>'
-					. '&nbsp;'
-					. $answer
-					. '</label>' . " &nbsp; \n";
-			}
-
-			echo '</td>'
-				. '</tr>' . "\n";
-
-			echo '<tr valign="top">'
-				. '<th scope="row">'
-				. '<label for="mediacaster-itunes-copyright">'
-					. __('Copyright', 'mediacaster')
-					. '</label>'
-				. '</th>'
-				. '<td>'
-				. '<textarea class="widefat" cols="58" rows="2"'
-					. ' id="mediacaster-itunes-copyright" name="mediacaster[itunes][copyright]"'
-					. ' >' . "\n"
-					. esc_html($options['itunes']['copyright'])
-					. '</textarea>' . "\n"
-				. '</td>'
-				. '</tr>' . "\n";
-				
-			echo '</table>';
-
-			echo '<p class="submit">'
-				. '<input type="submit"'
-					. ' value="' . esc_attr(__('Save Changes', 'mediacaster')) . '"'
-					. ' />'
-				. '</p>' . "\n";;
+					. esc_html($category)
+					. '</option>' . "\n";
+			} echo '</select>'
+			 	. '<br />'. "\n";
 		}
+
+		echo '</td>'
+		 	. '</tr>' . "\n";
+		
+
+		echo '<tr valign="top">'
+			. '<th scope="row">'
+				. __('Explicit', 'mediacaster')
+			. '</th>'
+			. '<td>';
+
+		foreach ( array(
+			'yes' => __('Yes', 'mediacaster'),
+			'no' => __('No', 'mediacaster'),
+			'clean' => __('Clean', 'mediacaster'),
+			) as $key => $answer ) {
+			echo '<label>'
+				. '<input type="radio" name="mediacaster[itunes][explicit]"'
+				. ' value="' . esc_attr($key) . '"'
+				. ( ( $key == $options['itunes']['explicit'] )
+					? ' checked="checked"'
+					: ''
+					)
+				. '>'
+				. '&nbsp;'
+				. $answer
+				. '</label>' . " &nbsp; \n";
+		}
+
+		echo '</td>'
+			. '</tr>' . "\n";
+
+
+		echo '<tr valign="top">'
+			. '<th scope="row">'
+				. __('Block iTunes', 'mediacaster')
+			. '</th>'
+			. '<td>';
+
+		foreach ( array(
+			'yes' => __('Yes', 'mediacaster'),
+			'no' => __('No', 'mediacaster'),
+			) as $key => $answer ) {
+			echo '<label>'
+				. '<input type="radio" name="mediacaster[itunes][block]"'
+				. ' value="' . esc_attr($key) . '"'
+				. ( ( $key == $options['itunes']['block'] )
+					? ' checked="checked"'
+					: ''
+					)
+				. '>'
+				. '&nbsp;'
+				. $answer
+				. '</label>' . " &nbsp; \n";
+		}
+
+		echo '</td>'
+			. '</tr>' . "\n";
+
+		echo '<tr valign="top">'
+			. '<th scope="row">'
+			. '<label for="mediacaster-itunes-copyright">'
+				. __('Copyright', 'mediacaster')
+				. '</label>'
+			. '</th>'
+			. '<td>'
+			. '<textarea class="widefat" cols="58" rows="2"'
+				. ' id="mediacaster-itunes-copyright" name="mediacaster[itunes][copyright]"'
+				. ' >' . "\n"
+				. esc_html($options['itunes']['copyright'])
+				. '</textarea>' . "\n"
+			. '</td>'
+			. '</tr>' . "\n";
+			
+		echo '</table>';
+
+		echo '<p class="submit">'
+			. '<input type="submit"'
+				. ' value="' . esc_attr(__('Save Changes', 'mediacaster')) . '"'
+				. ' />'
+			. '</p>' . "\n";
 
 		echo '</div>' . "\n";
 
@@ -571,11 +565,27 @@ class mediacaster_admin {
 			
 			static $scripts;
 			if ( !isset($scripts) ) {
-				$scripts = '<script type="text/javascript">
+				$player = plugin_dir_url(__FILE__) . 'player/player-viral.swf';
+
+				$flashvars = array();
+				$flashvars['file'] = $file_url;
+				$flashvars['skin'] = plugin_dir_url(__FILE__) . 'player/kleur.swf';
+
+				$flashvars['plugins'] = array('quickkeys-1');
+				$flashvars['plugins'] = array('snapshot-1');
+
+				$flashvars['plugins'] = implode(',', $flashvars['plugins']);
+				$flashvars = http_build_query($flashvars, null, '&');
+				
+				$scripts = <<<EOS
+<script type="text/javascript">
 var mc = {
+	i: 0,
+	
 	set_default: function(post_id) {
-		jQuery("#attachments-width-" + post_id).val(' . $default_width . ');
-		jQuery("#attachments-height-" + post_id).val(' . $default_height . ');
+		jQuery("#attachments-width-" + post_id).val($default_width);
+		jQuery("#attachments-height-" + post_id).val($default_height);
+		
 		return false;
 	},
 
@@ -589,10 +599,12 @@ var mc = {
 		return false;
 	}
 };
-</script>';
+</script>
+EOS;
 			} else {
 				$scripts = false;
 			}
+			
 			$post_fields['format'] = array(
 				'label' => __('Width x Height', 'mediacaster'),
 				'input' => 'html',
@@ -600,6 +612,11 @@ var mc = {
 	<button type="button" class="button" onclick="return mc.set_default(' . $post->ID . ');">' . __('Default', 'mediacaster') . '</button>
 	<button type="button" class="button" onclick="return mc.set_16_9(' . $post->ID . ');">' . __('16/9', 'mediacaster') . '</button>
 	<button type="button" class="button" onclick="return mc.set_4_3(' . $post->ID . ');">' . __('4/3', 'mediacaster') . '</button>',
+				);
+			
+			$post_fields['image'] = array(
+				'label' => __('Preview Image', 'mediacaster'),
+				'helps' => __('The URL of a preview image when the video isn\'t playing.', 'mediacaster'),
 				);
 		}
 		
@@ -658,16 +675,14 @@ var mc = {
 			return $html;
 		$ext = strtolower(end($ext));
 		
-		$add_link = !empty($attachment['url'])
-			&& !preg_match("/^" . preg_quote(get_option('home'), '/') . "$/ix", $attachment['url']);
+		$attachment['url'] = !empty($attachment['url'])
+			? trim(stripslashes($attachment['url']))
+			: '';
 		
-		if ( $add_link )
-			$link = ' link="' . esc_url_raw($attachment['url']) . '"';
-		else
-			$link = '';
-		
-		$width = !empty($attachment['width']) ? ( ' width="' . intval($attachment['width']) . '"' ) : '';
-		$height = !empty($attachment['height']) ? ( ' height="' . intval($attachment['height']) . '"' ) : '';
+		$link = $attachment['url']
+			&& !preg_match("/^" . preg_quote(get_option('home'), '/') . "$/ix", $attachment['url'])
+			? ( ' link="' . esc_url_raw($attachment['url']) . '"' )
+			: '';
 		
 		switch ( $post->post_mime_type ) {
 		case 'audio/mpeg':
@@ -675,8 +690,9 @@ var mc = {
 			if ( !preg_match("/\b(?:" . implode('|', mediacaster_admin::get_extensions('audio')) . ")\b/i", $file_url) )
 				break;
 			
-			$html = '[media id="' . $send_id . '"' . $width . $height . ' type="audio"' . $link . ']'
-					. $attachment['post_title'] . '[/media]';
+			 $html = '[mc id="' . $send_id . '" type="audio"' . $link . ']'
+			 	. $attachment['post_title']
+			 	. '[/mc]';
 			break;
 		
 		case 'video/mpeg':
@@ -686,16 +702,22 @@ var mc = {
 			if ( !preg_match("/\b(?:" . implode('|', mediacaster_admin::get_extensions('video')) . ")\b/i", $file_url) )
 				break;
 			
-			$html = '[media id="' . $send_id . '"' . $width . $height . ' type="video"' . $link . ']'
-				. $attachment['post_title'] . '[/media]';
+			$image = !empty($attachment['image'])
+				? ( ' width="' . esc_url_raw(stripslashes($attachment['image'])) . '"' )
+				: '';
+			
+			$html = '[mc id="' . $send_id . '"' . $width . $height . ' type="video"' . $link . ']'
+				. $attachment['post_title']
+				. '[/mc]';
 			break;
 		
 		default:
 			if ( !preg_match("/^(?:application|text)\//", $post->post_mime_type) )
 				break;
 			
-			$html = '[media id="' . $send_id . '" type="file"]'
-				. $attachment['post_title'] . '[/media]';
+			$html = '[mc id="' . $send_id . '" type="file"]'
+				. $attachment['post_title']
+				. '[/mc]';
 		}
 		
 		return $html;
@@ -764,7 +786,9 @@ var mc = {
 		if ( preg_match("/\b(" . implode('|', mediacaster_admin::get_extensions('audio')) . "|rss2?|xml|feed|atom)\b/i", $href) ) {
 			$link = trim(stripslashes($_POST['insertonly']['url']));
 			$link = $link ? ( ' link="' . esc_url_raw($link) . '"' ) : '';
-			$html = '[media href="' . $href . '" type="audio"' . $link . ']' . $title . '[/media]';
+			$html = '[mc href="' . $href . '" type="audio"' . $link . ']'
+				. $title
+				. '[/mc]';
 		}
 		
 		return $html;
@@ -824,6 +848,13 @@ var mc = {
 				<tr><td></td><td class="help">' . __('Link text, e.g. &#8220;Lucy on YouTube&#8221;', 'mediacaster') . '</td></tr>
 				<tr>
 					<th valign="top" scope="row" class="label">
+						<span class="alignleft"><label for="insertonly[url]">' . __('Link URL', 'mediacaster') . '</label></span>
+					</th>
+					<td class="field"><input id="insertonly[url]" name="insertonly[url]" value="" type="text"></td>
+				</tr>
+				<tr><td></td><td class="help">' . __('The link URL to which the player should direct users to (e.g. an affiliate link). Only applicable for flv, mp4, m4v, mov and YouTube files.', 'mediacaster') . '</td></tr>
+				<tr>
+					<th valign="top" scope="row" class="label">
 						<span class="alignleft"><label for="insertonly-width">' . __('Width x Height', 'mediacaster') . '</label></span>
 					</th>
 					<td class="field"><input id="insertonly-width" name="insertonly[width]" value="' . $default_width . '" type="text" size="3" style="width: 40px;"> x <input id="insertonly-height" name="insertonly[height]" value="' . $default_height . '" type="text" size="3" style="width: 40px;">
@@ -833,11 +864,11 @@ var mc = {
 				</tr>
 				<tr>
 					<th valign="top" scope="row" class="label">
-						<span class="alignleft"><label for="insertonly[url]">' . __('Link URL', 'mediacaster') . '</label></span>
+						<span class="alignleft"><label for="insertonly[image]">' . __('Preview Image', 'mediacaster') . '</label></span>
 					</th>
-					<td class="field"><input id="insertonly[url]" name="insertonly[url]" value="" type="text"></td>
+					<td class="field"><input id="insertonly[image]" name="insertonly[image]" value="" type="text"></td>
 				</tr>
-				<tr><td></td><td class="help">' . __('The link URL to which the player should direct users to (e.g. an affiliate link). Only applicable for flv, mp4, m4v, mov and YouTube files.', 'mediacaster') . '</td></tr>
+				<tr><td></td><td class="help">' . __('The URL of a preview image when the video isn\'t playing.', 'mediacaster') . '</td></tr>
 				<tr>
 					<td></td>
 					<td>
@@ -870,20 +901,39 @@ var mc = {
 				return $html;
 			if ( !$title )
 				$title = __('YouTube Video');
-			$link = trim(stripslashes($_POST['insertonly']['url']));
-			$link = $link ? ( ' link="' . esc_url_raw($link) . '"' ) : '';
-			$width = intval($_POST['insertonly']['width']);
-			$height = intval($_POST['insertonly']['height']);
-			$html = '[media href="' . $href . '" width="' . $width . '" height="' . $height . '" type="youtube"' . $link . ']' . $title . '[/media]';
+			$link = !empty($_POST['insertonly']['url'])
+				? trim(stripslashes($_POST['insertonly']['url']))
+				: '';
+			$link = $link
+				? ( ' link="' . esc_url_raw($link) . '"' )
+				: '';
+			$width = !empty($_POST['insertonly']['width'])
+				? ( ' width="' . intval($_POST['insertonly']['width']) . '"' )
+				: '';
+			$height = !empty($_POST['insertonly']['height'])
+				? ( ' height="' . intval($_POST['insertonly']['height']) . '"' )
+				: '';
+			$html = '[mc href="' . $href . '"' . $width . $height . ' type="youtube"' . $link . ']'
+				. $title
+				. '[/mc]';
 		} elseif ( preg_match("/\b(" . implode('|', mediacaster_admin::get_extensions('video')) . "|rss2?|xml|feed|atom)\b/i", $href) ) {
 			if ( !$title )
 				$title = basename($href);
-			$link = trim(stripslashes($_POST['insertonly']['url']));
-			$link = $link ? ( ' link="' . esc_url_raw($link) . '"' ) : '';
-			$ext = strtolower(end($ext));
-			$width = intval($_POST['insertonly']['width']);
-			$height = intval($_POST['insertonly']['height']);
-			$html = '[media href="' . $href . '" width="' . $width . '" height="' . $height . '" type="video"' . $link . ']' . $title . '[/media]';
+			$link = !empty($_POST['insertonly']['url'])
+				? trim(stripslashes($_POST['insertonly']['url']))
+				: '';
+			$link = $link
+				? ( ' link="' . esc_url_raw($link) . '"' )
+				: '';
+			$width = !empty($_POST['insertonly']['width'])
+				? ( ' width="' . intval($_POST['insertonly']['width']) . '"' )
+				: '';
+			$height = !empty($_POST['insertonly']['height'])
+				? ( ' height="' . intval($_POST['insertonly']['height']) . '"' )
+				: '';
+			$html = '[mc href="' . $href . '"' . $width . $height . ' type="video"' . $link . ']'
+				. $title
+				. '[/mc]';
 		}
 		
 		return $html;
@@ -944,7 +994,10 @@ var mc = {
 		$title = stripslashes($_POST['insertonly']['title']);
 		$href = esc_url_raw(stripslashes($_POST['insertonly']['href']));
 		
-		return '[media href="' . $href . '" type="file"]' . $title . '[/media]';
+		return "\n"
+			. '[mc href="' . $href . '" type="file"]'
+			. $title
+			. '[/mc]';
 	} # file_send_to_editor_url()
 	
 	
