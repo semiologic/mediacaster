@@ -125,9 +125,14 @@ class mediacaster {
 			return mediacaster::audio($args, $content);
 		
 		case 'flv':
+		case 'f4b':
+		case 'f4p':
+		case 'f4v':
 		case 'mp4':
 		case 'm4v':
 		case 'mov':
+		case '3gp':
+		case '3g2':
 		case 'youtube':
 		case 'video':
 			return mediacaster::video($args, $content);
@@ -141,8 +146,8 @@ class mediacaster {
 	/**
 	 * audio()
 	 *
-	 * @param string $content
 	 * @param array $args
+	 * @param string $content
 	 * @return string $player
 	 **/
 
@@ -152,7 +157,7 @@ class mediacaster {
 		static $count = 0;
 		
 		if ( $image = mediacaster::get_cover() ) {
-			$cover_size = getimagesize(ABSPATH . $image);
+			$cover_size = getimagesize(WP_CONTENT_DIR . $image);
 			$width = $cover_size[0];
 			$height = $cover_size[1];
 			
@@ -190,17 +195,17 @@ class mediacaster {
 		
 		$flashvars['plugins'] = array('quickkeys-1');
 		
-		if ( $image )
-			$flashvars['image'] = esc_url_raw($image);
+		if ( $image ) {
+			$flashvars['image'] = esc_url_raw(WP_CONTENT_URL . $image);
+			$flashvars['plugins'][] = 'viral-1';
+			$flashvars['viral.onpause'] = 'false';
+			$flashvars['viral.link'] = in_the_loop() ? get_permalink() : get_option('home');
+		}
 		
 		if ( $width >= $min_player_width ) {
 			$height += 59;
 			if ( isset($link) )
 				$flashvars['link'] = esc_url_raw($link);
-			
-			$flashvars['plugins'][] = 'viral-1';
-			$flashvars['viral.onpause'] = 'false';
-			$flashvars['viral.link'] = in_the_loop() ? get_permalink() : get_option('home');
 		} else {
 			$min_width = isset($link) ? 200 : 170;
 			if ( $width < $min_width ) {
@@ -245,8 +250,8 @@ EOS;
 	/**
 	 * video()
 	 *
-	 * @param string $content
 	 * @param array $args
+	 * @param string $content
 	 * @return string $player
 	 **/
 
@@ -350,7 +355,7 @@ EOS;
 	 *
 	 * @param array $args
 	 * @param string $content
-	 * @return string $player
+	 * @return string $download
 	 **/
 
 	function file($args, $content = '') {
@@ -466,7 +471,7 @@ EOS;
 		$folder = plugin_dir_url(__FILE__);
 		$css = $folder . 'mediacaster.css';
 		
-		wp_enqueue_style('mediacaster', $css, null, '1.6');
+		wp_enqueue_style('mediacaster', $css, null, '2.0');
 	} # styles()
 
 
@@ -482,15 +487,8 @@ EOS;
 		if ( !is_admin() && isset($cover) )
 			return $cover;
 		
-		if ( defined('GLOB_BRACE') )
-			$cover = glob(ABSPATH . 'media/cover{,-*}.{jpg,jpeg,png}', GLOB_BRACE);
-		else
-			$cover = glob(ABSPATH . 'media/cover-*.jpg');
-		
-		if ( $cover )
-			$cover = 'media/' . basename(current($cover));
-		else
-			$cover = false;
+		$o = get_option('mediacaster');
+		$cover = $o['cover'];
 		
 		return $cover;
 	} # get_cover()
@@ -622,7 +620,7 @@ EOS;
 			
 			if ( $cover ) {
 				echo '<image>'
-					. $site_url . $cover
+					. WP_CONTENT_URL . $cover
 					. '</image>' . "\n";
 			}
 
@@ -677,7 +675,7 @@ EOS;
 		$cover = mediacaster::get_cover();
 		
 		if ( $cover ) {
-			echo '<itunes:image href="' . esc_url($site_url . 'wp-content/itunes/' . $cover) . '" />' . "\n\t\t"
+			echo '<itunes:image href="' . esc_url(WP_CONTENT_URL . $cover) . '" />' . "\n\t\t"
 				;
 		}
 

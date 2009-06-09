@@ -31,59 +31,44 @@ class mediacaster_admin {
 			return;
 		
 		check_admin_referer('mediacaster');
-
-		if ( isset($_POST['delete_cover']) ) {
-			if ( defined('GLOB_BRACE') ) {
-				if ( $cover = glob(ABSPATH . 'media/cover{,-*}.{jpg,jpeg,png}', GLOB_BRACE) ) {
-					$cover = current($cover);
-					@unlink($cover);
-				}
-			} else {
-				if ( $cover = glob(ABSPATH . 'media/cover-*.jpg') ) {
-					$cover = current($cover);
-					@unlink($cover);
-				}
-			}
+		
+		$old_ops = get_option('mediacaster');
+		$cover = $old_ops['cover'];
+		
+		if ( isset($_POST['delete_cover']) && $cover ) {
+			if ( file_exists(WP_CONTENT_DIR . $cover) )
+				@unlink(WP_CONTENT_DIR . $cover);
+			$cover = false;
 		}
 
 		if ( @ $_FILES['new_cover']['name'] ) {
-			$name =& $_FILES['new_cover']['name'];
-			$tmp_name =& $_FILES['new_cover']['tmp_name'];
+			$name = $_FILES['new_cover']['name'];
+			$tmp_name = $_FILES['new_cover']['tmp_name'];
 			
 			$name = strip_tags(stripslashes($name));
 
-			preg_match("/\.([^.]+)$/", $name, $ext);
-			$ext = end($ext);
+			preg_match("/\.(jpg|jpeg|png)$/i", $name, $ext);
+			$ext = strtolower(end($ext));
 			
-			if ( !in_array(strtolower($ext), mediacaster_admin::get_extensions('image')) ) {
+			if ( !in_array($ext, mediacaster_admin::get_extensions('image')) ) {
 				echo '<div class="error">'
 					. "<p>"
 						. "<strong>"
-						. __('Invalid File Type.', 'mediacaster')
+						. __('Invalid Cover File.', 'mediacaster')
 						. "</strong>"
 					. "</p>\n"
 					. "</div>\n";
 			} else {
-				if ( defined('GLOB_BRACE') ) {
-					if ( $cover = glob(ABSPATH . 'media/cover{,-*}.{jpg,jpeg,png}', GLOB_BRACE) ) {
-						$cover = current($cover);
-						@unlink($cover);
-					}
-				} else {
-					if ( $cover = glob(ABSPATH . 'media/cover-*.jpg') ) {
-						$cover = current($cover);
-						@unlink($cover);
-					}
-				}
-				
-				preg_match("/\.([^.]+)$/", $name, $ext); 
-				$ext = end($ext);
+				if ( $cover && file_exists(WP_CONTENT_DIR . $cover) )
+					@unlink($cover);
 				
 				$entropy = intval(get_option('sem_entropy')) + 1;
 				update_option('sem_entropy', $entropy);
-
-				$new_name = ABSPATH . 'media/cover-' . $entropy . '.' . $ext;
-
+				
+				$cover = '/cover-' . $entropy . '.' . $ext;
+				
+				$new_name = WP_CONTENT_DIR . $cover;
+				
 				@move_uploaded_file($tmp_name, $new_name);
 				$stat = stat(dirname($new_name));
 				$perms = $stat['mode'] & 0000666;
@@ -113,7 +98,7 @@ class mediacaster_admin {
 			? $new_ops['itunes']['block']
 			: 'no';
 		
-		$options = compact('player', 'itunes');
+		$options = compact('player', 'itunes', 'cover');
 		update_option('mediacaster', $options);
 		
 		echo '<div class="updated fade">' . "\n"
@@ -233,7 +218,7 @@ class mediacaster_admin {
 			. '</td>' . "\n"
 			. '</tr>';
 
-		$cover = mediacaster::get_cover();
+		$cover = $options['cover'];
 
 		echo '<tr valign="top">'
 			. '<th scope="row">'
@@ -242,13 +227,12 @@ class mediacaster_admin {
 			. '<td>';
 		
 		if ( $cover ) {
-			$cover = ABSPATH . $cover;
 			echo '<div style="margin-botton: 6px;">';
 			
-			echo '<img src="' . esc_url(str_replace(ABSPATH, $site_url, $cover)) . '" />' . "\n"
+			echo '<img src="' . esc_url(WP_CONTENT_URL . $cover) . '" />' . "\n"
 				. '<br />' . "\n";
 				
-			if ( is_writable($cover) ) {
+			if ( is_writable(WP_CONTENT_DIR . $cover) ) {
 				echo '<label for="delete_cover">'
 					. '<input type="checkbox"'
 						. ' id="delete_cover" name="delete_cover"'
@@ -271,10 +255,6 @@ class mediacaster_admin {
 			. '<br />' . "\n"
 			. '<input type="file" id="new_cover" name="new_cover" />'
 			. '</div>' . "\n";
-
-		if ( !defined('GLOB_BRACE') ) {
-			echo '<p>' . __('Notice: GLOB_BRACE is an undefined constant on your server. Non .jpg images will be ignored.', 'mediacaster') . '</p>';
-		}
 		
 		echo '</td>'
 			. '</tr>';
