@@ -169,7 +169,7 @@ class mediacaster_admin {
 			. '&nbsp;'
 			. __('Top')
 			. '</label>'
-			. ' '
+			. ' &nbsp; '
 			. '<label for="mediacaster-player-position-bottom">'
 			. '<input type="radio"'
 				. ' id="mediacaster-player-position-bottom" name="mediacaster[player][position]"'
@@ -202,7 +202,7 @@ class mediacaster_admin {
 			. '&nbsp;'
 			. __('16/9')
 			. '</label>'
-			. ' '
+			. ' &nbsp; '
 			. '<label for="mediacaster-player-format-4-3">'
 			. '<input type="radio"'
 				. ' id="mediacaster-player-format-4-3" name="mediacaster[player][format]"'
@@ -302,7 +302,7 @@ class mediacaster_admin {
 			echo '<tr valign="top">'
 				. '<th scope="row">'
 				. '<label for="mediacaster-itunes-summary">'
-					. __('Summary') . ':'
+					. __('Summary')
 					. '</label>'
 				. '</th>'
 				. '<td>'
@@ -322,10 +322,8 @@ class mediacaster_admin {
 				. '<td>';
 
 			for ( $i = 1; $i <= 3; $i++ ) {
-				echo '<select class="widefat"'
-						. ' name="mediacaster[itunes][category][' . $i . ']"'
-						. ' >' . "\n"
-					. '<option value="">' . __('Select...') . '</option>' . "\n";
+				echo '<select name="mediacaster[itunes][category][' . $i . ']">' . "\n"
+					. '<option value="">' . __('-- Select --') . '</option>' . "\n";
 
 				foreach ( mediacaster_admin::get_itunes_categories() as $category ) {
 					$category = $category;
@@ -349,63 +347,55 @@ class mediacaster_admin {
 
 			echo '<tr valign="top">'
 				. '<th scope="row">'
-					. '<label for="mediacaster-itunes-explicit">'
-					. __('Explicit') . ':'
-					. '</label>'
+					. __('Explicit')
 				. '</th>'
-				. '<td>'
-				. '<select class="widefat"'
-					. ' id="mediacaster-itunes-explicit" name="mediacaster[itunes][explicit]"'
-					. ' >' . "\n";
+				. '<td>';
 
-			foreach ( array('Yes', 'No', 'Clean') as $answer ) {
-				echo '<option'
+			foreach ( array(__('Yes'), __('No'), __('Clean')) as $answer ) {
+				echo '<label>'
+					. '<input type="radio" name="mediacaster[itunes][explicit]"'
 					. ' value="' . esc_attr($answer) . '"'
 					. ( ( $answer == $options['itunes']['explicit'] )
-						? ' selected="selected"'
+						? ' checked="checked"'
 						: ''
 						)
 					. '>'
+					. '&nbsp;'
 					. $answer
-					. '</option>' . "\n";
+					. '</label>' . " &nbsp; \n";
 			}
 
-			echo '</select>' . "\n"
-				. '</td>'
+			echo '</td>'
 				. '</tr>' . "\n";
 
 
 			echo '<tr valign="top">'
 				. '<th scope="row">'
-					. '<label for="mediacaster-itunes-block">'
-					. __('Block iTunes') . ':'
-					. '</label>'
+					. __('Block iTunes')
 				. '</th>'
-				. '<td>'
-				. '<select class="widefat"'
-					. ' id="mediacaster-itunes-block" name="mediacaster[itunes][block]"'
-					. ' >' . "\n";
+				. '<td>';
 
-			foreach ( array('Yes', 'No') as $answer ) {
-				echo '<option'
+			foreach ( array(__('Yes'), __('No')) as $answer ) {
+				echo '<label>'
+					. '<input type="radio" name="mediacaster[itunes][block]"'
 					. ' value="' . esc_attr($answer) . '"'
 					. ( ( $answer == $options['itunes']['block'] )
-						? ' selected="selected"'
+						? ' checked="checked"'
 						: ''
 						)
 					. '>'
+					. '&nbsp;'
 					. $answer
-					. '</option>' . "\n";
+					. '</label>' . " &nbsp; \n";
 			}
 
-			echo '</select>' . "\n"
-				. '</td>'
+			echo '</td>'
 				. '</tr>' . "\n";
 
 			echo '<tr valign="top">'
 				. '<th scope="row">'
 				. '<label for="mediacaster-itunes-copyright">'
-					. __('Copyright') . ':'
+					. __('Copyright')
 					. '</label>'
 				. '</th>'
 				. '<td>'
