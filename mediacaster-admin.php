@@ -5,6 +5,8 @@
  * @package Mediacaster
  **/
 
+add_action('save_post', array('mediacaster_admin', 'save_post'));
+
 add_action('settings_page_mediacaster', array('mediacaster_admin', 'save_options'), 0);
 
 add_filter('attachment_fields_to_edit', array('mediacaster_admin', 'attachment_fields_to_edit'), 20, 2);
@@ -20,6 +22,18 @@ add_filter('type_url_form_file', array('mediacaster_admin', 'type_url_form_file'
 add_filter('file_send_to_editor_url', array('mediacaster_admin', 'file_send_to_editor_url'), 10, 3);
 
 class mediacaster_admin {
+	/**
+	 * save_post()
+	 *
+	 * @param int $post_ID
+	 * @return void
+	 **/
+
+	function save_post($post_ID) {
+		delete_post_meta($post_ID, '_mc_enclosed');
+	} # save_post()
+	
+	
 	/**
 	 * save_options()
 	 *

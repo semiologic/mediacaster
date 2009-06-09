@@ -101,7 +101,24 @@ class mediacaster {
 			if ( empty($args['id']) )
 				return '';
 			
-			$args['href'] = wp_get_attachment_url($args['id']);
+			$attachment = get_post($args['id']);
+			if ( !$attachment || $attachment->post_type != 'attachment' )
+				return '';
+			
+			$args['href'] = wp_get_attachment_url($attachment->ID);
+			
+			if ( !$args['href'])
+				return '';
+			
+			if ( $attachment->post_parent && preg_match("/^audio\//i", $attachment->post_mime_type) ) {
+				$enclosed = get_post_meta($attachment->post_parent, '_mc_enclosed');
+				if ( $enclosed )
+					$enclosed = array_map('intval', $enclosed);
+				else
+					$enclosed = array();
+				if ( !in_array($attachment->post_parent, $enclosed) )
+					add_post_meta($attachment->post_parent, '_mc_enclosed', $attachment->ID);
+			}
 		} else {
 			$args['href'] = esc_url_raw($args['href']);
 		}
@@ -359,7 +376,7 @@ EOS;
 		static $player_width;
 		static $player_height;
 		static $player_format;
-		static $min_player_width = 320;
+		static $min_player_width = 300;
 		static $max_player_width;
 		static $cover;
 		
@@ -469,15 +486,16 @@ EOS;
 		if ( !$enclosures )
 			return array();
 		
-		$enclosed = get_post_meta($post->ID, '_mc_enclosed', true);
-		
-		if ( !is_array($enclosed) )
+		$enclosed = get_post_meta($post->ID, '_mc_enclosed');
+		if ( $enclosed )
+			$enclosed = array_map('intval', $enclosed);
+		else
 			$enclosed = array();
 		
 		foreach ( $enclosures as $key => $enclosure ) {
 			if ( $podcasts ) {
 				if ( !in_array($enclosure->post_mime_type, array('audio/mpeg', 'audio/aac'))
-					|| in_array($enclosure->ID, $enclosed) )
+					|| in_array((int) $enclosure->ID, $enclosed) )
 					unset($enclosures[$key]);
 			} else {
 				if ( preg_match("/^image\//i", $post->post_mime_type) )
