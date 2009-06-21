@@ -262,10 +262,7 @@ EOS;
 			$width = $player_width;
 			$height = $player_height;
 		} elseif ( empty($height)) {
-			if ( $player_format == '4/3' )
-				$height = round($width * 3 / 4);
-			else
-				$height = round($width * 9 / 16);
+			$height = round($width * 9 / 16);
 		}
 		
 		if ( $max_player_width && $width > $max_player_width ) {
@@ -371,19 +368,17 @@ EOS;
 	function defaults() {
 		static $player_width;
 		static $player_height;
-		static $player_format;
 		static $min_player_width = 300;
 		static $max_player_width;
 		static $cover;
 		
-		if ( isset($player_format) )
-			return compact('player_width', 'player_height', 'player_format', 'min_player_width', 'max_player_width', 'cover');
+		if ( isset($player_width) )
+			return compact('player_width', 'player_height', 'min_player_width', 'max_player_width', 'cover');
 		
 		global $content_width;
 		
 		$o = get_option('mediacaster');
 		
-		$player_format = $o['player']['format'];
 		$max_player_width = intval($content_width);
 		
 		if ( $max_player_width )
@@ -391,14 +386,11 @@ EOS;
 		else
 			$player_width = 420;
 		
-		if ( $player_format == '4/3' )
-			$player_height = round($player_width * 3 / 4);
-		else
-			$player_height = round($player_width * 9 / 16);
+		$player_height = round($player_width * 9 / 16);
 		
 		$cover = $o['player']['cover'];
 		
-		return compact('player_width', 'player_height', 'player_format', 'min_player_width', 'max_player_width', 'cover');
+		return compact('player_width', 'player_height', 'min_player_width', 'max_player_width', 'cover');
 	} # defaults()
 	
 	
@@ -763,7 +755,6 @@ EOS;
 		$options['itunes']['block'] = 'no';
 		$options['itunes']['copyright'] = '';
 
-		$options['player']['format'] = '16/9';
 		$options['player']['position'] = 'top';
 		$options['player']['cover'] = false;
 

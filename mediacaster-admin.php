@@ -96,9 +96,6 @@ class mediacaster_admin {
 		$player['position'] = in_array($new_ops['player']['position'], array('top', 'bottom', 'none'))
 			? $new_ops['player']['position']
 			: 'top';
-		$player['format'] = in_array($new_ops['player']['format'], array('16/9', '4/3'))
-			? $new_ops['player']['format']
-			: '16/9';
 		$player['cover'] = $cover;
 		
 		$itunes = array();
@@ -199,39 +196,6 @@ class mediacaster_admin {
 			. '</label>'
 			. '</td>'
 			. '</tr>' . "\n";
-		
-		echo '<tr valign="top">'
-			. '<th scope="row">'
-			. __('Video Player Format', 'mediacaster')
-			. '</th>'
-			. '<td>'
-			. '<label for="mediacaster-player-format-16-9">'
-			. '<input type="radio"'
-				. ' id="mediacaster-player-format-16-9" name="mediacaster[player][format]"'
-				. ' value="16/9"'
-				. ( $options['player']['format'] != '4/3'
-					? ' checked="checked"'
-					: ''
-					)
-				. ' />'
-			. '&nbsp;'
-			. __('16/9', 'mediacaster')
-			. '</label>'
-			. ' &nbsp; '
-			. '<label for="mediacaster-player-format-4-3">'
-			. '<input type="radio"'
-				. ' id="mediacaster-player-format-4-3" name="mediacaster[player][format]"'
-				. ' value="4/3"'
-				. ( $options['player']['format'] == '4/3'
-					? ' checked="checked"'
-					: ''
-					)
-				. ' />'
-			. '&nbsp;'
-			. __('4/3', 'mediacaster')
-			. '</label>'
-			. '</td>' . "\n"
-			. '</tr>';
 
 		$cover = $options['player']['cover'];
 
@@ -551,10 +515,7 @@ class mediacaster_admin {
 		global $content_width;
 		$o = get_option('mediacaster');
 		$default_width = $content_width ? intval($content_width) : 420;
-		if ( $o['format'] == '4/3' )
-			$default_height = round($default_width * 3 / 4);
-		else
-			$default_height = round($default_width * 9 / 16);
+		$default_height = round($default_width * 9 / 16);
 		
 		switch ( $post->post_mime_type ) {
 		case 'video/mpeg':
@@ -816,10 +777,7 @@ EOS;
 		global $content_width;
 		$o = get_option('mediacaster');
 		$default_width = $content_width ? intval($content_width) : 420;
-		if ( $o['format'] == '4/3' )
-			$default_height = round($default_width * 3 / 4);
-		else
-			$default_height = round($default_width * 9 / 16);
+		$default_height = round($default_width * 9 / 16);
 		
 		return '
 <script type="text/javascript">
