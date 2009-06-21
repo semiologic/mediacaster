@@ -98,7 +98,7 @@ class mediacaster {
 	 **/
 
 	function shortcode($args, $content = '') {
-		if ( empty($args['href']) ) {
+		if ( empty($args['src']) ) {
 			if ( empty($args['id']) )
 				return '';
 			
@@ -106,9 +106,9 @@ class mediacaster {
 			if ( !$attachment || $attachment->post_type != 'attachment' )
 				return '';
 			
-			$args['href'] = wp_get_attachment_url($attachment->ID);
+			$args['src'] = wp_get_attachment_url($attachment->ID);
 			
-			if ( !$args['href'])
+			if ( !$args['src'])
 				return '';
 			
 			if ( $attachment->post_parent && preg_match("/^audio\//i", $attachment->post_mime_type) ) {
@@ -121,16 +121,16 @@ class mediacaster {
 					add_post_meta($attachment->post_parent, '_mc_enclosed', $attachment->ID);
 			}
 		} else {
-			$args['href'] = esc_url_raw($args['href']);
+			$args['src'] = esc_url_raw($args['src']);
 		}
 		
 		if ( empty($args['type']) ) {
-			if ( preg_match("/^https?:\/\/(?:www\.)?youtube.com\//i", $args['href']) ) {
+			if ( preg_match("/^https?:\/\/(?:www\.)?youtube.com\//i", $args['src']) ) {
 				$args['type'] = 'youtube';
-			} elseif ( preg_match("/\b(rss2?|xml|feed|atom)\b/i", $args['href']) ) {
+			} elseif ( preg_match("/\b(rss2?|xml|feed|atom)\b/i", $args['src']) ) {
 				$args['type'] = 'audio';
 			} else {
-				$type = wp_check_filetype($args['href']);
+				$type = wp_check_filetype($args['src']);
 				$args['type'] = $type['ext'];
 			}
 		}
@@ -191,7 +191,7 @@ class mediacaster {
 			$height = 0;
 		}
 		
-		$id = 'm' . md5($href . '_' . $count++);
+		$id = 'm' . md5($src . '_' . $count++);
 		
 		$player = plugin_dir_url(__FILE__) . 'player/player-viral.swf';
 		
@@ -199,7 +199,7 @@ class mediacaster {
 		$allowscriptaccess = 'always';
 		
 		$flashvars = array();
-		$flashvars['file'] = $href;
+		$flashvars['file'] = $src;
 		$flashvars['skin'] = plugin_dir_url(__FILE__) . 'player/kleur.swf';
 		$flashvars['quality'] = 'true';
 		
@@ -275,7 +275,7 @@ EOS;
 		
 		$image = false;
 		
-		$id = 'm' . md5($href . '_' . $count++);
+		$id = 'm' . md5($src . '_' . $count++);
 		
 		$player = plugin_dir_url(__FILE__) . 'player/player-viral.swf';
 		
@@ -283,7 +283,7 @@ EOS;
 		$allowscriptaccess = 'always';
 		
 		$flashvars = array();
-		$flashvars['file'] = $href;
+		$flashvars['file'] = $src;
 		$flashvars['skin'] = plugin_dir_url(__FILE__) . 'player/kleur.swf';
 		$flashvars['quality'] = 'true';
 		
@@ -342,19 +342,19 @@ EOS;
 		
 		$title = trim($content);
 		if ( !$title ) {
-			$title = basename($href);
+			$title = basename($src);
 			if ( preg_match("/(.+)\.([a-z0-9]+)$/", $title, $_title) )
 				$title = $_title[1] . ' (' . strtolower($_title[2]) . ')';
 		}
 		
-		$mime = wp_check_filetype($href);
+		$mime = wp_check_filetype($src);
 		$icon = wp_mime_type_icon(wp_ext2type($mime['ext']));
 		
-		$href = esc_url($href);
+		$src = esc_url($src);
 		
 		return <<<EOS
 <div class="media_container">
-<a class="no_icon" href="$href" style="background-image: url($icon);">
+<a class="no_icon" href="$src" style="background-image: url($icon);">
 $title
 </a>
 </div>
@@ -523,7 +523,7 @@ EOS;
 		if ( !$podcasts )
 			return $content;
 		
-		$out = mediacaster::audio(array('href' => get_option('home') . '?podcasts=' . get_the_ID()));
+		$out = mediacaster::audio(array('src' => get_option('home') . '?podcasts=' . get_the_ID()));
 		
 		if ( $options['player']['position'] != 'bottom' )
 			$content = $out . $content;

@@ -702,6 +702,16 @@ EOS;
 			if ( !preg_match("/\b(?:" . implode('|', mediacaster_admin::get_extensions('video')) . ")\b/i", $file_url) )
 				break;
 			
+			$width = intval($attachment['width']);
+			$width = $width
+				? ( ' width="' . $width . '"' )
+				: '';
+			
+			$height = intval($attachment['height']);
+			$height = $height
+				? ( ' height="' . $height . '"' )
+				: '';
+			
 			$image = !empty($attachment['image'])
 				? ( ' width="' . esc_url_raw(stripslashes($attachment['image'])) . '"' )
 				: '';
@@ -771,22 +781,22 @@ EOS;
 	 * audio_send_to_editor_url()
 	 *
 	 * @param string $html
-	 * @param string $href
+	 * @param string $src
 	 * @param string $title
 	 * @return string $html
 	 **/
 
-	function audio_send_to_editor_url($html, $href, $title) {
+	function audio_send_to_editor_url($html, $src, $title) {
 		$title = stripslashes($_POST['insertonly']['title']);
-		$href = esc_url_raw(stripslashes($_POST['insertonly']['href']));
+		$src = esc_url_raw(stripslashes($_POST['insertonly']['href']));
 		
 		if ( !$title )
-			$title = basename($href);
+			$title = basename($src);
 		
-		if ( preg_match("/\b(" . implode('|', mediacaster_admin::get_extensions('audio')) . "|rss2?|xml|feed|atom)\b/i", $href) ) {
+		if ( preg_match("/\b(" . implode('|', mediacaster_admin::get_extensions('audio')) . "|rss2?|xml|feed|atom)\b/i", $src) ) {
 			$link = trim(stripslashes($_POST['insertonly']['url']));
 			$link = $link ? ( ' link="' . esc_url_raw($link) . '"' ) : '';
-			$html = '[mc href="' . $href . '" type="audio"' . $link . ']'
+			$html = '[mc src="' . $src . '" type="audio"' . $link . ']'
 				. $title
 				. '[/mc]';
 		}
@@ -884,17 +894,17 @@ var mc = {
 	 * video_send_to_editor_url()
 	 *
 	 * @param string $html
-	 * @param string $href
+	 * @param string $src
 	 * @param string $title
 	 * @return string $html
 	 **/
 
-	function video_send_to_editor_url($html, $href, $title) {
+	function video_send_to_editor_url($html, $src, $title) {
 		$title = stripslashes($_POST['insertonly']['title']);
-		$href = esc_url_raw(stripslashes($_POST['insertonly']['href']));
+		$src = esc_url_raw(stripslashes($_POST['insertonly']['href']));
 		
-		if ( preg_match("/^https?:\/\/(?:www\.)?youtube.com\//i", $href) ) {
-			$v = parse_url($href);
+		if ( preg_match("/^https?:\/\/(?:www\.)?youtube.com\//i", $src) ) {
+			$v = parse_url($src);
 			$v = $v['query'];
 			parse_str($v, $v);
 			if ( empty($v['v']) ) // invalid video url
@@ -913,12 +923,12 @@ var mc = {
 			$height = !empty($_POST['insertonly']['height'])
 				? ( ' height="' . intval($_POST['insertonly']['height']) . '"' )
 				: '';
-			$html = '[mc href="' . $href . '"' . $width . $height . ' type="youtube"' . $link . ']'
+			$html = '[mc src="' . $src . '"' . $width . $height . ' type="youtube"' . $link . ']'
 				. $title
 				. '[/mc]';
-		} elseif ( preg_match("/\b(" . implode('|', mediacaster_admin::get_extensions('video')) . "|rss2?|xml|feed|atom)\b/i", $href) ) {
+		} elseif ( preg_match("/\b(" . implode('|', mediacaster_admin::get_extensions('video')) . "|rss2?|xml|feed|atom)\b/i", $src) ) {
 			if ( !$title )
-				$title = basename($href);
+				$title = basename($src);
 			$link = !empty($_POST['insertonly']['url'])
 				? trim(stripslashes($_POST['insertonly']['url']))
 				: '';
@@ -931,7 +941,7 @@ var mc = {
 			$height = !empty($_POST['insertonly']['height'])
 				? ( ' height="' . intval($_POST['insertonly']['height']) . '"' )
 				: '';
-			$html = '[mc href="' . $href . '"' . $width . $height . ' type="video"' . $link . ']'
+			$html = '[mc src="' . $src . '"' . $width . $height . ' type="video"' . $link . ']'
 				. $title
 				. '[/mc]';
 		}
@@ -985,17 +995,17 @@ var mc = {
 	 * file_send_to_editor_url()
 	 *
 	 * @param string $html
-	 * @param string $href
+	 * @param string $src
 	 * @param string $title
 	 * @return string $html
 	 **/
 
-	function file_send_to_editor_url($html, $href, $title) {
+	function file_send_to_editor_url($html, $src, $title) {
 		$title = stripslashes($_POST['insertonly']['title']);
-		$href = esc_url_raw(stripslashes($_POST['insertonly']['href']));
+		$src = esc_url_raw(stripslashes($_POST['insertonly']['src']));
 		
 		return "\n"
-			. '[mc href="' . $href . '" type="file"]'
+			. '[mc src="' . $src . '" type="file"]'
 			. $title
 			. '[/mc]';
 	} # file_send_to_editor_url()

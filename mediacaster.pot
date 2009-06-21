@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: 2.0\n"
 "Report-Msgid-Bugs-To: https://tickets.semiologic.com\n"
-"POT-Creation-Date: 2009-06-10 01:01+0200\n"
+"POT-Creation-Date: 2009-06-21 12:47+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -53,12 +53,12 @@ msgid "Video Player Format"
 msgstr ""
 
 #: mediacaster-admin.php:218 mediacaster-admin.php:613
-#: mediacaster-admin.php:862
+#: mediacaster-admin.php:872
 msgid "16/9"
 msgstr ""
 
 #: mediacaster-admin.php:231 mediacaster-admin.php:614
-#: mediacaster-admin.php:863
+#: mediacaster-admin.php:873
 msgid "4/3"
 msgstr ""
 
@@ -394,19 +394,19 @@ msgstr ""
 msgid "TV & Film"
 msgstr ""
 
-#: mediacaster-admin.php:609 mediacaster-admin.php:858
+#: mediacaster-admin.php:609 mediacaster-admin.php:868
 msgid "Width x Height"
 msgstr ""
 
-#: mediacaster-admin.php:612 mediacaster-admin.php:861
+#: mediacaster-admin.php:612 mediacaster-admin.php:871
 msgid "Default"
 msgstr ""
 
-#: mediacaster-admin.php:618 mediacaster-admin.php:867
+#: mediacaster-admin.php:618 mediacaster-admin.php:877
 msgid "Preview Image"
 msgstr ""
 
-#: mediacaster-admin.php:619 mediacaster-admin.php:871
+#: mediacaster-admin.php:619 mediacaster-admin.php:881
 msgid "The URL of a preview image when the video isn't playing."
 msgstr ""
 
@@ -416,54 +416,54 @@ msgid ""
 "link)."
 msgstr ""
 
-#: mediacaster-admin.php:739
+#: mediacaster-admin.php:749
 msgid "Audio File URL"
 msgstr ""
 
-#: mediacaster-admin.php:746 mediacaster-admin.php:844
-#: mediacaster-admin.php:962
+#: mediacaster-admin.php:756 mediacaster-admin.php:854
+#: mediacaster-admin.php:972
 msgid "Title"
 msgstr ""
 
-#: mediacaster-admin.php:750
+#: mediacaster-admin.php:760
 msgid "Link text, e.g. &#8220;Still Alive by Jonathan Coulton&#8221;"
 msgstr ""
 
-#: mediacaster-admin.php:754 mediacaster-admin.php:851
-#: mediacaster-admin.php:969
+#: mediacaster-admin.php:764 mediacaster-admin.php:861
+#: mediacaster-admin.php:979
 msgid "Link URL"
 msgstr ""
 
-#: mediacaster-admin.php:758
+#: mediacaster-admin.php:768
 msgid ""
 "The link URL to which the player should direct users to (e.g. an affiliate "
 "link). Only applicable for mp3, m4a and aac files."
 msgstr ""
 
-#: mediacaster-admin.php:762 mediacaster-admin.php:875
-#: mediacaster-admin.php:976
+#: mediacaster-admin.php:772 mediacaster-admin.php:885
+#: mediacaster-admin.php:986
 msgid "Insert into Post"
 msgstr ""
 
-#: mediacaster-admin.php:837 mediacaster-admin.php:955
+#: mediacaster-admin.php:847 mediacaster-admin.php:965
 msgid "Video URL"
 msgstr ""
 
-#: mediacaster-admin.php:848
+#: mediacaster-admin.php:858
 msgid "Link text, e.g. &#8220;Lucy on YouTube&#8221;"
 msgstr ""
 
-#: mediacaster-admin.php:855
+#: mediacaster-admin.php:865
 msgid ""
 "The link URL to which the player should direct users to (e.g. an affiliate "
 "link). Only applicable for flv, mp4, m4v, mov and YouTube files."
 msgstr ""
 
-#: mediacaster-admin.php:903
+#: mediacaster-admin.php:913
 msgid "YouTube Video"
 msgstr ""
 
-#: mediacaster-admin.php:966
+#: mediacaster-admin.php:976
 msgid "Link text, e.g. &#8220;Ransom Demands (PDF)&#8221;"
 msgstr ""
 
