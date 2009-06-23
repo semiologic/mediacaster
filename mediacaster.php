@@ -6,7 +6,7 @@ Description: Lets you add podcasts and videos to your site's posts and pages.
 Version: 2.0 beta
 Author: Denis de Bernardy
 Author URI: http://www.getsemiologic.com
-Text Domain: mediacaster-info
+Text Domain: mediacaster
 Domain Path: /lang
 */
 
