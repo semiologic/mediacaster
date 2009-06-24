@@ -138,8 +138,6 @@ class mediacaster_admin {
 
 		$options = get_option('mediacaster');
 		
-		$site_url = trailingslashit(site_url());
-		
 		echo '<div class="wrap">' . "\n"
 			. '<h2>'. __('Mediacaster Settings', 'mediacaster') . '</h2>' . "\n";
 

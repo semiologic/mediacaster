@@ -564,7 +564,6 @@ EOS;
 		
 		echo '<trackList>' . "\n";
 		
-		$site_url = trailingslashit(get_option('home'));
 		$o = get_option('mediacaster');
 		$cover = $o['player']['cover'];
 		
@@ -618,8 +617,6 @@ EOS;
 			return;
 		
 		$options = get_option('mediacaster');
-
-		$site_url = trailingslashit(site_url());
 
 		echo "\n\t\t"
 			. '<copyright>' . apply_filters('the_excerpt_rss', $options['itunes']['copyright']) . '</copyright>' . "\n\t\t"
