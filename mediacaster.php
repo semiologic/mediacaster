@@ -86,7 +86,8 @@ class mediacaster {
 	 **/
 
 	function ext2type($types) {
-		$types['video'] = array_merge($types['video'], array('flv', 'f4b', 'f4p', 'f4v', '3pg', '3g2'));
+		$types['video'] = array_merge($types['video'], array('flv', 'f4b', 'f4p', 'f4v'));
+		$types['audio'] = array_merge($types['audio'], array('3pg', '3g2'));
 		return $types;
 	} # ext2type()
 	
