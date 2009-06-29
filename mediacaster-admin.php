@@ -96,6 +96,9 @@ class mediacaster_admin {
 		$player['position'] = in_array($new_ops['player']['position'], array('top', 'bottom', 'none'))
 			? $new_ops['player']['position']
 			: 'top';
+		$player['skin'] = in_array($new_ops['player']['skin'], array('bekle', 'kleur', 'metarby10', 'modieus', 'silverywhite'))
+			? $new_ops['player']['skin']
+			: 'modius';
 		$player['cover'] = $cover;
 		
 		$itunes = array();
@@ -110,7 +113,13 @@ class mediacaster_admin {
 			? $new_ops['itunes']['block']
 			: 'no';
 		
-		$options = compact('player', 'itunes');
+		$longtail = array(
+			'licensed' => false,
+			'pub_id' => '',
+			'ad_flow' => array(),
+			);
+		
+		$options = compact('player', 'itunes', 'longtail');
 		update_option('mediacaster', $options);
 		
 		echo '<div class="updated fade">' . "\n"
@@ -142,7 +151,7 @@ class mediacaster_admin {
 			. '<h2>'. __('Mediacaster Settings', 'mediacaster') . '</h2>' . "\n";
 
 		wp_nonce_field('mediacaster');
-
+		
 		echo '<h3>'
 				. __('Media Player', 'mediacaster')
 				. '</h3>' . "\n";
@@ -151,7 +160,35 @@ class mediacaster_admin {
 		
 		echo '<tr valign="top">'
 			. '<th scope="row">'
-			. __('Playlist Position', 'mediacaster')
+			. __('Player Skin', 'mediacaster')
+			. '</th>'
+			. '<td>'
+			. '<ul>' . "\n";
+		
+		foreach ( array(
+			'bekle' => __('Bekle', 'mediacaster'),
+			'kleur' => __('Kleur', 'mediacaster'),
+			'modieus' => __('Modieus', 'mediacaster'),
+			) as $skin_id => $skin_name ) {
+			echo '<li>'
+				. '<label>'
+				. '<input type="radio" name="mediacaster[player][skin]"'
+					. ' value="' . $skin_id . '"'
+					. checked($options['player']['skin'], $skin_id, false)
+					. ' />'
+				. '&nbsp;'
+				. $skin_name
+				. '</label>'
+				. '</li>' . "\n";
+		}
+		
+		echo '</ul>' . "\n"
+			. '</td>'
+			. '</tr>' . "\n";
+		
+		echo '<tr valign="top">'
+			. '<th scope="row">'
+			. __('MP3 Playlist Position', 'mediacaster')
 			. '</th>'
 			. '<td>'
 			. '<label for="mediacaster-player-position-top">'

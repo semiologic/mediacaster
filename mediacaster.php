@@ -39,8 +39,11 @@ add_action('atom_head', array('mediacaster', 'display_feed_header'));
 add_action('rss2_item', array('mediacaster', 'display_feed_enclosures'));
 add_action('atom_entry', array('mediacaster', 'display_feed_enclosures'));
 
-if ( get_option('mediacaster') === false )
+$ops = get_option('mediacaster');
+if ( $ops === false )
 	mediacaster::init_options();
+elseif ( !isset($ops['version']) )
+	add_action('init', array('mediacaster', 'upgrade'), 10000);
 
 add_filter('widget_text', 'do_shortcode', 11);
 add_shortcode('mc', array('mediacaster', 'shortcode'));
@@ -107,7 +110,7 @@ class mediacaster {
 			if ( !$attachment || $attachment->post_type != 'attachment' )
 				return '';
 			
-			$args['src'] = wp_get_attachment_url($attachment->ID);
+			$args['src'] = str_replace(' ', rawurlencode(' '), wp_get_attachment_url($attachment->ID));
 			
 			if ( !$args['src'])
 				return '';
@@ -122,7 +125,7 @@ class mediacaster {
 					add_post_meta($attachment->post_parent, '_mc_enclosed', $attachment->ID);
 			}
 		} else {
-			$args['src'] = esc_url_raw($args['src']);
+			$args['src'] = esc_url_raw(str_replace(' ', rawurlencode(' '), $args['src']));
 		}
 		
 		if ( empty($args['type']) ) {
@@ -135,6 +138,12 @@ class mediacaster {
 				$args['type'] = $type['ext'];
 			}
 		}
+		
+		foreach ( array('width', 'height') as $arg ) {
+			if ( isset($args[$arg]) && !is_numeric($args[$arg]) )
+				unset($args[$arg]);
+		}
+			
 		
 		switch ( $args['type'] ) {
 		case 'mp3':
@@ -171,9 +180,15 @@ class mediacaster {
 	 **/
 
 	function audio($args, $content = '') {
-		extract($args, EXTR_SKIP);
-		extract(mediacaster::defaults(), EXTR_SKIP);
 		static $count = 0;
+		extract($args, EXTR_SKIP);
+		$defaults = mediacaster::defaults();
+		foreach ( array('width', 'height') as $arg ) {
+			if ( isset($$arg) )
+				unset($defaults[$arg]);
+		}
+		extract($defaults);
+		extract(mediacaster::get_skin($skin));
 		
 		if ( $cover ) {
 			$image = WP_CONTENT_URL . $cover;
@@ -200,8 +215,8 @@ class mediacaster {
 		$allowscriptaccess = 'always';
 		
 		$flashvars = array();
-		$flashvars['file'] = $src;
-		$flashvars['skin'] = plugin_dir_url(__FILE__) . 'player/kleur.swf';
+		$flashvars['file'] = esc_url_raw($src);
+		$flashvars['skin'] = plugin_dir_url(__FILE__) . 'skins/' . $skin . '.swf';
 		$flashvars['quality'] = 'true';
 		
 		if ( $image )
@@ -209,8 +224,14 @@ class mediacaster {
 		
 		$flashvars['plugins'] = array('quickkeys-1');
 		
+		if ( method_exists('google_analytics', 'get_options') ) {
+			$uacct = google_analytics::get_options();
+			if ( $uacct['uacct'] )
+				$flashvars['plugins'][] = 'googlytics-1';
+		}
+		
 		if ( $width >= $min_player_width ) {
-			$height += 59;
+			$height += $skin_height;
 			if ( $link )
 				$flashvars['link'] = esc_url_raw($link);
 		} else {
@@ -255,9 +276,15 @@ EOS;
 	 **/
 
 	function video($args, $content = '') {
-		extract($args, EXTR_SKIP);
-		extract(mediacaster::defaults(), EXTR_SKIP);
 		static $count = 0;
+		extract($args, EXTR_SKIP);
+		$defaults = mediacaster::defaults();
+		foreach ( array('width', 'height') as $arg ) {
+			if ( isset($$arg) )
+				unset($defaults[$arg]);
+		}
+		extract($defaults);
+		extract(mediacaster::get_skin($skin));
 		
 		if ( empty($width) ) {
 			$width = $player_width;
@@ -281,17 +308,23 @@ EOS;
 		$allowscriptaccess = 'always';
 		
 		$flashvars = array();
-		$flashvars['file'] = $src;
-		$flashvars['skin'] = plugin_dir_url(__FILE__) . 'player/kleur.swf';
+		$flashvars['file'] = esc_url_raw($src);
+		$flashvars['skin'] = plugin_dir_url(__FILE__) . 'skins/' . $skin . '.swf';
 		$flashvars['quality'] = 'true';
 		
 		if ( $image )
 			$flashvars['image'] = esc_url_raw($image);
 		
 		$flashvars['plugins'] = array('quickkeys-1');
-
-		if ( $width >= $min_player_width ) {
-			$height += 59;
+		
+		if ( method_exists('google_analytics', 'get_options') ) {
+			$uacct = google_analytics::get_options();
+			if ( $uacct['uacct'] )
+				$flashvars['plugins'][] = 'googlytics-1';
+		}
+		
+		if ( $width >= $min_player_width) {
+			$height += $skin_height;
 			if ( $link )
 				$flashvars['link'] = esc_url_raw($link);
 		} else {
@@ -350,6 +383,8 @@ EOS;
 		
 		$src = esc_url($src);
 		
+		$title = apply_filters('mediacaster_file', $title, $args);
+		
 		return <<<EOS
 <div class="media_container">
 <a class="no_icon" href="$src" style="background-image: url($icon);">
@@ -367,19 +402,16 @@ EOS;
 	 **/
 
 	function defaults() {
-		static $player_width;
-		static $player_height;
-		static $min_player_width = 300;
-		static $max_player_width;
-		static $cover;
+		static $defaults;
 		
-		if ( isset($player_width) )
-			return compact('player_width', 'player_height', 'min_player_width', 'max_player_width', 'cover');
+		if ( isset($defaults) )
+			return $defaults;
 		
 		global $content_width;
 		
 		$o = get_option('mediacaster');
 		
+		$min_player_width = 300;
 		$max_player_width = intval($content_width);
 		
 		if ( $max_player_width )
@@ -390,9 +422,39 @@ EOS;
 		$player_height = round($player_width * 9 / 16);
 		
 		$cover = $o['player']['cover'];
+		$skin = $o['player']['skin'];
 		
-		return compact('player_width', 'player_height', 'min_player_width', 'max_player_width', 'cover');
+		$defaults = compact('player_width', 'player_height', 'min_player_width', 'max_player_width', 'cover', 'skin');
+		
+		return $defaults;
 	} # defaults()
+	
+	
+	/**
+	 * get_skin
+	 *
+	 * @param string $skin
+	 * @return array $skin_details
+	 **/
+
+	function get_skin($skin) {
+		$skin_details = array(
+			'bekle' => array(
+				'skin' => 'bekle',
+				'skin_height' => 59,
+				),
+			'kleur' => array(
+				'skin' => 'kleur',
+				'skin_height' => 59,
+				),
+			'modieus' => array(
+				'skin' => 'modieus',
+				'skin_height' => 31,
+				),
+			);
+		
+		return isset($skin_details[$skin]) ? $skin_details[$skin] : $skin_details['modieus'];
+	} # get_skin()
 	
 	
 	/**
@@ -744,17 +806,18 @@ EOS;
 	 **/
 
 	function init_options() {
-		global $wpdb;
 		$options = array();
 
+		$options['player']['position'] = 'top';
+		$options['player']['cover'] = false;
+		
 		$options['itunes']['author'] = '';
 		$options['itunes']['summary'] = get_option('blogdescription');
 		$options['itunes']['explicit'] = 'no';
 		$options['itunes']['block'] = 'no';
 		$options['itunes']['copyright'] = '';
 
-		$options['player']['position'] = 'top';
-		$options['player']['cover'] = false;
+		$options['version'] = 2;
 
 		update_option('mediacaster', $options);
 	} # init_options()
@@ -775,6 +838,309 @@ EOS;
 			array('mediacaster_admin', 'edit_options')
 			);
 	} # admin_menu()
+	
+	
+	/**
+	 * upgrade()
+	 *
+	 * @return void
+	 **/
+
+	function upgrade() {
+		$ops = get_option('mediacaster');
+		
+		if ( isset($ops['version']) )
+			return;
+		
+		$ops['version'] = '2.0';
+		
+		if ( !isset($ops['player']['skin']) )
+			$ops['player']['skin'] = 'modieus';
+		
+		if ( !isset($ops['player']['position']) )
+			$ops['player']['position'] = 'top';
+		
+		if ( !isset($ops['player']['cover']) )
+			$ops['player']['cover'] = false;
+		
+		if ( !isset($ops['longtail']) )
+			$ops['longtail'] = array(
+				'licensed' => false,
+				'pub_id' => '',
+				'ad_flow' => array(),
+				);
+		
+		# prevent concurrent upgrades
+		update_option('mediacaster', $ops);
+		
+		$ignore_user_abort = ignore_user_abort(true);
+		$current_user = wp_get_current_user();
+		
+		global $wpdb;
+		
+		$posts = $wpdb->get_results("
+			SELECT	posts.*,
+					meta_value as media_path
+			FROM	$wpdb->posts as posts
+			JOIN	$wpdb->postmeta as postmeta
+			ON		postmeta.post_id = posts.ID
+			AND		postmeta.meta_key = '_mediacaster_path'
+			ORDER BY meta_value DESC, ID DESC
+			");
+		
+		foreach ( $posts as $i => $post ) {
+			$files[$i] = glob(ABSPATH . $post->media_path . '*');
+			$empty = true;
+			
+			if ( $files[$i] ) {
+				$files[$i] = array_map('basename', $files[$i]);
+				foreach ( $files[$i] as $j => $file ) {
+					unset($files[$i][$j]);
+					if ( preg_match("/^(.+)\.([^.]+)$/", $file, $match) ) {
+						$ext = array_pop($match);
+						$name = array_pop($match);
+						if ( in_array($ext, array('jpg', 'jpeg', 'png') ) && preg_match("/^cover-/", $name) ) {
+							if ( is_writable(ABSPATH . $post->media_path . $file) )
+								unlink(ABSPATH . $post->media_path . $file);
+							else
+								$empty = false;
+						} else {
+							$files[$i][$name][] = $ext;
+							$empty = false;
+						}
+					} else {
+						$empty = false;
+					}
+				}
+			}
+			
+			if ( !$files[$i] ) {
+				if ( is_writable(ABSPATH . $post->media_path) && $empty )
+					rmdir(ABSPATH . $post->media_path);
+			}
+		}
+		
+		$site_url = trailingslashit(get_option('siteurl'));
+		$format = '';
+		
+		if ( isset($ops['player']['width']) ) {
+			$format .= ' width="' . intval($ops['player']['width']) . '"';
+			unset($ops['player']['width']);
+		}
+			
+		if ( isset($ops['player']['height']) ) {
+			$format .= ' height="' . intval($ops['player']['height']) . '"';
+			unset($ops['player']['height']);
+		}
+		
+		foreach ( $posts as $i => $post ) {
+			if ( $files[$i] )
+				uksort($files[$i], 'strnatcasecmp');
+			
+			$found_one = (bool) $files;
+			$audios = array();
+			$videos = array();
+			$images = array();
+			$attachments = array();
+			$folder_url = $site_url . $post->media_path;
+			
+			# transform <!--podcast#file-->, <!--media#file--> and <!--videocast#file--> into [media:file]
+			$post->post_content = preg_replace(
+				"/
+					(?:<p>\s*)?				# maybe a paragraph tag
+					(?:<br\s*\/>\s*)*		# and a couple br tags
+					<!--\s*(?:
+						media
+						|
+						podcast
+						|
+						videocast
+						)\s*
+						\#([^>#]*)			# the media file
+						(?:\#[^>]*)?		# and some junk
+					\s*
+					-->
+					(?:\s*<br\s*\/>)*		# maybe a couple of br tags
+					(?:<\/p>\s*)?			# and a close paragraph tag
+				/ix",
+				"[media:$1]",
+				$post->post_content);
+
+			# transform <flv href="file" /> into [media:file]
+			$post->post_content = preg_replace(
+				"/
+					(?:<p>)?
+					<flv\s+
+					[^>]*
+					href=\"([^\">]*)\"
+					[^>]*
+					>
+					(?:<\/flv>)?
+					(?:<\/p>)?
+				/ix",
+				"[media:$1]",
+				$post->post_content);
+			
+			# split files into audios and videos
+			foreach ( $files[$i] as $name => $exts ) {
+				foreach ( $exts as $j => $ext ) {
+					if ( in_array($ext, array('jpg', 'jpeg', 'png')) ) {
+						$images[$name] = "$name.$ext";
+					} elseif ( in_array($ext, array('mp3', 'm4a')) ) {
+						$audios[] = "$name.$ext";
+					} elseif ( in_array($ext, array('flv', 'swf', 'mp4', 'm4v', 'mov')) ) {
+						$videos[$name][$ext] = "$name.$ext";
+					} else {
+						$attachments[] = "$name.$ext";
+					}
+				}
+			}
+			
+			# process inline attachments
+			foreach ( $attachments as $j => $attachment ) {
+				$find = preg_quote($attachment);
+				$repl = '[mc src="' . $folder_url . rawurlencode($attachment) . '" type="file"/]';
+				
+				$post->post_content = preg_replace(
+					"/\[media:\s*($find)\s*\]/",
+					$repl,
+					$post->post_content);
+			}
+			
+			# process inline audios
+			foreach ( $audios as $j => $audio ) {
+				$find = preg_quote($audio);
+				$repl = '[mc src="' . $folder_url . rawurlencode($audio) . '" type="audio"/]';
+				
+				unset($found);
+				
+				$post->post_content = preg_replace(
+					"/\[(?:audio|video|media):\s*($find)\s*\]/",
+					$repl,
+					$post->post_content, -1, $found);
+				
+				unset($audios[$j]);
+				if ( !$found )
+					$audios[$audio] = $repl;
+			}
+			
+			# process inline videos
+			$_videos = array();
+			foreach ( $videos as $name => $_video ) {
+				foreach ( $_video as $video ) {
+					if ( isset($images[$name]) ) {
+						$_videos[$video] = $images[$name];
+					} else {
+						$_videos[$video] = false;
+					}
+				}
+			}
+			
+			$videos = $_videos;
+			
+			foreach ( $videos as $video => $image ) {
+				$find = preg_quote($video);
+				$repl = ( '[mc src="' . $folder_url . rawurlencode($video) . '"' )
+					. ( $image
+					? ( ' image="' . $folder_url . rawurlencode($image) . '"' )
+					: ''
+					)
+					. $format . ' type="video"/]';
+				
+				$post->post_content = preg_replace(
+					"/\[(?:audio|video|media):\s*$find\s*\]/",
+					$repl,
+					$post->post_content, -1, $found);
+				
+				if ( $found )
+					unset($videos[$video]);
+				else
+					$videos[$video] = $repl;
+			}
+			
+			# insert remaining videos
+			foreach ( $videos as $file => $repl ) {
+				if ( $ops['position'] == 'bottom' )
+					$post->post_content .= "\n\n$repl";
+				else
+					$post->post_content = "$repl\n\n$post->post_content";
+			}
+			
+			# insert remaining audios
+			foreach ( $audios as $file => $repl ) {
+				if ( $ops['position'] == 'bottom' )
+					$post->post_content .= "\n\n$repl";
+				else
+					$post->post_content = "$repl\n\n$post->post_content";
+			}
+			
+			# process external urls
+			$post->post_content = preg_replace_callback(
+				"/\[(?:audio|video|media):\s*(.+)\s*\]/",
+				array('mediacaster', 'upgrade_callback'),
+				$post->post_content, -1, $found);
+			
+			$found_one |= $found;
+			
+			if ( $found_one ) {
+				wp_set_current_user($post->post_author);
+				wp_update_post($post);
+			}
+			
+			delete_post_meta($post->ID, '_mediacaster_path');
+		}
+		
+		wp_set_current_user($current_user->ID);
+		ignore_user_abort($ignore_user_abort);
+		
+		# unset version in case anything went wrong
+		if ( $posts )
+			unset($ops['version']);
+		update_option('mediacaster', $ops);
+	} # upgrade()
+	
+	
+	/**
+	 * upgrade_callback
+	 *
+	 * @param array $match
+	 * @return string $out
+	 **/
+
+	function upgrade_callback($match) {
+		static $i = 0;
+		$file = array_pop($match);
+		
+		if ( preg_match("/^https?:\/\/[^\/]*\byoutube\.com\//", $file) ) {
+			return "[mc src=\"$file\" type=\"video\"/]";
+		} elseif ( preg_match("/^https?:\/\/video\.google\.com\//", $file) ) {
+			$file = parse_url($file);
+			$file = $file['query'];
+			parse_str($file, $file);
+			$file = $file['docid'];
+			$file = preg_replace("/[^a-z0-9_-]/i", '', $file);
+			
+			if ( !$file )
+				return '';
+			
+			$ops = get_option('mediacaster');
+			
+			$width = intval($ops['player']['width']);
+			$height = intval($ops['player']['height']);
+			$height += 26;
+			
+			$player = 'http://video.google.com/googleplayer.swf?docId=' . $file;
+			$id = md5($i++ . $player);
+			
+			return <<<EOS
+
+<div class="media_container"><div class="media" style="width: {$width}px; height: {$height}px;"><object id="$id" classid="clsid:D27CDB6E-AE6D-11cf-96B8-444553540000" width="$width" height="$height"><param name="movie" value="$player" /><param name="allowfullscreen" value="true" /><param name="allowscriptaccess" value="true" /><embed src="$player" pluginspage="http://www.macromedia.com/go/getflashplayer" width="$width" height="$height" allowfullscreen="true" allowscriptaccess="true" /></object></div></div>
+
+EOS;
+		} else {
+			return '[mc src="' . str_replace(' ', rawurlencode(' '), $file) . '"/]';
+		}
+	} # upgrade_callback()
 } # mediacaster
 
 function mediacaster_admin() {
