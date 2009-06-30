@@ -224,7 +224,8 @@ class mediacaster {
 		
 		$flashvars['plugins'] = array('quickkeys-1');
 		
-		if ( method_exists('google_analytics', 'get_options') ) {
+		if ( method_exists('google_analytics', 'get_options')
+			&& !current_user_can('edit_posts') && !current_user_can('edit_pages') ) {
 			$uacct = google_analytics::get_options();
 			if ( $uacct['uacct'] )
 				$flashvars['plugins'][] = 'googlytics-1';
@@ -317,7 +318,8 @@ EOS;
 		
 		$flashvars['plugins'] = array('quickkeys-1');
 		
-		if ( method_exists('google_analytics', 'get_options') ) {
+		if ( method_exists('google_analytics', 'get_options')
+			&& !current_user_can('edit_posts') && !current_user_can('edit_pages') ) {
 			$uacct = google_analytics::get_options();
 			if ( $uacct['uacct'] )
 				$flashvars['plugins'][] = 'googlytics-1';
