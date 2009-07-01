@@ -226,8 +226,10 @@ class mediacaster {
 		
 		if ( method_exists('google_analytics', 'get_options') && !current_user_can('publish_posts') && !current_user_can('publish_pages') ) {
 			$uacct = google_analytics::get_options();
-			if ( $uacct['uacct'] )
-				$flashvars['plugins'][] = 'googlytics-1';
+			if ( $uacct['uacct'] ) {
+				$flashvars['plugins'][] = 'gapro-1';
+				$flashvars['gapro.accountid'] = $uacct['uacct'];
+			}
 		}
 		
 		if ( $width >= $min_player_width ) {
@@ -319,8 +321,10 @@ EOS;
 		
 		if ( method_exists('google_analytics', 'get_options') && !current_user_can('publish_posts') && !current_user_can('publish_pages') ) {
 			$uacct = google_analytics::get_options();
-			if ( $uacct['uacct'] )
-				$flashvars['plugins'][] = 'googlytics-1';
+			if ( $uacct['uacct'] ) {
+				$flashvars['plugins'][] = 'gapro-1';
+				$flashvars['gapro.accountid'] = $uacct['uacct'];
+			}
 		}
 		
 		if ( $width >= $min_player_width) {
