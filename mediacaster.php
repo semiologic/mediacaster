@@ -43,7 +43,7 @@ $ops = get_option('mediacaster');
 if ( $ops === false )
 	mediacaster::init_options();
 elseif ( !isset($ops['version']) )
-	add_action('init', array('mediacaster', 'upgrade'), 10000);
+	add_action('init', array('mediacaster', 'upgrade'), 1000);
 
 add_filter('widget_text', 'do_shortcode', 11);
 add_shortcode('mc', array('mediacaster', 'shortcode'));
