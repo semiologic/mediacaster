@@ -42,7 +42,7 @@ add_action('atom_entry', array('mediacaster', 'display_feed_enclosures'));
 $ops = get_option('mediacaster');
 if ( $ops === false )
 	mediacaster::init_options();
-elseif ( !isset($ops['version']) )
+elseif ( !isset($ops['version']) && !defined('DOING_CRON') )
 	add_action('init', array('mediacaster', 'upgrade'), 1000);
 
 add_filter('widget_text', 'do_shortcode', 11);
