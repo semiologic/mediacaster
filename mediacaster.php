@@ -879,6 +879,7 @@ EOS;
 		
 		$ignore_user_abort = ignore_user_abort(true);
 		$current_user = wp_get_current_user();
+		set_time_limit(600);
 		
 		global $wpdb;
 		
