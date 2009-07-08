@@ -561,17 +561,17 @@ class mediacaster_admin {
 			
 			static $scripts;
 			if ( !isset($scripts) ) {
-				$player = plugin_dir_url(__FILE__) . 'player/player-viral.swf';
-
-				$flashvars = array();
-				$flashvars['file'] = $file_url;
-				$flashvars['skin'] = plugin_dir_url(__FILE__) . 'player/kleur.swf';
-
-				$flashvars['plugins'] = array('quickkeys-1');
-				$flashvars['plugins'] = array('snapshot-1');
-
-				$flashvars['plugins'] = implode(',', $flashvars['plugins']);
-				$flashvars = http_build_query($flashvars, null, '&');
+				// $player = plugin_dir_url(__FILE__) . 'mediaplayer/player.swf';
+				// 
+				// $flashvars = array();
+				// $flashvars['file'] = $file_url;
+				// $flashvars['skin'] = plugin_dir_url(__FILE__) . 'player/kleur.swf';
+				// 
+				// $flashvars['plugins'] = array('quickkeys-1');
+				// $flashvars['plugins'] = array('snapshot-1');
+				// 
+				// $flashvars['plugins'] = implode(',', $flashvars['plugins']);
+				// $flashvars = http_build_query($flashvars, null, '&');
 				
 				$scripts = <<<EOS
 <script type="text/javascript">

@@ -209,7 +209,7 @@ class mediacaster {
 		
 		$id = 'm' . md5($src . '_' . $count++);
 		
-		$player = plugin_dir_url(__FILE__) . 'player/player-viral.swf';
+		$player = plugin_dir_url(__FILE__) . 'mediaplayer/player.swf';
 		
 		$allowfullscreen = 'true';
 		$allowscriptaccess = 'always';
@@ -304,7 +304,7 @@ EOS;
 		
 		$id = 'm' . md5($src . '_' . $count++);
 		
-		$player = plugin_dir_url(__FILE__) . 'player/player-viral.swf';
+		$player = plugin_dir_url(__FILE__) . 'mediaplayer/player.swf';
 		
 		$allowfullscreen = 'true';
 		$allowscriptaccess = 'always';
