@@ -579,18 +579,22 @@ var mc = {
 	i: 0,
 	
 	set_default: function(post_id) {
-		jQuery("#attachments-width-" + post_id).val($default_width);
-		jQuery("#attachments-height-" + post_id).val($default_height);
+		jQuery("#attachments-width-" + post_id).val('');
+		jQuery("#attachments-height-" + post_id).val('');
 		
 		return false;
 	},
 
 	set_16_9: function(post_id) {
+		if ( !jQuery("#attachments-width-" + post_id).val() )
+			jQuery("#attachments-width-" + post_id).val($default_width);
 		jQuery("#attachments-height-" + post_id).val(Math.round(jQuery("#attachments-width-" + post_id).val() * 9 / 16));
 		return false;
 	},
 
 	set_4_3: function(post_id) {
+		if ( !jQuery("#attachments-width-" + post_id).val() )
+			jQuery("#attachments-width-" + post_id).val($default_width);
 		jQuery("#attachments-height-" + post_id).val(Math.round(jQuery("#attachments-width-" + post_id).val() * 3 / 4));
 		return false;
 	}
@@ -604,7 +608,7 @@ EOS;
 			$post_fields['format'] = array(
 				'label' => __('Width x Height', 'mediacaster'),
 				'input' => 'html',
-				'html' => $scripts . '<input id="attachments-width-' . $post->ID . '" name="attachments[' . $post->ID . '][width]" value="' . $default_width . '" type="text" size="3" style="width: 40px;"> x <input id="attachments-height-' . $post->ID . '" name="attachments[' . $post->ID . '][height]" value="' . $default_height . '" type="text" size="3" style="width: 40px;">
+				'html' => $scripts . '<input id="attachments-width-' . $post->ID . '" name="attachments[' . $post->ID . '][width]" value="" type="text" size="3" style="width: 40px;"> x <input id="attachments-height-' . $post->ID . '" name="attachments[' . $post->ID . '][height]" value="" type="text" size="3" style="width: 40px;">
 	<button type="button" class="button" onclick="return mc.set_default(' . $post->ID . ');">' . __('Default', 'mediacaster') . '</button>
 	<button type="button" class="button" onclick="return mc.set_16_9(' . $post->ID . ');">' . __('16/9', 'mediacaster') . '</button>
 	<button type="button" class="button" onclick="return mc.set_4_3(' . $post->ID . ');">' . __('4/3', 'mediacaster') . '</button>',

@@ -2,7 +2,7 @@
 /*
 Plugin Name: Mediacaster
 Plugin URI: http://www.semiologic.com/software/mediacaster/
-Description: Lets you add podcasts and videos to your site's posts and pages.
+Description: Lets you add podcasts, videos, and pretty download links to your site's posts and pages.
 Version: 2.0 beta
 Author: Denis de Bernardy
 Author URI: http://www.getsemiologic.com
@@ -42,7 +42,7 @@ add_action('atom_entry', array('mediacaster', 'display_feed_enclosures'));
 $ops = get_option('mediacaster');
 if ( $ops === false )
 	mediacaster::init_options();
-elseif ( !isset($ops['version']) && !defined('DOING_CRON') )
+elseif ( !isset($ops['version']) && !defined('DOING_CRON') && is_admin() )
 	add_action('init', array('mediacaster', 'upgrade'), 1000);
 
 add_filter('widget_text', 'do_shortcode', 11);
