@@ -139,18 +139,21 @@ class mediacaster_admin {
 	 **/
 
 	function edit_options() {
+		$options = get_option('mediacaster');
+		
+		echo '<div class="wrap">' . "\n";
+		
 		echo '<form enctype="multipart/form-data" method="post" action="">' . "\n";
 
 		$bytes = apply_filters( 'import_upload_size_limit', wp_max_upload_size() );
 
-		echo  "\n" . '<input type="hidden" name="MAX_FILE_SIZE" value="' . esc_attr($bytes) .'" />' . "\n";
-
-		$options = get_option('mediacaster');
-		
-		echo '<div class="wrap">' . "\n"
-			. '<h2>'. __('Mediacaster Settings', 'mediacaster') . '</h2>' . "\n";
+		echo '<input type="hidden" name="MAX_FILE_SIZE" value="' . esc_attr($bytes) .'" />' . "\n";
 
 		wp_nonce_field('mediacaster');
+		
+		screen_icon();
+		
+		echo '<h2>'. __('Mediacaster Settings', 'mediacaster') . '</h2>' . "\n";
 		
 		echo '<h3>'
 				. __('Media Player', 'mediacaster')
@@ -432,10 +435,9 @@ class mediacaster_admin {
 				. ' value="' . esc_attr(__('Save Changes', 'mediacaster')) . '"'
 				. ' />'
 			. '</p>' . "\n";
-
-		echo '</div>' . "\n";
-
-		echo '</form>' . "\n";
+		
+		echo '</form>' . "\n"
+			. '</div>' . "\n";
 	} # edit_options()
 
 

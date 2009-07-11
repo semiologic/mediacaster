@@ -391,7 +391,7 @@ EOS;
 		
 		return <<<EOS
 <div class="media_container">
-<a class="no_icon" href="$src" style="background-image: url($icon);">
+<a href="$src" class="no_icon" style="background-image: url($icon);">
 $title
 </a>
 </div>
