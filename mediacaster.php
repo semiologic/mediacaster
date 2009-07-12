@@ -878,7 +878,6 @@ EOS;
 		update_option('mediacaster', $ops);
 		
 		$ignore_user_abort = ignore_user_abort(true);
-		$current_user = wp_get_current_user();
 		set_time_limit(600);
 		
 		global $wpdb;
@@ -1088,14 +1087,17 @@ EOS;
 			$found_one |= $found;
 			
 			if ( $found_one ) {
-				wp_set_current_user($post->post_author);
-				wp_update_post($post);
+				$wpdb->query("
+					UPDATE	$wpdb->posts
+					SET		post_content = '" . $post->post_content . "'
+					WHERE	ID = " . intval($post->ID)
+					);
+				wp_cache_delete($post->ID, 'posts');
 			}
 			
 			delete_post_meta($post->ID, '_mediacaster_path');
 		}
 		
-		wp_set_current_user($current_user->ID);
 		ignore_user_abort($ignore_user_abort);
 		
 		# unset version in case anything went wrong
