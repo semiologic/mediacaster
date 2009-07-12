@@ -851,6 +851,11 @@ EOS;
 	 **/
 
 	function upgrade() {
+		global $wp_db_version;
+		
+		if ( get_option('db_version') != $wp_db_version )
+			return;
+		
 		$ops = get_option('mediacaster');
 		
 		if ( isset($ops['version']) )
