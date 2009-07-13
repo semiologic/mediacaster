@@ -1094,7 +1094,7 @@ EOS;
 			if ( $found_one ) {
 				$wpdb->query("
 					UPDATE	$wpdb->posts
-					SET		post_content = '" . $post->post_content . "'
+					SET		post_content = '" . $wpdb->escape($post->post_content) . "'
 					WHERE	ID = " . intval($post->ID)
 					);
 				wp_cache_delete($post->ID, 'posts');
