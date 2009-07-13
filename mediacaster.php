@@ -946,7 +946,6 @@ EOS;
 			if ( $files[$i] )
 				uksort($files[$i], 'strnatcasecmp');
 			
-			$found_one = (bool) $files;
 			$audios = array();
 			$videos = array();
 			$images = array();
@@ -1021,16 +1020,15 @@ EOS;
 				$find = preg_quote($audio);
 				$repl = '[mc src="' . $folder_url . rawurlencode($audio) . '" type="audio"/]';
 				
-				unset($found);
+				if ( preg_match("/\[(?:audio|video|media):\s*($find)\s*\]/", $post->post_content) )
+					$audios[$audio] = $repl;
 				
 				$post->post_content = preg_replace(
 					"/\[(?:audio|video|media):\s*($find)\s*\]/",
 					$repl,
-					$post->post_content, -1, $found);
+					$post->post_content);
 				
 				unset($audios[$j]);
-				if ( !$found )
-					$audios[$audio] = $repl;
 			}
 			
 			# process inline videos
@@ -1056,15 +1054,15 @@ EOS;
 					)
 					. $format . ' type="video"/]';
 				
-				$post->post_content = preg_replace(
-					"/\[(?:audio|video|media):\s*$find\s*\]/",
-					$repl,
-					$post->post_content, -1, $found);
-				
-				if ( $found )
-					unset($videos[$video]);
-				else
+				if ( !preg_match("/\[(?:audio|video|media):\s*$find\s*\]/", $post->post_content) ) {
 					$videos[$video] = $repl;
+				} else {
+					$post->post_content = preg_replace(
+						"/\[(?:audio|video|media):\s*$find\s*\]/",
+						$repl,
+						$post->post_content);
+					unset($videos[$video]);
+				}
 			}
 			
 			# insert remaining videos
@@ -1087,18 +1085,14 @@ EOS;
 			$post->post_content = preg_replace_callback(
 				"/\[(?:audio|video|media):\s*(.+)\s*\]/",
 				array('mediacaster', 'upgrade_callback'),
-				$post->post_content, -1, $found);
+				$post->post_content);
 			
-			$found_one |= $found;
-			
-			if ( $found_one ) {
-				$wpdb->query("
-					UPDATE	$wpdb->posts
-					SET		post_content = '" . $wpdb->escape($post->post_content) . "'
-					WHERE	ID = " . intval($post->ID)
-					);
-				wp_cache_delete($post->ID, 'posts');
-			}
+			$wpdb->query("
+				UPDATE	$wpdb->posts
+				SET		post_content = '" . $wpdb->escape($post->post_content) . "'
+				WHERE	ID = " . intval($post->ID)
+				);
+			wp_cache_delete($post->ID, 'posts');
 			
 			delete_post_meta($post->ID, '_mediacaster_path');
 		}
