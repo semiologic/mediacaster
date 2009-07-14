@@ -20,6 +20,9 @@ http://www.opensource.org/licenses/gpl-2.0.php
 */
 
 
+load_plugin_textdomain('mediacaster', false, dirname(plugin_basename(__FILE__)) . '/lang');
+
+
 /**
  * mediacaster
  *
@@ -531,11 +534,35 @@ EOS;
 		if ( !$post )
 			return array();
 		
-		$enclosures = get_children(array(
-			'post_parent' => $post->ID,
-			'post_type' => 'attachment',
-			'order_by' => 'menu_order ID',
-			));
+		global $wpdb;
+		
+		#$enclosures = get_children(array(
+		#	'post_parent' => $post->ID,
+		#	'post_type' => 'attachment',
+		#	'order_by' => 'menu_order ID',
+		#	));
+		
+		$enclosures = get_post_meta($post->ID, '_mc_enclosures', true);
+		
+		if ( $enclosures !== '' && !$enclosures )
+			return array();
+		
+		$enclosures = $wpdb->get_results("
+			SELECT	*
+			FROM	$wpdb->posts
+			WHERE	post_type = 'attachment'
+			AND		post_parent = $post->ID
+			AND		mime_type NOT LIKE 'image/%'
+			ORDER BY ID
+			");
+		update_post_cache($enclosures);
+		
+		$to_cache = array();
+		foreach ( $enclosures as $enclosure )
+			$to_cache[] = $enclosure->ID;
+		update_postmeta_cache($to_cache);
+		
+		update_post_meta($post->ID, '_mc_enclosures', count($to_cache));
 		
 		if ( !$enclosures )
 			return array();

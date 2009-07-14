@@ -30,6 +30,7 @@ class mediacaster_admin {
 	 **/
 
 	function save_post($post_ID) {
+		delete_post_meta($post_ID, '_mc_enclosures');
 		delete_post_meta($post_ID, '_mc_enclosed');
 	} # save_post()
 	
