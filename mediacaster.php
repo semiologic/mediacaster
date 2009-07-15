@@ -910,7 +910,7 @@ EOS;
 		update_option('mediacaster', $ops);
 		
 		$ignore_user_abort = ignore_user_abort(true);
-		set_time_limit(600);
+		@set_time_limit(600);
 		
 		global $wpdb;
 		
