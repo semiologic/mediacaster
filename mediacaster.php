@@ -3,7 +3,7 @@
 Plugin Name: Mediacaster
 Plugin URI: http://www.semiologic.com/software/mediacaster/
 Description: Lets you add podcasts, videos, and formatted download links in your site's posts and pages.
-Version: 2.0 beta
+Version: 2.0 beta2
 Author: Denis de Bernardy
 Author URI: http://www.getsemiologic.com
 Text Domain: mediacaster
@@ -30,7 +30,7 @@ load_plugin_textdomain('mediacaster', false, dirname(plugin_basename(__FILE__)) 
  **/
 
 # playlists:
-add_filter('the_content', array('mediacaster', 'podcasts'), 1000);
+add_filter('the_content', array('mediacaster', 'podcasts'), 10);
 add_action('template_redirect', array('mediacaster', 'catch_playlist'), 0);
 
 add_action('rss2_ns', array('mediacaster', 'display_feed_ns'));
@@ -57,15 +57,102 @@ add_filter('upload_mimes', array('mediacaster', 'upload_mimes'));
 add_filter('get_the_excerpt', array('mediacaster', 'disable'), 0);
 add_filter('get_the_excerpt', array('mediacaster', 'enable'), 20);
 
+add_action('flush_cache', array('mediacaster', 'flush_cache'));
+add_action('after_db_upgrade', array('mediacaster', 'flush_cache'));
+
 if ( !is_admin() ) {
 	add_action('wp_print_scripts', array('mediacaster', 'scripts'), 0);
 	add_action('wp_print_styles', array('mediacaster', 'styles'), 0);
+	add_action('wp_footer', array('mediacaster', 'thickbox_images'));
+	
+	add_action('template_redirect', array('mediacaster', 'template_redirect'));
 } else {
-	add_action('admin_print_scripts-media-upload.php', array('mediacaster', 'scripts'), 0);
 	add_action('admin_menu', array('mediacaster', 'admin_menu'));
 }
 
 class mediacaster {
+	/**
+	 * wp()
+	 *
+	 * @return void
+	 **/
+
+	function template_redirect() {
+		if ( !empty($_GET['mc_src']) ) {
+			$src = trim(stripslashes($_GET['mc_src']));
+			if ( $src )
+				$src = esc_url_raw($src);
+			else
+				return;
+		} else {
+			if ( !is_attachment() )
+				return;
+			
+			global $wp_the_query;
+			$post = $wp_the_query->get_queried_object();
+
+			$src = wp_get_attachment_url($post->ID);
+			$regexp = mediacaster::get_extensions('video');
+			$regexp = '/\\.' . implode('|', $regexp) . '$/i';
+			
+			if ( !preg_match($regexp, $src) )
+				return;
+		}
+		
+		if ( !empty($_GET['mc_link']) ) {
+			$link = trim(stripslashes($_GET['mc_link']));
+			if ( $link )
+				$link = esc_url_raw($link);
+		}
+		
+		$max_width = 640;
+		$max_height = 480;
+		
+		if ( isset($_GET['mc_width']) )
+			$width = intval($_GET['mc_width']);
+		elseif ( is_object($post) )
+			$width = 2 * (int) get_post_meta($post->ID, '_mc_width', true);
+		else
+			$width = $max_width;
+		
+		if ( isset($_GET['mc_height']) )
+			$height = intval($_GET['mc_height']);
+		elseif ( is_object($post) )
+			$height = 2 * (int) get_post_meta($post->ID, '_mc_height', true);
+		else
+			$height = $max_height;
+		
+		if ( !$width )
+			$width = 640;
+		if ( !$height )
+			$height = round($width * 9 / 16);
+		
+		if ( $width > $max_width ) {
+			$height = round($height * $max_width / $width);
+			$width = $max_width;
+		}
+		
+		if ( $height > $max_height ) {
+			$width = round($width * $max_height / $height);
+			$height = $max_height;
+		}
+		
+		$args = array(
+			'src' => $src,
+			'width' => $width,
+			'height' => $height,
+			'autostart' => 'autostart',
+			'doing_thickbox' => 'doing_thickbox',
+			);
+		
+		if ( isset($link) )
+			$args['link'] = $link;
+		
+		include dirname(__FILE__) . '/thickbox.php';
+		die;
+	} # template_redirect()
+	
+	
 	/**
 	 * upload_mimes()
 	 *
@@ -146,7 +233,20 @@ class mediacaster {
 			if ( isset($args[$arg]) && !is_numeric($args[$arg]) )
 				unset($args[$arg]);
 		}
-			
+		
+		foreach ( array('autostart', 'thickbox') as $arg ) {
+			if ( isset($args[$arg]) )
+				continue;
+			$key = array_search($arg, $args);
+			if ( $key !== false ) {
+				unset($args[$key]);
+				$args[$arg] = $arg;
+			} else {
+				$args[$arg] = false;
+			}
+		}
+		
+		$args['doing_thickbox'] = false;
 		
 		switch ( $args['type'] ) {
 		case 'mp3':
@@ -175,6 +275,24 @@ class mediacaster {
 	
 	
 	/**
+	 * autostart()
+	 *
+	 * @param string $autostart
+	 * @return string $autostart
+	 **/
+
+	function autostart($autostart = false) {
+		static $autostarted = false;
+		
+		if ( $autostarted )
+			return false;
+		
+		$autostarted |= $autostart;
+		return $autostart;
+	} # autostart()
+	
+	
+	/**
 	 * audio()
 	 *
 	 * @param array $args
@@ -193,6 +311,9 @@ class mediacaster {
 		extract($defaults);
 		extract(mediacaster::get_skin($skin));
 		
+		$thickbox = false;
+		$autostart = mediacaster::autostart($autostart);
+		
 		if ( $cover ) {
 			$image = WP_CONTENT_URL . $cover;
 			$cover_size = getimagesize(WP_CONTENT_DIR . $cover);
@@ -210,16 +331,15 @@ class mediacaster {
 			$height = 0;
 		}
 		
-		$id = 'm' . md5($src . '_' . $count++);
-		
 		$player = plugin_dir_url(__FILE__) . 'mediaplayer/player.swf';
+		$player_id = 'm' . md5($src . '_' . $count++);
 		
-		$allowfullscreen = 'true';
+		$allowfullscreen = 'false';
 		$allowscriptaccess = 'always';
 		
 		$flashvars = array();
 		$flashvars['file'] = esc_url_raw($src);
-		$flashvars['skin'] = plugin_dir_url(__FILE__) . 'skins/' . $skin . '.swf';
+		$flashvars['skin'] = esc_url_raw(plugin_dir_url(__FILE__) . 'skins/' . $skin . '.swf');
 		$flashvars['quality'] = 'true';
 		
 		if ( $image )
@@ -229,9 +349,9 @@ class mediacaster {
 		
 		if ( method_exists('google_analytics', 'get_options') && !current_user_can('publish_posts') && !current_user_can('publish_pages') ) {
 			$uacct = google_analytics::get_options();
-			if ( $uacct['uacct'] ) {
+			if ( $uacct ) {
 				$flashvars['plugins'][] = 'gapro-1';
-				$flashvars['gapro.accountid'] = $uacct['uacct'];
+				$flashvars['gapro.accountid'] = $uacct;
 			}
 		}
 		
@@ -244,6 +364,9 @@ class mediacaster {
 			$height = max($height, 50);
 			$flashvars['controlbar'] = 'none';
 		}
+		
+		if ( $autostart )
+			$flashvars['autostart'] = 'true';
 		
 		$flashvars = apply_filters('mediacaster_audio', $flashvars);
 		$flashvars['plugins'] = implode(',', $flashvars['plugins']);
@@ -258,13 +381,13 @@ var params = {};
 params.allowfullscreen = "$allowfullscreen";
 params.allowscriptaccess = "$allowscriptaccess";
 params.flashvars = "$flashvars";
-swfobject.embedSWF("$player", "$id", "$width", "$height", "9.0.0", false, false, params);
+swfobject.embedSWF("$player", "$player_id", "$width", "$height", "9.0.0", false, false, params);
 </script>
 EOS;
 		
 		return <<<EOS
 
-<div class="media_container"><div class="media" style="width: {$width}px; height: {$height}px;"><object id="$id" classid="clsid:D27CDB6E-AE6D-11cf-96B8-444553540000" width="$width" height="$height"><param name="movie" value="$player" /><param name="allowfullscreen" value="$allowfullscreen" /><param name="allowscriptaccess" value="$allowscriptaccess" /><param name="flashvars" value="$flashvars" /><embed src="$player" pluginspage="http://www.macromedia.com/go/getflashplayer" width="$width" height="$height" allowfullscreen="$allowfullscreen" allowscriptaccess="$allowscriptaccess" flashvars="$flashvars" /></object></div></div>
+<div class="media_container"><div class="media" style="width: {$width}px; height: {$height}px;"><object id="$player_id" classid="clsid:D27CDB6E-AE6D-11cf-96B8-444553540000" width="$width" height="$height"><param name="movie" value="$player" /><param name="allowfullscreen" value="$allowfullscreen" /><param name="allowscriptaccess" value="$allowscriptaccess" /><param name="flashvars" value="$flashvars" /><embed src="$player" pluginspage="http://www.macromedia.com/go/getflashplayer" width="$width" height="$height" allowfullscreen="$allowfullscreen" allowscriptaccess="$allowscriptaccess" flashvars="$flashvars" /></object></div></div>
 
 $script
 
@@ -298,23 +421,67 @@ EOS;
 			$height = round($width * 9 / 16);
 		}
 		
-		if ( $max_player_width && $width > $max_player_width ) {
+		if ( !$doing_thickbox && $max_player_width && $width > $max_player_width ) {
 			$height = round($height * $max_player_width / $width);
 			$width = $max_player_width;
 		}
 		
-		$image = false;
+		if ( !is_feed() && $thickbox && $image ) {
+			$image = esc_url($image);
+			
+			if ( $id )
+				$href = apply_filters('the_permalink', get_permalink($id));
+			else
+				$href = user_trailingslashit(get_option('home')) . '?mc_src=' . urlencode(esc_url_raw($src));
+			
+			if ( $link ) {
+				$href .= ( ( strpos($href, '?') === false ) ? '?' : '&' )
+					. 'mc_link=' . urlencode(esc_url_raw($link));
+			}
+			
+			$tb_width = 2 * $width;
+			$tb_height = 2 * $height;
+			
+			$max_width = 640;
+			$max_height = 480;
+			
+			if ( $tb_width > $max_width ) {
+				$tb_height = round($tb_height * $max_width / $tb_width);
+				$tb_width = $max_width;
+			}
+			
+			if ( $tb_height > $max_height ) {
+				$tb_width = round($tb_width * $max_height / $tb_height);
+				$tb_height = $max_height;
+			}
+			
+			$href .= ( strpos($href, '?') === false ? '?' : '&' )
+				. "mc_width=$tb_width&mc_height=$tb_height&"
+				. "KeepThis=true&TB_iframe=true&width=$tb_width&height=" . ( $tb_height + 10 );
+			$href = esc_url($href);
+			
+			return <<<EOS
+
+<div class="media_container">
+<div class="media">
+<a href="$href" class="thickbox no_icon"><img src="$image" width="$width" height="$height" alt="" /></a>
+</div>
+</div>
+
+EOS;
+		}
 		
-		$id = 'm' . md5($src . '_' . $count++);
+		$autostart = mediacaster::autostart($autostart);
 		
 		$player = plugin_dir_url(__FILE__) . 'mediaplayer/player.swf';
+		$player_id = 'm' . md5($src . '_' . $count++);
 		
 		$allowfullscreen = 'true';
 		$allowscriptaccess = 'always';
 		
 		$flashvars = array();
 		$flashvars['file'] = esc_url_raw($src);
-		$flashvars['skin'] = plugin_dir_url(__FILE__) . 'skins/' . $skin . '.swf';
+		$flashvars['skin'] = esc_url_raw(plugin_dir_url(__FILE__) . 'skins/' . $skin . '.swf');
 		$flashvars['quality'] = 'true';
 		
 		if ( $image )
@@ -324,14 +491,14 @@ EOS;
 		
 		if ( method_exists('google_analytics', 'get_options') && !current_user_can('publish_posts') && !current_user_can('publish_pages') ) {
 			$uacct = google_analytics::get_options();
-			if ( $uacct['uacct'] ) {
+			if ( $uacct ) {
 				$flashvars['plugins'][] = 'gapro-1';
-				$flashvars['gapro.accountid'] = $uacct['uacct'];
+				$flashvars['gapro.accountid'] = $uacct;
 			}
 		}
 		
 		if ( $width >= $min_player_width) {
-			$height += $skin_height;
+			$flashvars['controlbar'] = 'over';
 			if ( $link )
 				$flashvars['link'] = esc_url_raw($link);
 		} else {
@@ -339,6 +506,9 @@ EOS;
 			$height = max($height, 50);
 			$flashvars['controlbar'] = 'none';
 		}
+		
+		if ( $autostart )
+			$flashvars['autostart'] = 'true';
 		
 		$flashvars = apply_filters('mediacaster_video', $flashvars);
 		$flashvars['plugins'] = implode(',', $flashvars['plugins']);
@@ -353,13 +523,13 @@ var params = {};
 params.allowfullscreen = "$allowfullscreen";
 params.allowscriptaccess = "$allowscriptaccess";
 params.flashvars = "$flashvars";
-swfobject.embedSWF("$player", "$id", "$width", "$height", "9.0.0", false, false, params);
+swfobject.embedSWF("$player", "$player_id", "$width", "$height", "9.0.0", false, false, params);
 </script>
 EOS;
 		
 		return <<<EOS
 
-<div class="media_container"><div class="media" style="width: {$width}px; height: {$height}px;"><object id="$id" classid="clsid:D27CDB6E-AE6D-11cf-96B8-444553540000" width="$width" height="$height"><param name="movie" value="$player" /><param name="allowfullscreen" value="$allowfullscreen" /><param name="allowscriptaccess" value="$allowscriptaccess" /><param name="flashvars" value="$flashvars" /><embed src="$player" pluginspage="http://www.macromedia.com/go/getflashplayer" width="$width" height="$height" allowfullscreen="$allowfullscreen" allowscriptaccess="$allowscriptaccess" flashvars="$flashvars" /></object></div></div>
+<div class="media_container"><div class="media" style="width: {$width}px; height: {$height}px;"><object id="$player_id" classid="clsid:D27CDB6E-AE6D-11cf-96B8-444553540000" width="$width" height="$height"><param name="movie" value="$player" /><param name="allowfullscreen" value="$allowfullscreen" /><param name="allowscriptaccess" value="$allowscriptaccess" /><param name="flashvars" value="$flashvars" /><embed src="$player" pluginspage="http://www.macromedia.com/go/getflashplayer" width="$width" height="$height" allowfullscreen="$allowfullscreen" allowscriptaccess="$allowscriptaccess" flashvars="$flashvars" /></object></div></div>
 
 $script
 
@@ -386,14 +556,14 @@ EOS;
 		}
 		
 		$mime = wp_check_filetype($src);
-		$icon = wp_mime_type_icon(wp_ext2type($mime['ext']));
+		$icon = esc_url(wp_mime_type_icon(wp_ext2type($mime['ext'])));
 		
 		$src = esc_url($src);
 		
 		$title = apply_filters('mediacaster_file', $title, $args);
 		
 		return <<<EOS
-<div class="media_container">
+<div class="media_container media_attachment">
 <a href="$src" class="no_icon" style="background-image: url($icon);">
 $title
 </a>
@@ -444,7 +614,7 @@ EOS;
 	 * @return array $skin_details
 	 **/
 
-	function get_skin($skin) {
+	function get_skin($skin = 'bekle') {
 		$skin_details = array(
 			'bekle' => array(
 				'skin' => 'bekle',
@@ -460,7 +630,7 @@ EOS;
 				),
 			);
 		
-		return isset($skin_details[$skin]) ? $skin_details[$skin] : $skin_details['modieus'];
+		return isset($skin_details[$skin]) ? $skin_details[$skin] : $skin_details['bekle'];
 	} # get_skin()
 	
 	
@@ -500,6 +670,7 @@ EOS;
 
 	function scripts() {
 		wp_enqueue_script('swfobject');
+		wp_enqueue_script('thickbox');
 	} # scripts()
 	
 	
@@ -514,7 +685,28 @@ EOS;
 		$css = $folder . 'css/mediacaster.css';
 		
 		wp_enqueue_style('mediacaster', $css, null, '2.0');
+		wp_enqueue_style('thickbox');
 	} # styles()
+	
+	
+	/**
+	 * thickbox_images()
+	 *
+	 * @return void
+	 **/
+
+	function thickbox_images() {
+		$includes_url = includes_url();
+		
+		echo <<<EOS
+
+<script type="text/javascript">
+var tb_pathToImage = "{$includes_url}js/thickbox/loadingAnimation.gif";
+var tb_closeImage = "{$includes_url}js/thickbox/tb-close.png";
+</script>
+
+EOS;
+	} # thickbox_images()
 	
 	
 	/**
@@ -536,12 +728,6 @@ EOS;
 		
 		global $wpdb;
 		
-		#$enclosures = get_children(array(
-		#	'post_parent' => $post->ID,
-		#	'post_type' => 'attachment',
-		#	'order_by' => 'menu_order ID',
-		#	));
-		
 		$enclosures = get_post_meta($post->ID, '_mc_enclosures', true);
 		
 		if ( $enclosures !== '' && !$enclosures )
@@ -552,7 +738,7 @@ EOS;
 			FROM	$wpdb->posts
 			WHERE	post_type = 'attachment'
 			AND		post_parent = $post->ID
-			AND		mime_type NOT LIKE 'image/%'
+			AND		post_mime_type NOT LIKE 'image/%'
 			ORDER BY ID
 			");
 		update_post_cache($enclosures);
@@ -575,7 +761,7 @@ EOS;
 		
 		foreach ( $enclosures as $key => $enclosure ) {
 			if ( $playlist ) {
-				if ( !in_array($enclosure->post_mime_type, array('audio/mpeg', 'audio/aac'))
+				if ( !in_array($enclosure->post_mime_type, array('audio/mpeg', 'audio/mp3', 'audio/aac'))
 					|| in_array((int) $enclosure->ID, $enclosed) )
 					unset($enclosures[$key]);
 			} else {
@@ -609,7 +795,12 @@ EOS;
 		if ( !$podcasts )
 			return $content;
 		
-		$out = mediacaster::audio(array('src' => get_option('home') . '?podcasts=' . get_the_ID()));
+		$args = array(
+			'src' => user_trailingslashit(get_option('home')) . '?podcasts=' . get_the_ID(),
+			'autostart' => $o['player']['autostart'],
+			);
+		
+		$out = mediacaster::audio($args);
 		
 		if ( $options['player']['position'] != 'bottom' )
 			$content = $out . $content;
@@ -627,10 +818,11 @@ EOS;
 	 **/
 
 	function catch_playlist() {
-		if ( isset($_GET['podcasts']) && intval($_GET['podcasts']) ) {
-			mediacaster::display_playlist_xml($_GET['podcasts'], 'audio');
-			die;
-		}
+		if ( !isset($_GET['podcasts']) || !intval($_GET['podcasts']) )
+			return;
+		
+		mediacaster::display_playlist_xml($_GET['podcasts']);
+		die;
 	} # catch_playlist()
 
 
@@ -638,19 +830,20 @@ EOS;
 	 * display_playlist_xml()
 	 *
 	 * @param int $post_ID
-	 * @param string $type
 	 * @return void
 	 **/
 
-	function display_playlist_xml($post_ID, $type = 'audio') {
+	function display_playlist_xml($post_ID) {
 		$post_ID = intval($post_ID);
 		
 		$podcasts = mediacaster::get_enclosures($post_ID, true);
 		
 		# Reset WP
-		$GLOBALS['wp_filter'] = array();
-		while ( @ob_end_clean() );
+		$levels = ob_get_level();
+		for ($i=0; $i<$levels; $i++)
+			ob_end_clean();
 		
+		status_header(200);
 		header('Content-Type:text/xml; charset=' . get_option('blog_charset'));
 
 		echo '<?xml version="1.0" encoding="' . get_option('blog_charset') . '"?>' . "\n"
@@ -828,6 +1021,20 @@ EOS;
 
 		echo "\n";
 	} # display_feed_enclosures()
+	
+	
+	/**
+	 * get_extensions()
+	 *
+	 * @return array $extensions
+	 **/
+
+	function get_extensions($type = null) {
+		$audio = array('mp3', 'm4a', 'aac');
+		$video = array('flv', 'f4b', 'f4p', 'f4v', 'mp4', 'm4v', 'mov', '3pg', '3g2');
+		
+		return isset($type) ? $$type : array_merge($audio, $video);
+	} # get_extensions()
 
 
 	/**
@@ -840,6 +1047,7 @@ EOS;
 		$options = array();
 
 		$options['player']['position'] = 'top';
+		$options['player']['skin'] = 'bekle';
 		$options['player']['cover'] = false;
 		
 		$options['itunes']['author'] = '';
@@ -891,7 +1099,7 @@ EOS;
 		$ops['version'] = '2.0';
 		
 		if ( !isset($ops['player']['skin']) )
-			$ops['player']['skin'] = 'modieus';
+			$ops['player']['skin'] = 'bekle';
 		
 		if ( !isset($ops['player']['position']) )
 			$ops['player']['position'] = 'top';
@@ -1174,6 +1382,21 @@ EOS;
 			return '[mc src="' . str_replace(' ', rawurlencode(' '), $file) . '"/]';
 		}
 	} # upgrade_callback()
+	
+	
+	/**
+	 * flush_cache()
+	 *
+	 * @param mixed $in
+	 * @return mixed $in
+	 **/
+
+	function flush_cache($in = null) {
+		delete_post_meta_by_key('_mc_enclosures');
+		delete_post_meta_by_key('_mc_enclosed');
+		
+		return $in;
+	} # flush_cache()
 } # mediacaster
 
 function mediacaster_admin() {

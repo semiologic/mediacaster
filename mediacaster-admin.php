@@ -5,11 +5,14 @@
  * @package Mediacaster
  **/
 
-add_action('save_post', array('mediacaster_admin', 'save_post'));
+add_action('save_post', array('mediacaster_admin', 'save_entry'));
+add_action('add_attachment', array('mediacaster_admin', 'save_attachment'));
+add_action('edit_attachment', array('mediacaster_admin', 'save_attachment'));
 
 add_action('settings_page_mediacaster', array('mediacaster_admin', 'save_options'), 0);
 
 add_filter('attachment_fields_to_edit', array('mediacaster_admin', 'attachment_fields_to_edit'), 20, 2);
+add_filter('attachment_fields_to_save', array('mediacaster_admin', 'attachment_fields_to_save'), 20, 2);
 add_filter('media_send_to_editor', array('mediacaster_admin', 'media_send_to_editor'), 20, 3);
 
 add_filter('type_url_form_audio', array('mediacaster_admin', 'type_url_form_audio'));
@@ -23,16 +26,51 @@ add_filter('file_send_to_editor_url', array('mediacaster_admin', 'file_send_to_e
 
 class mediacaster_admin {
 	/**
-	 * save_post()
+	 * save_attachment()
 	 *
-	 * @param int $post_ID
 	 * @return void
 	 **/
 
-	function save_post($post_ID) {
-		delete_post_meta($post_ID, '_mc_enclosures');
-		delete_post_meta($post_ID, '_mc_enclosed');
-	} # save_post()
+	function save_attachment($post_id) {
+		$post_id = (int) $post_id;
+		if ( !$post_id || !isset($_POST['attachments'][$post_id]['image']) )
+			return;
+		
+		$attachment = $_POST['attachments'][$post_id];
+		
+		$image = trim(strip_tags($attachment['image']));
+		
+		if ( $image ) {
+			$image = addslashes(esc_url_raw($image));
+			update_post_meta($post_id, '_mc_image', $image);
+		} else {
+			delete_post_meta($post_id, '_mc_image');
+		}
+		
+		foreach ( array('width', 'height') as $arg ) {
+			$val = intval($attachment[$arg]);
+			if ( $val )
+				update_post_meta($post_id, '_mc_' . $arg, $val);
+			else
+				delete_post_meta($post_id, '_mc_' . $arg);
+		}
+	} # save_attachment()
+	
+	
+	/**
+	 * save_entry()
+	 *
+	 * @param int $post_id
+	 * @return void
+	 **/
+
+	function save_entry($post_id) {
+		if ( !$_POST || wp_is_post_revision($post_id) || !current_user_can('edit_post', $post_id) )
+			return;
+		
+		delete_post_meta($post_id, '_mc_enclosures');
+		delete_post_meta($post_id, '_mc_enclosed');
+	} # save_entry()
 	
 	
 	/**
@@ -101,6 +139,7 @@ class mediacaster_admin {
 			? $new_ops['player']['skin']
 			: 'modius';
 		$player['cover'] = $cover;
+		$player['autostart'] = isset($new_ops['player']['autostart']);
 		
 		$itunes = array();
 		foreach ( array('author', 'summary', 'copyright') as $var )
@@ -231,11 +270,30 @@ class mediacaster_admin {
 					)
 				. ' />'
 			. '&nbsp;'
-			. __('None', 'mediacaster')
+			. __('None (manual inserts only)', 'mediacaster')
 			. '</label>'
 			. '</td>'
 			. '</tr>' . "\n";
-
+		
+		echo '<tr valign="top">'
+			. '<th scope="row">'
+			. __('MP3 Playlist Behavior', 'mediacaster')
+			. '</th>'
+			. '<td>'
+			. '<label>'
+			. '<input type="checkbox"'
+				. ' name="mediacaster[player][autostart]"'
+				. ( $options['player']['autostart']
+					? ' checked="checked"'
+					: ''
+					)
+				. ' />'
+			. '&nbsp;'
+			. __('Automatically start the (first) playlist.', 'mediacaster')
+			. '</label>'
+			. '</td>'
+			. '</tr>' . "\n";
+		
 		$cover = $options['player']['cover'];
 
 		echo '<tr valign="top">'
@@ -557,25 +615,14 @@ class mediacaster_admin {
 		
 		switch ( $post->post_mime_type ) {
 		case 'video/mpeg':
+		case 'video/mp4':
 		case 'video/x-flv':
 		case 'video/quicktime':
-			if ( !in_array($ext, mediacaster_admin::get_extensions('video')) )
+			if ( !in_array($ext, mediacaster::get_extensions('video')) )
 				break;
 			
 			static $scripts;
 			if ( !isset($scripts) ) {
-				// $player = plugin_dir_url(__FILE__) . 'mediaplayer/player.swf';
-				// 
-				// $flashvars = array();
-				// $flashvars['file'] = $file_url;
-				// $flashvars['skin'] = plugin_dir_url(__FILE__) . 'player/kleur.swf';
-				// 
-				// $flashvars['plugins'] = array('quickkeys-1');
-				// $flashvars['plugins'] = array('snapshot-1');
-				// 
-				// $flashvars['plugins'] = implode(',', $flashvars['plugins']);
-				// $flashvars = http_build_query($flashvars, null, '&');
-				
 				$scripts = <<<EOS
 <script type="text/javascript">
 var mc = {
@@ -608,29 +655,53 @@ EOS;
 				$scripts = false;
 			}
 			
+			$width = get_post_meta($post->ID, '_mc_width', true);
+			$width = $width ? (int) $width : '';
+			
+			$height = get_post_meta($post->ID, '_mc_height', true);
+			$height = $height ? (int) $height : '';
+			
 			$post_fields['format'] = array(
 				'label' => __('Width x Height', 'mediacaster'),
 				'input' => 'html',
-				'html' => $scripts . '<input id="attachments-width-' . $post->ID . '" name="attachments[' . $post->ID . '][width]" value="" type="text" size="3" style="width: 40px;"> x <input id="attachments-height-' . $post->ID . '" name="attachments[' . $post->ID . '][height]" value="" type="text" size="3" style="width: 40px;">
+				'html' => $scripts . '<input id="attachments-width-' . $post->ID . '" name="attachments[' . $post->ID . '][width]" value="' . $width . '" type="text" size="3" style="width: 40px;"> x <input id="attachments-height-' . $post->ID . '" name="attachments[' . $post->ID . '][height]" value="' . $height . '" type="text" size="3" style="width: 40px;">
 	<button type="button" class="button" onclick="return mc.set_default(' . $post->ID . ');">' . __('Default', 'mediacaster') . '</button>
 	<button type="button" class="button" onclick="return mc.set_16_9(' . $post->ID . ');">' . __('16/9', 'mediacaster') . '</button>
 	<button type="button" class="button" onclick="return mc.set_4_3(' . $post->ID . ');">' . __('4/3', 'mediacaster') . '</button>',
 				);
 			
+			$image = get_post_meta($post->ID, '_mc_image', true);
+			$image = $image ? esc_url($image) : '';
+			
 			$post_fields['image'] = array(
 				'label' => __('Preview Image', 'mediacaster'),
+				'value' => $image,
 				'helps' => __('The URL of a preview image when the video isn\'t playing.', 'mediacaster'),
+				);
+			
+			$post_fields['autostart'] = array(
+				'label' => __('Autostart', 'mediacaster'),
+				'input' => 'html',
+				'html' => '<label style="font-weight: normal"><input type="checkbox" name="attachments[' . $post->ID . '][autostart]">&nbsp;' . __('Automatically start the (first) video (NB: bandwidth intensive).', 'mediacaster') . '</label>',
+				);
+			
+			$post_fields['thickbox'] = array(
+				'label' => __('Thickbox', 'mediacaster'),
+				'input' => 'html',
+				'html' => '<label style="font-weight: normal"><input type="checkbox" name="attachments[' . $post->ID . '][thickbox]">&nbsp;' . __('Open the video in a thickbox window (requires a preview image).', 'mediacaster') . '</label>',
 				);
 		}
 		
 		switch ( $post->post_mime_type ) {
 		case 'audio/mpeg':
+		case 'audio/mp3':
 		case 'audio/aac':
 		case 'video/mpeg':
+		case 'video/mp4':
 		case 'video/x-flv':
 		case 'video/quicktime':
 		case 'video/3gpp':
-			if ( !in_array($ext, mediacaster_admin::get_extensions()) )
+			if ( !in_array($ext, mediacaster::get_extensions()) )
 				break;
 			unset($post_fields['post_excerpt']);
 			$post_fields['url']['html'] = preg_split("/<br/", $post_fields['url']['html']);
@@ -644,6 +715,14 @@ EOS;
 				$bad_urls[$k] = " value='" . esc_url($bad_url) . "'";
 			$post_fields['url']['html'] = str_replace($bad_urls, " value=''", $post_fields['url']['html']);
 			$post_fields['url']['helps'] = __('The link URL to which the player should direct users to (e.g. an affiliate link).', 'mediacaster');
+			
+			if ( !isset($post_fields['autostart']) ) {
+				$post_fields['autostart'] = array(
+					'label' => __('Autostart', 'mediacaster'),
+					'input' => 'html',
+					'html' => '<label style="font-weight: normal"><input type="checkbox" name="attachments[' . $post->ID . '][autostart]">&nbsp;' . __('Automatically start the (first) podcast (NB: bandwidth intensive).', 'mediacaster') . '</label>',
+					);
+			}
 			break;
 		
 		default:
@@ -655,6 +734,24 @@ EOS;
 		
 		return $post_fields;
 	} # attachment_fields_to_edit()
+	
+	
+	/**
+	 * attachment_fields_to_save()
+	 *
+	 * @param array $post
+	 * @param array $attachment
+	 * @return array $post
+	 **/
+
+	function attachment_fields_to_save($post, $attachment) {
+		foreach ( array('width', 'height', 'image') as $var ) {
+			if ( isset($attachment[$var]) )
+				$post[$var] = $attachment[$var];
+		}
+		
+		return $post;
+	} # attachment_fields_to_save()
 	
 	
 	/**
@@ -678,31 +775,33 @@ EOS;
 			return $html;
 		$ext = strtolower(end($ext));
 		
-		$attachment['url'] = !empty($attachment['url'])
-			? trim(stripslashes($attachment['url']))
+		$autostart = !empty($attachment['autostart'])
+			? ' autostart'
 			: '';
 		
-		$link = $attachment['url']
-			&& !preg_match("/^" . preg_quote(get_option('home'), '/') . "$/ix", $attachment['url'])
-			? ( ' link="' . esc_url_raw($attachment['url']) . '"' )
+		$link = trim(stripslashes($attachment['url']));
+		$link = $link
+			? ( ' link="' . esc_url_raw($link) . '"' )
 			: '';
 		
 		switch ( $post->post_mime_type ) {
 		case 'audio/mpeg':
+		case 'audio/mp3':
 		case 'audio/aac':
-			if ( !preg_match("/\b(?:" . implode('|', mediacaster_admin::get_extensions('audio')) . ")\b/i", $file_url) )
+			if ( !preg_match("/\b(?:" . implode('|', mediacaster::get_extensions('audio')) . ")\b/i", $file_url) )
 				break;
 			
-			 $html = '[mc id="' . $send_id . '" type="audio"' . $link . ']'
+			$html = '[mc id="' . $send_id . '" type="audio"' . $link . $autostart . ']'
 			 	. $attachment['post_title']
 			 	. '[/mc]';
 			break;
 		
 		case 'video/mpeg':
+		case 'video/mp4':
 		case 'video/x-flv':
 		case 'video/quicktime':
 		case 'video/3gpp':
-			if ( !preg_match("/\b(?:" . implode('|', mediacaster_admin::get_extensions('video')) . ")\b/i", $file_url) )
+			if ( !preg_match("/\b(?:" . implode('|', mediacaster::get_extensions('video')) . ")\b/i", $file_url) )
 				break;
 			
 			$width = intval($attachment['width']);
@@ -715,11 +814,16 @@ EOS;
 				? ( ' height="' . $height . '"' )
 				: '';
 			
-			$image = !empty($attachment['image'])
-				? ( ' width="' . esc_url_raw(stripslashes($attachment['image'])) . '"' )
+			$image = trim(stripslashes($attachment['image']));
+			$image = $image
+				? ( ' image="' . esc_url_raw($image) . '"' )
 				: '';
 			
-			$html = '[mc id="' . $send_id . '"' . $width . $height . ' type="video"' . $link . ']'
+			$thickbox = !empty($attachment['thickbox'])
+				? ' thickbox'
+				: '';
+			
+			$html = '[mc id="' . $send_id . '"' . $width . $height . ' type="video"' . $autostart . $thickbox . $link . $image . ']'
 				. $attachment['post_title']
 				. '[/mc]';
 			break;
@@ -770,6 +874,12 @@ EOS;
 				</tr>
 				<tr><td></td><td class="help">' . __('The link URL to which the player should direct users to (e.g. an affiliate link). Only applicable for mp3, m4a and aac files.', 'mediacaster') . '</td></tr>
 				<tr>
+					<th valign="top" scope="row" class="label">
+						<span class="alignleft"><label for="insertonly[autostart]">' . __('Autostart', 'mediacaster') . '</label></span>
+					</th>
+					<td class="field"><label style="font-weight: normal"><input type="checkbox" name="insertonly[autostart]">&nbsp;' . __('Automatically start the (first) podcast (NB: bandwidth intensive).', 'mediacaster') . '</label></td>
+				</tr>
+				<tr>
 					<td></td>
 					<td>
 						<input type="submit" class="button" name="insertonlybutton" value="' . esc_attr(__('Insert into Post', 'mediacaster')) . '" />
@@ -796,10 +906,13 @@ EOS;
 		if ( !$title )
 			$title = basename($src);
 		
-		if ( preg_match("/\b(" . implode('|', mediacaster_admin::get_extensions('audio')) . "|rss2?|xml|feed|atom)\b/i", $src) ) {
+		if ( preg_match("/\b(" . implode('|', mediacaster::get_extensions('audio')) . "|rss2?|xml|feed|atom)\b/i", $src) ) {
 			$link = trim(stripslashes($_POST['insertonly']['url']));
 			$link = $link ? ( ' link="' . esc_url_raw($link) . '"' ) : '';
-			$html = '[mc src="' . $src . '" type="audio"' . $link . ']'
+			$autostart = isset($_POST['insertonly']['autostart'])
+				? ' autostart'
+				: '';
+			$html = '[mc src="' . $src . '" type="audio"' . $autostart . $link . ']'
 				. $title
 				. '[/mc]';
 		}
@@ -824,18 +937,25 @@ EOS;
 		return '
 <script type="text/javascript">
 var mc = {
+	i: 0,
+	
 	set_default: function() {
-		jQuery("#insertonly-width").val(' . $default_width . ');
-		jQuery("#insertonly-height").val(' . $default_height . ');
+		jQuery("#insertonly-width").val("");
+		jQuery("#insertonly-height").val("");
+		
 		return false;
 	},
-	
+
 	set_16_9: function() {
+		if ( !jQuery("#insertonly-width").val() )
+			jQuery("#insertonly-width").val(' . $default_width . ');
 		jQuery("#insertonly-height").val(Math.round(jQuery("#insertonly-width").val() * 9 / 16));
 		return false;
 	},
-	
+
 	set_4_3: function() {
+		if ( !jQuery("#insertonly-width").val() )
+			jQuery("#insertonly-width").val(' . $default_width . ');
 		jQuery("#insertonly-height").val(Math.round(jQuery("#insertonly-width").val() * 3 / 4));
 		return false;
 	}
@@ -867,7 +987,7 @@ var mc = {
 					<th valign="top" scope="row" class="label">
 						<span class="alignleft"><label for="insertonly-width">' . __('Width x Height', 'mediacaster') . '</label></span>
 					</th>
-					<td class="field"><input id="insertonly-width" name="insertonly[width]" value="' . $default_width . '" type="text" size="3" style="width: 40px;"> x <input id="insertonly-height" name="insertonly[height]" value="' . $default_height . '" type="text" size="3" style="width: 40px;">
+					<td class="field"><input id="insertonly-width" name="insertonly[width]" value="" type="text" size="3" style="width: 40px;"> x <input id="insertonly-height" name="insertonly[height]" value="" type="text" size="3" style="width: 40px;">
 					<button type="button" class="button" onclick="return mc.set_default();">' . __('Default', 'mediacaster') . '</button>
 					<button type="button" class="button" onclick="return mc.set_16_9();">' . __('16/9', 'mediacaster') . '</button>
 					<button type="button" class="button" onclick="return mc.set_4_3();">' . __('4/3', 'mediacaster') . '</button></td>
@@ -879,6 +999,19 @@ var mc = {
 					<td class="field"><input id="insertonly[image]" name="insertonly[image]" value="" type="text"></td>
 				</tr>
 				<tr><td></td><td class="help">' . __('The URL of a preview image when the video isn\'t playing.', 'mediacaster') . '</td></tr>
+				<tr>
+				<tr>
+					<th valign="top" scope="row" class="label">
+						<span class="alignleft"><label for="insertonly[autostart]">' . __('Autostart', 'mediacaster') . '</label></span>
+					</th>
+					<td class="field"><label style="font-weight: normal"><input type="checkbox" name="insertonly[autostart]">&nbsp;' . __('Automatically start the (first) video (NB: bandwidth intensive).', 'mediacaster') . '</label></td>
+				</tr>
+				<tr>
+					<th valign="top" scope="row" class="label">
+						<span class="alignleft"><label for="insertonly[thickbox]">' . __('Thickbox', 'mediacaster') . '</label></span>
+					</th>
+					<td class="field"><label style="font-weight: normal"><input type="checkbox" name="insertonly[thickbox]">&nbsp;' . __('Open the video in a thickbox window (requires a preview image).', 'mediacaster') . '</label></td>
+				</tr>
 				<tr>
 					<td></td>
 					<td>
@@ -923,10 +1056,20 @@ var mc = {
 			$height = !empty($_POST['insertonly']['height'])
 				? ( ' height="' . intval($_POST['insertonly']['height']) . '"' )
 				: '';
-			$html = '[mc src="' . $src . '"' . $width . $height . ' type="youtube"' . $link . ']'
+			$image = trim(stripslashes($_POST['insertonly']['image']));
+			$image = $image
+				? ( ' image="' . esc_url_raw($image) . '"' )
+				: '';
+			$autostart = isset($_POST['insertonly']['autostart'])
+				? ' autostart'
+				: '';
+			$thickbox = isset($_POST['insertonly']['thickbox'])
+				? ' thickbox'
+				: '';
+			$html = '[mc src="' . $src . '"' . $width . $height . ' type="youtube"' . $autostart . $thickbox . $link . $image . ']'
 				. $title
 				. '[/mc]';
-		} elseif ( preg_match("/\b(" . implode('|', mediacaster_admin::get_extensions('video')) . "|rss2?|xml|feed|atom)\b/i", $src) ) {
+		} elseif ( preg_match("/\b(" . implode('|', mediacaster::get_extensions('video')) . "|rss2?|xml|feed|atom)\b/i", $src) ) {
 			if ( !$title )
 				$title = basename($src);
 			$link = !empty($_POST['insertonly']['url'])
@@ -941,7 +1084,13 @@ var mc = {
 			$height = !empty($_POST['insertonly']['height'])
 				? ( ' height="' . intval($_POST['insertonly']['height']) . '"' )
 				: '';
-			$html = '[mc src="' . $src . '"' . $width . $height . ' type="video"' . $link . ']'
+			$autostart = isset($_POST['insertonly']['autostart'])
+				? ' autostart'
+				: '';
+			$thickbox = isset($_POST['insertonly']['thickbox'])
+				? ' thickbox'
+				: '';
+			$html = '[mc src="' . $src . '"' . $width . $height . ' type="video"' . $autostart . $thickbox . $link . ']'
 				. $title
 				. '[/mc]';
 		}
@@ -1009,19 +1158,5 @@ var mc = {
 			. $title
 			. '[/mc]';
 	} # file_send_to_editor_url()
-	
-	
-	/**
-	 * get_extensions()
-	 *
-	 * @return array $extensions
-	 **/
-
-	function get_extensions($type = null) {
-		$audio = array('mp3', 'm4a', 'aac');
-		$video = array('flv', 'f4b', 'f4p', 'f4v', 'mp4', 'm4v', 'mov', '3pg', '3g2');
-		
-		return isset($type) ? $$type : array_merge($audio, $video);
-	} # get_extensions()
 } # mediacaster_admin
 ?>
