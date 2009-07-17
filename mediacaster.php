@@ -105,8 +105,8 @@ class mediacaster {
 				$link = esc_url_raw($link);
 		}
 		
-		$max_width = 640;
-		$max_height = 480;
+		$max_width = 720;
+		$max_height = 540;
 		
 		if ( isset($_GET['mc_width']) )
 			$width = intval($_GET['mc_width']);
@@ -123,7 +123,7 @@ class mediacaster {
 			$height = $max_height;
 		
 		if ( !$width )
-			$width = 640;
+			$width = $max_width;
 		if ( !$height )
 			$height = round($width * 9 / 16);
 		
@@ -246,7 +246,7 @@ class mediacaster {
 			}
 		}
 		
-		$args['doing_thickbox'] = false;
+		$args['doing_thickbox'] = true;
 		
 		switch ( $args['type'] ) {
 		case 'mp3':
@@ -442,8 +442,8 @@ EOS;
 			$tb_width = 2 * $width;
 			$tb_height = 2 * $height;
 			
-			$max_width = 640;
-			$max_height = 480;
+			$max_width = 720;
+			$max_height = 540;
 			
 			if ( $tb_width > $max_width ) {
 				$tb_height = round($tb_height * $max_width / $tb_width);
@@ -509,6 +509,9 @@ EOS;
 		
 		if ( $autostart )
 			$flashvars['autostart'] = 'true';
+		
+		if ( $doing_thickbox )
+			$flashvars['stretching'] = 'fill';
 		
 		$flashvars = apply_filters('mediacaster_video', $flashvars);
 		$flashvars['plugins'] = implode(',', $flashvars['plugins']);
