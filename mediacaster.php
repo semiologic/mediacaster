@@ -518,9 +518,6 @@ EOS;
 		if ( $autostart )
 			$flashvars['autostart'] = 'true';
 		
-		if ( $doing_thickbox )
-			$flashvars['stretching'] = 'fill';
-		
 		$flashvars = apply_filters('mediacaster_video', $flashvars);
 		$flashvars['plugins'] = implode(',', $flashvars['plugins']);
 		$flashvars = http_build_query($flashvars, null, '&');
