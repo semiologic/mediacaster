@@ -63,7 +63,7 @@ add_action('after_db_upgrade', array('mediacaster', 'flush_cache'));
 if ( !is_admin() ) {
 	add_action('wp_print_scripts', array('mediacaster', 'scripts'), 0);
 	add_action('wp_print_styles', array('mediacaster', 'styles'), 0);
-	add_action('wp_footer', array('mediacaster', 'thickbox_images'));
+	add_action('wp_footer', array('mediacaster', 'thickbox_images'), 20);
 	
 	add_action('template_redirect', array('mediacaster', 'template_redirect'));
 } else {
@@ -696,6 +696,9 @@ EOS;
 	 **/
 
 	function thickbox_images() {
+		if ( class_exists('auto_thickbox') )
+			return;
+		
 		$includes_url = includes_url();
 		
 		echo <<<EOS
