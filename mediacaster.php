@@ -78,11 +78,15 @@ class mediacaster {
 	 **/
 
 	function template_redirect() {
-		if ( !empty($_GET['mc_src']) ) {
+		if ( isset($_GET['mc_snapshot']) ) {
+			include dirname(__FILE__) . '/snapshot.php';
+			die;
+		} elseif ( !empty($_GET['mc_src']) ) {
 			$src = trim(stripslashes($_GET['mc_src']));
 			if ( $src )
 				$src = esc_url_raw($src);
-			else
+			
+			if ( !$src )
 				return;
 		} else {
 			if ( !is_attachment() )
@@ -141,14 +145,14 @@ class mediacaster {
 			'src' => $src,
 			'width' => $width,
 			'height' => $height,
-			'autostart' => 'autostart',
+			'autostart' => !is_preview() ? 'autostart' : false,
 			'doing_thickbox' => 'doing_thickbox',
 			);
 		
 		if ( isset($link) )
 			$args['link'] = $link;
 		
-		include dirname(__FILE__) . '/thickbox.php';
+		include dirname(__FILE__) . '/media.php';
 		die;
 	} # template_redirect()
 	
@@ -513,6 +517,15 @@ EOS;
 			$width = max($width, 50);
 			$height = max($height, 50);
 			$flashvars['controlbar'] = 'none';
+		}
+		
+		if ( is_preview() && ( $id && current_user_can('edit_post', $id) || !$id && current_user_can('upload_files') ) ) {
+			$flashvars['plugins'][] = 'snapshot-1';
+			$user = wp_get_current_user();
+			$uid = (int) $user->id;
+			$snapshot_url = get_option('home') . '?mc_snapshot=' . $id . '&mc_user=' . $uid;
+			$flashvars['snapshot.script'] = wp_nonce_url($snapshot_url);
+			#unset($flashvars['skin']);
 		}
 		
 		if ( $autostart )
