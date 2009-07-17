@@ -92,7 +92,7 @@ class mediacaster {
 			$post = $wp_the_query->get_queried_object();
 
 			$src = wp_get_attachment_url($post->ID);
-			$regexp = mediacaster::get_extensions('video');
+			$regexp = mediacaster::get_extensions();
 			$regexp = '/\\.' . implode('|', $regexp) . '$/i';
 			
 			if ( !preg_match($regexp, $src) )

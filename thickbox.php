@@ -36,7 +36,7 @@ body {
 <body>
 <div id="body">
 <?php
-echo mediacaster::video($args);
+echo mediacaster::shortcode($args);
 ?>
 </div>
 <?php
