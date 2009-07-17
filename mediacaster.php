@@ -455,16 +455,24 @@ EOS;
 				$tb_height = $max_height;
 			}
 			
+			$href = @html_entity_decode($href, ENT_COMPAT, get_option('blog_charset'));
 			$href .= ( strpos($href, '?') === false ? '?' : '&' )
 				. "mc_width=$tb_width&mc_height=$tb_height&"
-				. "KeepThis=true&TB_iframe=true&width=$tb_width&height=" . ( $tb_height + 10 );
+				. "TB_iframe=true&width=$tb_width&height=" . ( $tb_height + 10 );
 			$href = esc_url($href);
+			
+			if ( $title )
+				$title = ' title="' . esc_attr(strip_tags($title)) . '"';
+			elseif ( $content )
+				$title = ' title="' . esc_attr(strip_tags($content)) . '"';
+			else
+				$title = '';
 			
 			return <<<EOS
 
 <div class="media_container">
 <div class="media">
-<a href="$href" class="thickbox no_icon"><img src="$image" width="$width" height="$height" alt="" /></a>
+<a href="$href" class="thickbox no_icon" $title><img src="$image" width="$width" height="$height" alt="" /></a>
 </div>
 </div>
 
