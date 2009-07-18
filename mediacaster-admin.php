@@ -24,6 +24,8 @@ add_filter('video_send_to_editor_url', array('mediacaster_admin', 'video_send_to
 add_filter('type_url_form_file', array('mediacaster_admin', 'type_url_form_file'));
 add_filter('file_send_to_editor_url', array('mediacaster_admin', 'file_send_to_editor_url'), 10, 3);
 
+add_action('admin_print_scripts', array('mediacaster_admin', 'admin_scripts'), 15);
+
 class mediacaster_admin {
 	/**
 	 * save_attachment()
@@ -622,7 +624,13 @@ class mediacaster_admin {
 				break;
 			
 			static $scripts;
+			static $player;
+			
 			if ( !isset($scripts) ) {
+				$player = plugin_dir_url(__FILE__) . 'mediaplayer/player.swf';
+				$site_url = site_url();
+				$user = wp_get_current_user();
+				
 				$scripts = <<<EOS
 <script type="text/javascript">
 var mc = {
@@ -647,6 +655,36 @@ var mc = {
 			jQuery("#attachments-width-" + post_id).val($default_width);
 		jQuery("#attachments-height-" + post_id).val(Math.round(jQuery("#attachments-width-" + post_id).val() * 3 / 4));
 		return false;
+	},
+	
+	take_snapshot: function(post_id) {
+		var s_id, s_width, s_height, s_src;
+		
+		do {
+			s_id = 'mc-snapshot-' + Math.floor(Math.random() * 10000);
+		} while ( document.getElementById(s_id) );
+		
+		s_width = 460;
+		s_height = 345;
+		
+		jQuery("#mc-preview-" + post_id).html('<div id="' + s_id + '" style="width: ' + s_width + 'px; height: ' + s_height + 'px;"></div>').fadeIn('slow');
+		
+		var params = {};
+		params.allowfullscreen = 'false';
+		params.allowscriptaccess = 'true';
+		
+		var flashvars = {};
+		flashvars.file = jQuery("#mc-src-" + post_id).val();
+		flashvars.controlbar = 'over';
+		flashvars.plugins = 'quickkeys-1,snapshot-1';
+		flashvars['snapshot.script'] = '$site_url/mc-snapshot.' + post_id + '.' + $user->ID + '.php';
+		
+		swfobject.embedSWF("$player", s_id, s_width, s_height, '9.0.0', false, flashvars, params);
+		
+		var player = document.getElementById(s_id);
+		
+		if ( typeof player.getConfig == 'function' )
+			alert(player.getConfig());
 	}
 };
 </script>
@@ -661,34 +699,85 @@ EOS;
 			$height = get_post_meta($post->ID, '_mc_height', true);
 			$height = $height ? (int) $height : '';
 			
-			$post_fields['format'] = array(
-				'label' => __('Width x Height', 'mediacaster'),
-				'input' => 'html',
-				'html' => $scripts . '<input id="attachments-width-' . $post->ID . '" name="attachments[' . $post->ID . '][width]" value="' . $width . '" type="text" size="3" style="width: 40px;"> x <input id="attachments-height-' . $post->ID . '" name="attachments[' . $post->ID . '][height]" value="' . $height . '" type="text" size="3" style="width: 40px;">
-	<button type="button" class="button" onclick="return mc.set_default(' . $post->ID . ');">' . __('Default', 'mediacaster') . '</button>
-	<button type="button" class="button" onclick="return mc.set_16_9(' . $post->ID . ');">' . __('16/9', 'mediacaster') . '</button>
-	<button type="button" class="button" onclick="return mc.set_4_3(' . $post->ID . ');">' . __('4/3', 'mediacaster') . '</button>',
-				);
-			
 			$image = get_post_meta($post->ID, '_mc_image', true);
 			$image = $image ? esc_url($image) : '';
 			
+			$src = esc_url(wp_get_attachment_url($post->ID));
+			
+			$preview = $image ? $image : '';
+			
+			if ( $preview ) {
+				list($preview_width, $preview_height) = getimagesize($preview);
+				$preview = '<div id="mc-preview-"' . $post->ID . '>'
+					. '<img src="' . $preview . '" alt="" width="360"'
+					. ( $preview_width && $preview_height
+						? ( ' height="' . round($preview_height * 360 / $preview_width) . '"' )
+						: ''
+						)
+						. ' />' . "\n"
+					. '</div>' . "\n";
+			} else {
+				$preview = '<div id="mc-preview-' . $post->ID . '"></div>' . "\n";
+			}
+			
+			$post_fields['format'] = array(
+				'label' => __('Width x Height', 'mediacaster'),
+				'input' => 'html',
+				'html' => $scripts
+					. '<input id="attachments-width-' . $post->ID . '"'
+						. ' name="attachments[' . $post->ID . '][width]"'
+						. ' value="' . $width . '" type="text" size="3" style="width: 40px;">'
+					. ' x '
+					. '<input id="attachments-height-' . $post->ID . '"'
+						. ' name="attachments[' . $post->ID . '][height]"'
+						. ' value="' . $height . '" type="text" size="3" style="width: 40px;">'
+					. '<button type="button" class="button"'
+						. ' onclick="return mc.set_default(' . $post->ID . ');">'
+						. __('Default', 'mediacaster') . '</button>'
+					. '<button type="button" class="button"'
+						. ' onclick="return mc.set_16_9(' . $post->ID . ');">'
+						. __('16/9', 'mediacaster') . '</button>'
+						. '<button type="button" class="button"'
+						. ' onclick="return mc.set_4_3(' . $post->ID . ');">'
+						. __('4/3', 'mediacaster') . '</button>',
+				);
+			
 			$post_fields['image'] = array(
 				'label' => __('Preview Image', 'mediacaster'),
-				'value' => $image,
-				'helps' => __('The URL of a preview image when the video isn\'t playing.', 'mediacaster'),
+				'input' => 'html',
+				'html' => '<input type="text" id="attachments[' . $post->ID . '][image]"'
+						. ' name="attachments[' . $post->ID . '][image]" value="' . $image . '" /><br />' . "\n"
+					. '<p class="help">'
+						. __('The URL of a preview image when the video isn\'t playing.', 'mediacaster')
+						. '<span class="hide-if-no-js">'
+						. ' '
+						. '<button type="button" class="button"'
+							. ' onclick="return mc.take_snapshot(' . $post->ID . ');">'
+						. __('New Snapshot', 'mediacaster') . '</button>'
+						. '</span>'
+						. '</p>' . "\n"
+					. '<input type="hidden" id="mc-src-' . $post->ID . '" value="' . $src . '" />'
+					. $preview,
 				);
 			
 			$post_fields['autostart'] = array(
 				'label' => __('Autostart', 'mediacaster'),
 				'input' => 'html',
-				'html' => '<label style="font-weight: normal"><input type="checkbox" name="attachments[' . $post->ID . '][autostart]">&nbsp;' . __('Automatically start the (first) video (NB: bandwidth intensive).', 'mediacaster') . '</label>',
+				'html' => '<label style="font-weight: normal">'
+					. '<input type="checkbox" id="attachments[' . $post->ID . '][autostart]"'
+						. ' name="attachments[' . $post->ID . '][autostart]">&nbsp;'
+					. __('Automatically start the (first) video (NB: bandwidth intensive).', 'mediacaster')
+					. '</label>',
 				);
 			
 			$post_fields['thickbox'] = array(
 				'label' => __('Thickbox', 'mediacaster'),
 				'input' => 'html',
-				'html' => '<label style="font-weight: normal"><input type="checkbox" name="attachments[' . $post->ID . '][thickbox]">&nbsp;' . __('Open the video in a thickbox window (requires a preview image).', 'mediacaster') . '</label>',
+				'html' => '<label style="font-weight: normal">'
+					. '<input type="checkbox" id="attachments[' . $post->ID . '][thickbox]"'
+						. ' name="attachments[' . $post->ID . '][thickbox]">&nbsp;'
+					. __('Open the video in a thickbox window (requires a preview image).', 'mediacaster')
+					. '</label>',
 				);
 		}
 		
@@ -720,7 +809,11 @@ EOS;
 				$post_fields['autostart'] = array(
 					'label' => __('Autostart', 'mediacaster'),
 					'input' => 'html',
-					'html' => '<label style="font-weight: normal"><input type="checkbox" name="attachments[' . $post->ID . '][autostart]">&nbsp;' . __('Automatically start the (first) podcast (NB: bandwidth intensive).', 'mediacaster') . '</label>',
+					'html' => '<label style="font-weight: normal">'
+						. '<input type="checkbox" id="attachments[' . $post->ID . '][autostart]"'
+							. ' name="attachments[' . $post->ID . '][autostart]">&nbsp;'
+						. __('Automatically start the (first) podcast (NB: bandwidth intensive).', 'mediacaster')
+						. '</label>',
 					);
 			}
 			break;
@@ -1158,5 +1251,22 @@ var mc = {
 			. $title
 			. '[/mc]';
 	} # file_send_to_editor_url()
+	
+	
+	/**
+	 * admin_scripts()
+	 *
+	 * @return void
+	 **/
+
+	function admin_scripts() {
+		global $wp_scripts;
+		if ( !is_a($wp_scripts, 'WP_Scripts') || !$wp_scripts->query('admin-gallery', 'queue') )
+			return;
+		
+		$folder = plugin_dir_url(__FILE__);
+		wp_enqueue_script('swfobject');
+		wp_enqueue_script('mediacaster_admin', $folder . 'js/admin.js', array('jquery-ui-sortable'), '2.0', true);
+	} # admin_scripts()
 } # mediacaster_admin
 ?>

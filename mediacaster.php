@@ -31,7 +31,6 @@ load_plugin_textdomain('mediacaster', false, dirname(plugin_basename(__FILE__)) 
 
 # playlists:
 add_filter('the_content', array('mediacaster', 'podcasts'), 10);
-add_action('template_redirect', array('mediacaster', 'catch_playlist'), 0);
 
 add_action('rss2_ns', array('mediacaster', 'display_feed_ns'));
 add_action('atom_ns', array('mediacaster', 'display_feed_ns'));
@@ -65,7 +64,7 @@ if ( !is_admin() ) {
 	add_action('wp_print_styles', array('mediacaster', 'styles'), 0);
 	add_action('wp_footer', array('mediacaster', 'thickbox_images'), 20);
 	
-	add_action('template_redirect', array('mediacaster', 'template_redirect'));
+	add_action('template_redirect', array('mediacaster', 'template_redirect'), 0);
 } else {
 	add_action('admin_menu', array('mediacaster', 'admin_menu'));
 }
@@ -78,8 +77,11 @@ class mediacaster {
 	 **/
 
 	function template_redirect() {
-		if ( isset($_GET['mc_snapshot']) ) {
+		if ( preg_match("/\/mc-snapshot\.(\d+)\.(\d+)\.php/", $_SERVER['REQUEST_URI'], $match) ) {
 			include dirname(__FILE__) . '/snapshot.php';
+			die;
+		} elseif ( isset($_GET['podcasts']) && intval($_GET['podcasts']) ) {
+			mediacaster::display_playlist_xml($_GET['podcasts']);
 			die;
 		} elseif ( !empty($_GET['mc_src']) ) {
 			$src = trim(stripslashes($_GET['mc_src']));
@@ -88,13 +90,15 @@ class mediacaster {
 			
 			if ( !$src )
 				return;
+			
+			$post = false;
 		} else {
 			if ( !is_attachment() )
 				return;
 			
 			global $wp_the_query;
 			$post = $wp_the_query->get_queried_object();
-
+			
 			$src = wp_get_attachment_url($post->ID);
 			$regexp = mediacaster::get_extensions();
 			$regexp = '/\\.' . implode('|', $regexp) . '$/i';
@@ -107,6 +111,14 @@ class mediacaster {
 			$link = trim(stripslashes($_GET['mc_link']));
 			if ( $link )
 				$link = esc_url_raw($link);
+		}
+		
+		if ( !empty($_GET['mc_image']) ) {
+			$image = trim(stripslashes($_GET['mc_image']));
+			if ( $image )
+				$image = esc_url_raw($image);
+		} elseif ( $post ) {
+			$image = esc_url_raw(get_post_meta($post->ID, '_mc_image', true));
 		}
 		
 		$max_width = 720;
@@ -149,8 +161,16 @@ class mediacaster {
 			'doing_thickbox' => 'doing_thickbox',
 			);
 		
+		if ( $post ) {
+			$args['id'] = $post->ID;
+			$args['post_id'] = $post->post_parent;
+		}
+		
 		if ( isset($link) )
 			$args['link'] = $link;
+		
+		if ( $image )
+			$args['image'] = $image;
 		
 		include dirname(__FILE__) . '/media.php';
 		die;
@@ -344,7 +364,6 @@ class mediacaster {
 		$flashvars = array();
 		$flashvars['file'] = esc_url_raw($src);
 		$flashvars['skin'] = esc_url_raw(plugin_dir_url(__FILE__) . 'skins/' . $skin . '.swf');
-		$flashvars['quality'] = 'true';
 		
 		if ( $image )
 			$flashvars['image'] = esc_url_raw($image);
@@ -435,8 +454,12 @@ EOS;
 			
 			if ( $id )
 				$href = apply_filters('the_permalink', get_permalink($id));
+			elseif ( in_the_loop() )
+				$href = apply_filters('the_permalink', get_permalink())
+					. '?mc_src=' . urlencode(esc_url_raw($src));
 			else
-				$href = user_trailingslashit(get_option('home')) . '?mc_src=' . urlencode(esc_url_raw($src));
+				$href = user_trailingslashit(get_option('home'))
+					. '?mc_src=' . urlencode(esc_url_raw($src));
 			
 			if ( $link ) {
 				$href .= ( ( strpos($href, '?') === false ) ? '?' : '&' )
@@ -494,7 +517,6 @@ EOS;
 		$flashvars = array();
 		$flashvars['file'] = esc_url_raw($src);
 		$flashvars['skin'] = esc_url_raw(plugin_dir_url(__FILE__) . 'skins/' . $skin . '.swf');
-		$flashvars['quality'] = 'true';
 		
 		if ( $image )
 			$flashvars['image'] = esc_url_raw($image);
@@ -523,9 +545,10 @@ EOS;
 			$flashvars['plugins'][] = 'snapshot-1';
 			$user = wp_get_current_user();
 			$uid = (int) $user->id;
-			$snapshot_url = get_option('home') . '?mc_snapshot=' . $id . '&mc_user=' . $uid;
-			$flashvars['snapshot.script'] = wp_nonce_url($snapshot_url);
-			#unset($flashvars['skin']);
+			$snapshot_url = trailingslashit(site_url())
+				. '/mc-snapshot.' . intval($id) . '.' . intval($uid) . '.php';
+			$flashvars['snapshot.script'] = $snapshot_url;
+			unset($flashvars['skin']);
 		}
 		
 		if ( $autostart )
@@ -833,21 +856,6 @@ EOS;
 		
 		return $content;
 	} # podcasts()
-	
-	
-	/**
-	 * catch_playlist()
-	 *
-	 * @return void
-	 **/
-
-	function catch_playlist() {
-		if ( !isset($_GET['podcasts']) || !intval($_GET['podcasts']) )
-			return;
-		
-		mediacaster::display_playlist_xml($_GET['podcasts']);
-		die;
-	} # catch_playlist()
 
 
 	/**
