@@ -280,6 +280,15 @@ class mediacaster {
 		$thickbox = false;
 		$autostart = mediacaster::autostart($autostart);
 		
+		# exception: external audio files
+		if ( !$id && $cover ) {
+			$src_d = @parse_url($src);
+			$home_d = @parse_url(get_option('home'));
+			
+			if ( strtolower($src_d['host']) != strtolower($home_d['host']) )
+				$cover = false;
+		}
+		
 		if ( $cover ) {
 			$image = WP_CONTENT_URL . $cover;
 			static $cover_size;
