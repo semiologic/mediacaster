@@ -861,7 +861,7 @@ EOS;
 		
 		$args = array(
 			'src' => user_trailingslashit(get_option('home')) . '?podcasts=' . get_the_ID(),
-			'autostart' => $o['player']['autostart'],
+			'autostart' => false,
 			);
 		
 		$out = mediacaster::audio($args);
