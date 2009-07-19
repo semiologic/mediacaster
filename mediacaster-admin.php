@@ -28,11 +28,27 @@ add_action('admin_print_scripts', array('mediacaster_admin', 'admin_scripts'), 1
 
 class mediacaster_admin {
 	/**
+	 * save_entry()
+	 *
+	 * @param int $post_id
+	 * @return void
+	 **/
+
+	function save_entry($post_id) {
+		if ( !$_POST || wp_is_post_revision($post_id) || !current_user_can('edit_post', $post_id) )
+			return;
+		
+		delete_post_meta($post_id, '_mc_enclosures');
+		delete_post_meta($post_id, '_mc_enclosed');
+	} # save_entry()
+	
+	
+	/**
 	 * save_attachment()
 	 *
 	 * @return void
 	 **/
-
+	
 	function save_attachment($post_id) {
 		$post_id = (int) $post_id;
 		if ( !$post_id || !isset($_POST['attachments'][$post_id]['image']) )
@@ -49,30 +65,11 @@ class mediacaster_admin {
 			delete_post_meta($post_id, '_mc_image');
 		}
 		
-		foreach ( array('width', 'height') as $arg ) {
-			$val = intval($attachment[$arg]);
-			if ( $val )
-				update_post_meta($post_id, '_mc_' . $arg, $val);
-			else
-				delete_post_meta($post_id, '_mc_' . $arg);
+		if ( !get_post_meta($post_id, '_mc_image_id', true) ) {
+			delete_post_meta($post_id, '_mc_width');
+			delete_post_meta($post_id, '_mc_height');
 		}
 	} # save_attachment()
-	
-	
-	/**
-	 * save_entry()
-	 *
-	 * @param int $post_id
-	 * @return void
-	 **/
-
-	function save_entry($post_id) {
-		if ( !$_POST || wp_is_post_revision($post_id) || !current_user_can('edit_post', $post_id) )
-			return;
-		
-		delete_post_meta($post_id, '_mc_enclosures');
-		delete_post_meta($post_id, '_mc_enclosed');
-	} # save_entry()
 	
 	
 	/**
@@ -141,7 +138,6 @@ class mediacaster_admin {
 			? $new_ops['player']['skin']
 			: 'modius';
 		$player['cover'] = $cover;
-		$player['autostart'] = isset($new_ops['player']['autostart']);
 		
 		$itunes = array();
 		foreach ( array('author', 'summary', 'copyright') as $var )
@@ -277,25 +273,6 @@ class mediacaster_admin {
 			. '</td>'
 			. '</tr>' . "\n";
 		
-		echo '<tr valign="top">'
-			. '<th scope="row">'
-			. __('MP3 Playlist Behavior', 'mediacaster')
-			. '</th>'
-			. '<td>'
-			. '<label>'
-			. '<input type="checkbox"'
-				. ' name="mediacaster[player][autostart]"'
-				. ( $options['player']['autostart']
-					? ' checked="checked"'
-					: ''
-					)
-				. ' />'
-			. '&nbsp;'
-			. __('Automatically start the (first) playlist.', 'mediacaster')
-			. '</label>'
-			. '</td>'
-			. '</tr>' . "\n";
-		
 		$cover = $options['player']['cover'];
 
 		echo '<tr valign="top">'
@@ -309,7 +286,6 @@ class mediacaster_admin {
 			update_option('mediacaster', $options);
 			$cover = false;
 		}
-			
 		
 		if ( $cover ) {
 			echo '<div style="margin-botton: 6px;">';
@@ -635,6 +611,9 @@ class mediacaster_admin {
 <script type="text/javascript">
 var mc = {
 	i: 0,
+	player: null,
+	interval: null,
+	post_id: null,
 	
 	set_default: function(post_id) {
 		jQuery("#attachments-width-" + post_id).val('');
@@ -642,22 +621,24 @@ var mc = {
 		
 		return false;
 	},
-
+	
 	set_16_9: function(post_id) {
 		if ( !jQuery("#attachments-width-" + post_id).val() )
 			jQuery("#attachments-width-" + post_id).val($default_width);
 		jQuery("#attachments-height-" + post_id).val(Math.round(jQuery("#attachments-width-" + post_id).val() * 9 / 16));
+		
 		return false;
 	},
-
+	
 	set_4_3: function(post_id) {
 		if ( !jQuery("#attachments-width-" + post_id).val() )
 			jQuery("#attachments-width-" + post_id).val($default_width);
 		jQuery("#attachments-height-" + post_id).val(Math.round(jQuery("#attachments-width-" + post_id).val() * 3 / 4));
+		
 		return false;
 	},
 	
-	take_snapshot: function(post_id) {
+	take_snapshot: function(post_id, nonce) {
 		var s_id, s_width, s_height, s_src;
 		
 		do {
@@ -667,7 +648,7 @@ var mc = {
 		s_width = 460;
 		s_height = 345;
 		
-		jQuery("#mc-preview-" + post_id).html('<div id="' + s_id + '" style="width: ' + s_width + 'px; height: ' + s_height + 'px;"></div>').fadeIn('slow');
+		jQuery("#mc-preview-" + post_id).fadeOut('fast').html('<div id="' + s_id + '"></div>').fadeIn('slow');
 		
 		var params = {};
 		params.allowfullscreen = 'false';
@@ -677,16 +658,48 @@ var mc = {
 		flashvars.file = jQuery("#mc-src-" + post_id).val();
 		flashvars.controlbar = 'over';
 		flashvars.plugins = 'quickkeys-1,snapshot-1';
-		flashvars['snapshot.script'] = '$site_url/mc-snapshot.' + post_id + '.' + $user->ID + '.php';
+		flashvars['snapshot.script'] = '$site_url/mc-snapshot.' + post_id + '.' + $user->ID + '.' + nonce + '.php';
+		flashvars.id = s_id;
+		
+		var attributes = {};
+		attributes.id = s_id;
+		attributes.name = s_id;
+
+		if ( mc.interval )
+			clearInterval(mc.interval);
+		if ( mc.player )
+			mc.player = null;
 		
 		swfobject.embedSWF("$player", s_id, s_width, s_height, '9.0.0', false, flashvars, params);
 		
-		var player = document.getElementById(s_id);
+		mc.post_id = post_id;
+		mc.player = document.getElementById(s_id);
+		mc.interval = setInterval('mc.catch_snapshot();', 100);
+	},
+	
+	catch_snapshot: function() {
+		var p = mc.player;
 		
-		if ( typeof player.getConfig == 'function' )
-			alert(player.getConfig());
+		if ( !p || typeof p.getConfig != 'function' || p.getConfig()['state'] != 'IDLE' )
+			return;
+		
+		var img = p.getConfig()['image'];
+		
+		if ( !img )
+			return;
+		
+		clearInterval(mc.interval);
+		mc.interval = null;
+		mc.player = null;
+		
+		jQuery("#media-item-" + jQuery("#mc-image-id-" + mc.post_id).val()).fadeOut('fast').html('');
+		
+		jQuery("#mc-image-" + mc.post_id).val('');
+		jQuery("#mc-image-id-" + mc.post_id).val(img.replace(/.*\?/, ''));
+		jQuery("#mc-preview-" + mc.post_id).fadeOut('fast').html('<img src="' + img + '" width="460" alt=""  style="float: none; display: block; margin-left: auto; margin-right: auto;"/>').fadeIn('slow');
 	}
 };
+
 </script>
 EOS;
 			} else {
@@ -702,23 +715,25 @@ EOS;
 			$image = get_post_meta($post->ID, '_mc_image', true);
 			$image = $image ? esc_url($image) : '';
 			
+			$image_id = get_post_meta($post->ID, '_mc_image_id', true);
+			$image_id = $image_id ? intval($image_id) : '';
+			
 			$src = esc_url(wp_get_attachment_url($post->ID));
 			
 			$preview = $image ? $image : '';
 			
 			if ( $preview ) {
-				list($preview_width, $preview_height) = getimagesize($preview);
-				$preview = '<div id="mc-preview-"' . $post->ID . '>'
-					. '<img src="' . $preview . '" alt="" width="360"'
-					. ( $preview_width && $preview_height
-						? ( ' height="' . round($preview_height * 360 / $preview_width) . '"' )
-						: ''
-						)
-						. ' />' . "\n"
+				$preview = '<div id="mc-preview-' . $post->ID . '">'
+					. '<img src="' . $preview . '?' . $image_id . '" alt="" width="460" style="float: none; display: block; margin-left: auto; margin-right: auto;" />' . "\n"
 					. '</div>' . "\n";
 			} else {
 				$preview = '<div id="mc-preview-' . $post->ID . '"></div>' . "\n";
 			}
+			
+			$nonce = $post->ID
+				? 'snapshot-' . $post->ID
+				: 'snapshot';
+			$nonce = wp_create_nonce($nonce);
 			
 			$post_fields['format'] = array(
 				'label' => __('Width x Height', 'mediacaster'),
@@ -726,38 +741,41 @@ EOS;
 				'html' => $scripts
 					. '<input id="attachments-width-' . $post->ID . '"'
 						. ' name="attachments[' . $post->ID . '][width]"'
-						. ' value="' . $width . '" type="text" size="3" style="width: 40px;">'
+						. ' value="" type="text" size="3" style="width: 40px;">'
 					. ' x '
 					. '<input id="attachments-height-' . $post->ID . '"'
 						. ' name="attachments[' . $post->ID . '][height]"'
-						. ' value="' . $height . '" type="text" size="3" style="width: 40px;">'
+						. ' value="" type="text" size="3" style="width: 40px;">'
+					. ' '
 					. '<button type="button" class="button"'
-						. ' onclick="return mc.set_default(' . $post->ID . ');">'
+						. ' onclick="return mc.set_max(' . $post->ID . ');">'
 						. __('Default', 'mediacaster') . '</button>'
 					. '<button type="button" class="button"'
 						. ' onclick="return mc.set_16_9(' . $post->ID . ');">'
-						. __('16/9', 'mediacaster') . '</button>'
+						. __('16:9', 'mediacaster') . '</button>'
 						. '<button type="button" class="button"'
 						. ' onclick="return mc.set_4_3(' . $post->ID . ');">'
-						. __('4/3', 'mediacaster') . '</button>',
+						. __('4:3', 'mediacaster') . '</button>'
+						. ' '
+						. __('(optional)', 'mediacaster'),
 				);
 			
 			$post_fields['image'] = array(
 				'label' => __('Preview Image', 'mediacaster'),
 				'input' => 'html',
-				'html' => '<input type="text" id="attachments[' . $post->ID . '][image]"'
+				'html' => $preview
+					. '<input type="text" id="mc-image-' . $post->ID . '"'
 						. ' name="attachments[' . $post->ID . '][image]" value="' . $image . '" /><br />' . "\n"
+					. '<div class="hide-if-no-js" style="float: right">'
+					. '<input type="hidden" id="mc-src-' . $post->ID . '" value="' . $src . '" />'
+					. '<input type="hidden" id="mc-image-id-' . $post->ID . '" value="' . $image_id . '" />'
+					. '<button type="button" class="button"'
+						. ' onclick="return mc.take_snapshot(' . $post->ID . ', \'' . $nonce . '\');">'
+						. __('New Snapshot', 'mediacaster') . '</button>'
+						. '</div>' . "\n"
 					. '<p class="help">'
 						. __('The URL of a preview image when the video isn\'t playing.', 'mediacaster')
-						. '<span class="hide-if-no-js">'
-						. ' '
-						. '<button type="button" class="button"'
-							. ' onclick="return mc.take_snapshot(' . $post->ID . ');">'
-						. __('New Snapshot', 'mediacaster') . '</button>'
-						. '</span>'
-						. '</p>' . "\n"
-					. '<input type="hidden" id="mc-src-' . $post->ID . '" value="' . $src . '" />'
-					. $preview,
+						. '</p>' . "\n",
 				);
 			
 			$post_fields['autostart'] = array(
@@ -766,7 +784,7 @@ EOS;
 				'html' => '<label style="font-weight: normal">'
 					. '<input type="checkbox" id="attachments[' . $post->ID . '][autostart]"'
 						. ' name="attachments[' . $post->ID . '][autostart]">&nbsp;'
-					. __('Automatically start the (first) video (NB: bandwidth intensive).', 'mediacaster')
+					. __('Automatically start the (first) media player (NB: bandwidth intensive).', 'mediacaster')
 					. '</label>',
 				);
 			
@@ -805,17 +823,15 @@ EOS;
 			$post_fields['url']['html'] = str_replace($bad_urls, " value=''", $post_fields['url']['html']);
 			$post_fields['url']['helps'] = __('The link URL to which the player should direct users to (e.g. an affiliate link).', 'mediacaster');
 			
-			if ( !isset($post_fields['autostart']) ) {
-				$post_fields['autostart'] = array(
-					'label' => __('Autostart', 'mediacaster'),
-					'input' => 'html',
-					'html' => '<label style="font-weight: normal">'
-						. '<input type="checkbox" id="attachments[' . $post->ID . '][autostart]"'
-							. ' name="attachments[' . $post->ID . '][autostart]">&nbsp;'
-						. __('Automatically start the (first) podcast (NB: bandwidth intensive).', 'mediacaster')
-						. '</label>',
-					);
-			}
+			$post_fields['autostart'] = array(
+				'label' => __('Autostart', 'mediacaster'),
+				'input' => 'html',
+				'html' => '<label style="font-weight: normal">'
+					. '<input type="checkbox" id="attachments[' . $post->ID . '][autostart]"'
+						. ' name="attachments[' . $post->ID . '][autostart]">&nbsp;'
+					. __('Automatically start the (first) media player (NB: bandwidth intensive).', 'mediacaster')
+					. '</label>',
+				);
 			break;
 		
 		default:
@@ -1082,8 +1098,8 @@ var mc = {
 					</th>
 					<td class="field"><input id="insertonly-width" name="insertonly[width]" value="" type="text" size="3" style="width: 40px;"> x <input id="insertonly-height" name="insertonly[height]" value="" type="text" size="3" style="width: 40px;">
 					<button type="button" class="button" onclick="return mc.set_default();">' . __('Default', 'mediacaster') . '</button>
-					<button type="button" class="button" onclick="return mc.set_16_9();">' . __('16/9', 'mediacaster') . '</button>
-					<button type="button" class="button" onclick="return mc.set_4_3();">' . __('4/3', 'mediacaster') . '</button></td>
+					<button type="button" class="button" onclick="return mc.set_16_9();">' . __('16:9', 'mediacaster') . '</button>
+					<button type="button" class="button" onclick="return mc.set_4_3();">' . __('4:3', 'mediacaster') . '</button></td>
 				</tr>
 				<tr>
 					<th valign="top" scope="row" class="label">
@@ -1268,5 +1284,132 @@ var mc = {
 		wp_enqueue_script('swfobject');
 		wp_enqueue_script('mediacaster_admin', $folder . 'js/admin.js', array('jquery-ui-sortable'), '2.0', true);
 	} # admin_scripts()
+	
+	
+	/**
+	 * create_snapshot()
+	 *
+	 * @param int $post_id
+	 * @param int $user_id
+	 * @param string $nonce
+	 * @return void
+	 **/
+	
+	function create_snapshot($post_id, $user_id, $nonce) {
+		status_header(200);
+		header('Content-Type: text/plain; Charset: UTF-8');
+		#die(WP_CONTENT_DIR . '/test.jpg');
+		
+		$post_id = (int) $post_id;
+		$user_id = (int) $user_id;
+		
+		if ( !$user_id )
+			die(-1);
+		
+		$attachment = get_post($post_id);
+		if ( !$attachment || !$attachment->ID ) {
+			$post = false;
+			$attachment = false;
+		} elseif ( $attachment->post_type != 'attachment' ) {
+			$post = wp_clone($attachment);
+			$attachment = false;
+		} else {
+			$post = get_post($attachment->post_parent);
+		}
+		
+		if ( $post && $post->ID )
+			$_POST['post_id'] = $post->ID; // for the uploads folder plugin
+		
+		$user = wp_set_current_user($user_id);
+		if ( !$user || !$user->has_cap('upload_files') || $post->ID && !$user->has_cap('edit_post') )
+			die(-1);
+		
+		if ( wp_verify_nonce($nonce, 'snapshot' . ( $attachment->ID ? "-$attachment->ID" : '' )) !== 1 )
+			die(-1);
+		
+		$time = current_time('mysql');
+		if ( substr($post->post_date, 0, 4) > 0 )
+			$time = $post->post_date;
+		$uploads = wp_upload_dir($time);
+		
+		if ( !empty($uploads['error']) )
+			die(-1);
+		
+		$ext = 'jpg';
+		$type = 'image/jpeg';
+		
+		if ( $attachment->ID ) {
+			$file_name = basename(wp_get_attachment_url($attachment->ID));
+			$file_name = preg_replace("/\.[^.]+$/", '.jpg', $file_name);
+		} else {
+			$file_name = 'snapshot.jpg';
+		}
+		
+		$file_name = wp_unique_filename($uploads['path'], $file_name);
+		$url = $uploads['url'] . '/' . $file_name;
+		
+		$new_file = $uploads['path'] . '/' . $file_name;
+		$tmp_file = wp_tempnam();
+		
+		$fp = fopen($tmp_file, 'wb');
+		fwrite($fp, file_get_contents('php://input'));
+		fclose($fp);
+		
+		if ( @rename($tmp_file, $new_file) === false ) {
+			@unlink($tmp_file);
+			die(-1);
+		}
+		
+		$stat = stat(dirname($new_file));
+		$perms = $stat['mode'] & 0000666;
+		@chmod($new_file, $perms);
+		
+		$details = apply_filters('wp_handle_upload', array(
+			'file' => $new_file,
+			'url' => $url,
+			'type' => $type,
+			));
+		
+		$new_file = $details['file'];
+		$url = $details['url'];
+		$type = $details['type'];
+		
+		$title = __('Video Snapshot', 'mediacaster');
+		$content = '';
+		
+		$post_date = current_time('mysql');
+		$post_date_gmt = current_time('mysql', 1);
+		$post_parent = $post ? $post->ID : 0;
+		
+		$snapshot = array(
+			'post_mime_type' => $type,
+			'guid' => $url,
+			'post_parent' => $post_parent,
+			'post_title' => $title,
+			'post_name' => $title,
+			'post_content' => $content,
+			'post_date' => $post_date,
+			'post_date_gmt' => $post_date_gmt,
+			);
+		
+		$snapshot_id = wp_insert_attachment($snapshot, $new_file, $post_parent);
+		if ( is_wp_error($snapshot_id) )
+			die(-1);
+		
+		$meta = wp_generate_attachment_metadata($snapshot_id, $new_file);
+		wp_update_attachment_metadata($snapshot_id, $meta);
+		
+		if ( $attachment && $attachment->ID ) {
+			$old_snapshot_id = get_post_meta($attachment->ID, '_mc_image_id', true);
+			if ( $old_snapshot_id )
+				wp_delete_attachment($old_snapshot_id);
+			update_post_meta($attachment->ID, '_mc_image_id', $snapshot_id);
+			update_post_meta($attachment->ID, '_mc_width', $meta['width']);
+			update_post_meta($attachment->ID, '_mc_height', $meta['height']);
+			delete_post_meta($attachment->ID, '_mc_image');
+		}
+		
+		die("$url?$snapshot_id");
+	} # create_snapshot()
 } # mediacaster_admin
 ?>

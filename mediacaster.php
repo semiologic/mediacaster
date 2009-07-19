@@ -3,7 +3,7 @@
 Plugin Name: Mediacaster
 Plugin URI: http://www.semiologic.com/software/mediacaster/
 Description: Lets you add podcasts, videos, and formatted download links in your site's posts and pages.
-Version: 2.0 beta2
+Version: 2.0 beta3
 Author: Denis de Bernardy
 Author URI: http://www.getsemiologic.com
 Text Domain: mediacaster
@@ -14,9 +14,9 @@ Domain Path: /lang
 Terms of use
 ------------
 
-This software is copyright Mesoconcepts (http://www.mesoconcepts.com), and is distributed under the terms of the GPL license, v.2.
+This software is copyright Mesoconcepts (http://www.mesoconcepts.com), and is distributed under the terms of the Mesoconcepts license. In a nutshell, you may freely use it for any purpose, but may not redistribute it without written permission.
 
-http://www.opensource.org/licenses/gpl-2.0.php
+http://www.mesoconcepts.com/license/
 */
 
 
@@ -30,7 +30,7 @@ load_plugin_textdomain('mediacaster', false, dirname(plugin_basename(__FILE__)) 
  **/
 
 # playlists:
-add_filter('the_content', array('mediacaster', 'podcasts'), 10);
+add_filter('the_content', array('mediacaster', 'podcasts'), 12);
 
 add_action('rss2_ns', array('mediacaster', 'display_feed_ns'));
 add_action('atom_ns', array('mediacaster', 'display_feed_ns'));
@@ -71,113 +71,6 @@ if ( !is_admin() ) {
 
 class mediacaster {
 	/**
-	 * wp()
-	 *
-	 * @return void
-	 **/
-
-	function template_redirect() {
-		if ( preg_match("/\/mc-snapshot\.(\d+)\.(\d+)\.php/", $_SERVER['REQUEST_URI'], $match) ) {
-			include dirname(__FILE__) . '/snapshot.php';
-			die;
-		} elseif ( isset($_GET['podcasts']) && intval($_GET['podcasts']) ) {
-			mediacaster::display_playlist_xml($_GET['podcasts']);
-			die;
-		} elseif ( !empty($_GET['mc_src']) ) {
-			$src = trim(stripslashes($_GET['mc_src']));
-			if ( $src )
-				$src = esc_url_raw($src);
-			
-			if ( !$src )
-				return;
-			
-			$post = false;
-		} else {
-			if ( !is_attachment() )
-				return;
-			
-			global $wp_the_query;
-			$post = $wp_the_query->get_queried_object();
-			
-			$src = wp_get_attachment_url($post->ID);
-			$regexp = mediacaster::get_extensions();
-			$regexp = '/\\.' . implode('|', $regexp) . '$/i';
-			
-			if ( !preg_match($regexp, $src) )
-				return;
-		}
-		
-		if ( !empty($_GET['mc_link']) ) {
-			$link = trim(stripslashes($_GET['mc_link']));
-			if ( $link )
-				$link = esc_url_raw($link);
-		}
-		
-		if ( !empty($_GET['mc_image']) ) {
-			$image = trim(stripslashes($_GET['mc_image']));
-			if ( $image )
-				$image = esc_url_raw($image);
-		} elseif ( $post ) {
-			$image = esc_url_raw(get_post_meta($post->ID, '_mc_image', true));
-		}
-		
-		$max_width = 720;
-		$max_height = 540;
-		
-		if ( isset($_GET['mc_width']) )
-			$width = intval($_GET['mc_width']);
-		elseif ( is_object($post) )
-			$width = 2 * (int) get_post_meta($post->ID, '_mc_width', true);
-		else
-			$width = $max_width;
-		
-		if ( isset($_GET['mc_height']) )
-			$height = intval($_GET['mc_height']);
-		elseif ( is_object($post) )
-			$height = 2 * (int) get_post_meta($post->ID, '_mc_height', true);
-		else
-			$height = $max_height;
-		
-		if ( !$width )
-			$width = $max_width;
-		if ( !$height )
-			$height = round($width * 9 / 16);
-		
-		if ( $width > $max_width ) {
-			$height = round($height * $max_width / $width);
-			$width = $max_width;
-		}
-		
-		if ( $height > $max_height ) {
-			$width = round($width * $max_height / $height);
-			$height = $max_height;
-		}
-		
-		$args = array(
-			'src' => $src,
-			'width' => $width,
-			'height' => $height,
-			'autostart' => !is_preview() ? 'autostart' : false,
-			'doing_thickbox' => 'doing_thickbox',
-			);
-		
-		if ( $post ) {
-			$args['id'] = $post->ID;
-			$args['post_id'] = $post->post_parent;
-		}
-		
-		if ( isset($link) )
-			$args['link'] = $link;
-		
-		if ( $image )
-			$args['image'] = $image;
-		
-		include dirname(__FILE__) . '/media.php';
-		die;
-	} # template_redirect()
-	
-	
-	/**
 	 * upload_mimes()
 	 *
 	 * @param array $mines
@@ -207,6 +100,75 @@ class mediacaster {
 		$types['audio'] = array_merge($types['audio'], array('3pg', '3g2'));
 		return $types;
 	} # ext2type()
+	
+	
+	/**
+	 * template_redirect()
+	 *
+	 * @return void
+	 **/
+
+	function template_redirect() {
+		if ( preg_match("/\/mc-snapshot\.(\d+)\.(\d+)\.([0-9a-f]+)\.php/i", $_SERVER['REQUEST_URI'], $match) ) {
+			include_once ABSPATH . 'wp-admin/includes/admin.php';
+			include_once dirname(__FILE__) . '/mediacaster-admin.php';
+			$nonce = array_pop($match);
+			$user_id = array_pop($match);
+			$post_id = array_pop($match);
+			mediacaster_admin::create_snapshot($post_id, $user_id, $nonce);
+		} elseif ( isset($_GET['podcasts']) && intval($_GET['podcasts']) ) {
+			mediacaster::display_playlist_xml($_GET['podcasts']);
+			die;
+		} elseif ( !empty($_GET['mc_src']) ) {
+			$src = trim(stripslashes($_GET['mc_src']));
+			if ( $src )
+				$src = esc_url_raw($src);
+			
+			if ( !$src )
+				return;
+			
+			$attachment = false;
+		} else {
+			if ( !is_attachment() )
+				return;
+			
+			global $wp_the_query;
+			$attachment = $wp_the_query->get_queried_object();
+			
+			$src = wp_get_attachment_url($attachment->ID);
+			$regexp = mediacaster::get_extensions();
+			$regexp = '/\\.' . implode('|', $regexp) . '$/i';
+			
+			if ( !preg_match($regexp, $src) )
+				return;
+		}
+		
+		$args = array(
+			'src' => $src,
+			'autostart' => !is_preview() ? 'autostart' : false,
+			'standalone' => 'standalone',
+			);
+		
+		if ( $attachment ) {
+			$args['id'] = $attachment->ID;
+			$args['post_id'] = $attachment->post_parent;
+		}
+		
+		if ( isset($_GET['mc_width']) && intval($_GET['mc_width']) )
+			$width = intval($_GET['mc_width']);
+		
+		if ( isset($_GET['mc_height']) && intval($_GET['mc_height']) )
+			$height = intval($_GET['mc_height']);
+		
+		if ( !empty($_GET['mc_link']) ) {
+			$link = trim(strip_tags(stripslashes($_GET['mc_link'])));
+			if ( $link )
+				$args['link'] = $link;
+		}
+		
+		include dirname(__FILE__) . '/media.php';
+		die;
+	} # template_redirect()
 	
 	
 	/**
@@ -270,8 +232,6 @@ class mediacaster {
 			}
 		}
 		
-		$args['doing_thickbox'] = true;
-		
 		switch ( $args['type'] ) {
 		case 'mp3':
 		case 'm4a':
@@ -299,24 +259,6 @@ class mediacaster {
 	
 	
 	/**
-	 * autostart()
-	 *
-	 * @param string $autostart
-	 * @return string $autostart
-	 **/
-
-	function autostart($autostart = false) {
-		static $autostarted = false;
-		
-		if ( $autostarted )
-			return false;
-		
-		$autostarted |= $autostart;
-		return $autostart;
-	} # autostart()
-	
-	
-	/**
 	 * audio()
 	 *
 	 * @param array $args
@@ -327,31 +269,35 @@ class mediacaster {
 	function audio($args, $content = '') {
 		static $count = 0;
 		extract($args, EXTR_SKIP);
-		$defaults = mediacaster::defaults();
-		foreach ( array('width', 'height') as $arg ) {
-			if ( isset($$arg) )
-				unset($defaults[$arg]);
-		}
-		extract($defaults);
+		extract(mediacaster::defaults());
 		extract(mediacaster::get_skin($skin));
+		
+		foreach ( array('width', 'height', 'id', 'standalone') as $arg ) {
+			if ( empty($$arg) )
+				$$arg = false;
+		}
 		
 		$thickbox = false;
 		$autostart = mediacaster::autostart($autostart);
 		
 		if ( $cover ) {
 			$image = WP_CONTENT_URL . $cover;
-			$cover_size = getimagesize(WP_CONTENT_DIR . $cover);
+			static $cover_size;
+			
+			if ( !isset($cover_size) )
+				$cover_size = getimagesize(WP_CONTENT_DIR . $cover);
+			
 			$width = $cover_size[0];
 			$height = $cover_size[1];
 			
-			if ( $max_player_width && $width > $max_player_width ) {
-				$height = round($height * $max_player_width / $width);
-				$width = $player_width;
+			if ( $width > $max_width ) {
+				$height = round($height * $max_width / $width);
+				$width = $max_width;
 			}
 		} else {
 			$image = false;
-			if ( empty($width) )
-				$width = min($player_width, $min_player_width);
+			if ( !$width )
+				$width = 360;
 			$height = 0;
 		}
 		
@@ -378,8 +324,14 @@ class mediacaster {
 			}
 		}
 		
-		if ( $width >= $min_player_width ) {
-			$height += $skin_height;
+		if ( $width >= $min_width ) {
+			if ( $image ) {
+				$allowfullscreen = 'true';
+				$flashvars['controlbar'] = 'over';
+			} else {
+				$height += $skin_height;
+			}
+			
 			if ( $link )
 				$flashvars['link'] = esc_url_raw($link);
 		} else {
@@ -391,7 +343,7 @@ class mediacaster {
 		if ( $autostart )
 			$flashvars['autostart'] = 'true';
 		
-		$flashvars = apply_filters('mediacaster_audio', $flashvars);
+		$flashvars = apply_filters('mediacaster_audio', $flashvars, $args);
 		$flashvars['plugins'] = implode(',', $flashvars['plugins']);
 		$flashvars = http_build_query($flashvars, null, '&');
 		
@@ -429,24 +381,30 @@ EOS;
 	function video($args, $content = '') {
 		static $count = 0;
 		extract($args, EXTR_SKIP);
-		$defaults = mediacaster::defaults();
-		foreach ( array('width', 'height') as $arg ) {
-			if ( isset($$arg) )
-				unset($defaults[$arg]);
-		}
-		extract($defaults);
+		extract(mediacaster::defaults());
 		extract(mediacaster::get_skin($skin));
 		
-		if ( empty($width) ) {
-			$width = $player_width;
-			$height = $player_height;
-		} elseif ( empty($height)) {
-			$height = round($width * 9 / 16);
+		foreach ( array('width', 'height', '_width', '_height', 'id', 'standalone') as $arg ) {
+			if ( empty($$arg) )
+				$$arg = false;
 		}
 		
-		if ( !$doing_thickbox && $max_player_width && $width > $max_player_width ) {
-			$height = round($height * $max_player_width / $width);
-			$width = $max_player_width;
+		if ( $standalone ) {
+			$image = false;
+		} elseif ( $id && !$image ) {
+			$snapshot_id = get_post_meta($id, '_mc_image_id', true);
+			if ( $snapshot_id )
+				$image = wp_get_attachment_url($snapshot_id);
+		}
+		
+		if ( $id ) {
+			$_width = 2 * (int) get_post_meta($id, '_mc_width', true);
+			$_height = 2 * (int) get_post_meta($id, '_mc_height', true);
+			
+			if ( !$_width || !$_height ) {
+				$_width = false;
+				$_height = false;
+			}
 		}
 		
 		if ( !is_feed() && $thickbox && $image ) {
@@ -466,34 +424,52 @@ EOS;
 					. 'mc_link=' . urlencode(esc_url_raw($link));
 			}
 			
-			$tb_width = 2 * $width;
-			$tb_height = 2 * $height;
+			$max_tb_width = 720;
+			$max_tb_height = 540;
 			
-			$max_width = 720;
-			$max_height = 540;
+			$tb_width = $_width;
+			$tb_height = $_height;
 			
-			if ( $tb_width > $max_width ) {
-				$tb_height = round($tb_height * $max_width / $tb_width);
-				$tb_width = $max_width;
+			if ( !$tb_width )
+				$tb_width = $max_tb_width;
+			if ( !$width )
+				$width = $tb_width ? $tb_width : $max_width;
+			if ( !$height && $tb_height )
+				$height = (int) round($tb_height * $width / $tb_width);
+			
+			if ( $width > $max_width ) {
+				$height = (int) round($height * $max_width / $width);
+				$width = $max_width;
 			}
 			
-			if ( $tb_height > $max_height ) {
-				$tb_width = round($tb_width * $max_height / $tb_height);
-				$tb_height = $max_height;
+			if ( $tb_width > $max_tb_width ) {
+				$tb_height = (int) round($tb_height * $max_tb_width / $tb_width);
+				$tb_width = $max_tb_width;
+			}
+			
+			if ( !$height && !$tb_height ) {
+				$height = (int) round($width * 9 / 16);
+				$tb_height = (int) round($tb_width * 9 / 16);
+			} elseif ( !$height ) {
+				$height = (int) round($width * 9 / 16);
+			} elseif ( !$tb_height ) {
+				$tb_height = (int) $height * $tb_width / $width;
+			}
+			
+			if ( $tb_height > $max_tb_height ) {
+				$tb_width = (int) round($tb_width * $max_tb_height / $tb_height);
+				$tb_height = $max_tb_height;
 			}
 			
 			$href = @html_entity_decode($href, ENT_COMPAT, get_option('blog_charset'));
 			$href .= ( strpos($href, '?') === false ? '?' : '&' )
-				. "mc_width=$tb_width&mc_height=$tb_height&"
+				. ( ( !$_width || !$_height ) ? "mc_width=$tb_width&mc_height=$tb_height&" : '' )
 				. "TB_iframe=true&width=$tb_width&height=" . ( $tb_height + 10 );
 			$href = esc_url($href);
 			
+			$title = trim(strip_tags($content));
 			if ( $title )
-				$title = ' title="' . esc_attr(strip_tags($title)) . '"';
-			elseif ( $content )
-				$title = ' title="' . esc_attr(strip_tags($content)) . '"';
-			else
-				$title = '';
+				$title = ' title="' . esc_attr($title) . '"';
 			
 			return <<<EOS
 
@@ -507,6 +483,39 @@ EOS;
 		}
 		
 		$autostart = mediacaster::autostart($autostart);
+		
+		if ( $standalone ) {
+			$max_width = 720;
+			$max_height = 540;
+		} else {
+			$max_height = false;
+		}
+		
+		if ( !$width ) {
+			if ( $_width ) {
+				$width = $_width;
+				$height = $_height;
+			} else {
+				$width = $max_width;
+			}
+		}
+		
+		if ( !$height ) {
+			if ( $_height )
+				$height = (int) round($_height * $width / $_width);
+			else
+				$height = (int) round($width * 9 / 16);
+		}
+		
+		if ( $width > $max_width ) {
+			$height = (int) round($height * $max_width / $width);
+			$width = $max_width;
+		}
+		
+		if ( $max_height && $height > $max_height ) {
+			$width = (int) round($width * $max_height / $height);
+			$height = $max_height;
+		}
 		
 		$player = plugin_dir_url(__FILE__) . 'mediaplayer/player.swf';
 		$player_id = 'm' . md5($src . '_' . $count++);
@@ -531,7 +540,7 @@ EOS;
 			}
 		}
 		
-		if ( $width >= $min_player_width) {
+		if ( $width >= $min_width) {
 			$flashvars['controlbar'] = 'over';
 			if ( $link )
 				$flashvars['link'] = esc_url_raw($link);
@@ -541,20 +550,10 @@ EOS;
 			$flashvars['controlbar'] = 'none';
 		}
 		
-		if ( is_preview() && ( $id && current_user_can('edit_post', $id) || !$id && current_user_can('upload_files') ) ) {
-			$flashvars['plugins'][] = 'snapshot-1';
-			$user = wp_get_current_user();
-			$uid = (int) $user->id;
-			$snapshot_url = trailingslashit(site_url())
-				. '/mc-snapshot.' . intval($id) . '.' . intval($uid) . '.php';
-			$flashvars['snapshot.script'] = $snapshot_url;
-			unset($flashvars['skin']);
-		}
-		
 		if ( $autostart )
 			$flashvars['autostart'] = 'true';
 		
-		$flashvars = apply_filters('mediacaster_video', $flashvars);
+		$flashvars = apply_filters('mediacaster_video', $flashvars, $args);
 		$flashvars['plugins'] = implode(',', $flashvars['plugins']);
 		$flashvars = http_build_query($flashvars, null, '&');
 		
@@ -579,6 +578,86 @@ $script
 
 EOS;
 	} # video()
+	
+	
+	/**
+	 * defaults()
+	 *
+	 * @return void
+	 **/
+
+	function defaults() {
+		static $defaults;
+		
+		if ( isset($defaults) )
+			return $defaults;
+		
+		global $content_width;
+		
+		$o = get_option('mediacaster');
+		
+		$min_width = 320;
+		$max_width = intval($content_width);
+		
+		if ( $max_width && !defined('sem_version') )
+			$max_width -= 10; # add some margin space
+		
+		if ( !$max_width )
+			$max_width = 420;
+		
+		$cover = $o['player']['cover'];
+		$skin = $o['player']['skin'];
+		
+		$defaults = compact('min_width', 'max_width', 'cover', 'skin');
+		
+		return $defaults;
+	} # defaults()
+	
+	
+	/**
+	 * get_skin
+	 *
+	 * @param string $skin
+	 * @return array $skin_details
+	 **/
+	
+	function get_skin($skin = 'bekle') {
+		$skin_details = array(
+			'bekle' => array(
+				'skin' => 'bekle',
+				'skin_height' => 59,
+				),
+			'kleur' => array(
+				'skin' => 'kleur',
+				'skin_height' => 59,
+				),
+			'modieus' => array(
+				'skin' => 'modieus',
+				'skin_height' => 31,
+				),
+			);
+		
+		return isset($skin_details[$skin]) ? $skin_details[$skin] : $skin_details['bekle'];
+	} # get_skin()
+	
+	
+	/**
+	 * autostart()
+	 *
+	 * @param string $autostart
+	 * @return string $autostart
+	 **/
+
+	function autostart($autostart = false) {
+		static $autostarted = false;
+		
+		if ( $autostarted )
+			return false;
+		
+		$autostarted |= $autostart;
+		
+		return $autostart;
+	} # autostart()
 	
 	
 	/**
@@ -617,68 +696,6 @@ EOS;
 	
 	
 	/**
-	 * defaults()
-	 *
-	 * @return void
-	 **/
-
-	function defaults() {
-		static $defaults;
-		
-		if ( isset($defaults) )
-			return $defaults;
-		
-		global $content_width;
-		
-		$o = get_option('mediacaster');
-		
-		$min_player_width = 300;
-		$max_player_width = intval($content_width);
-		
-		if ( $max_player_width )
-			$player_width = $max_player_width;
-		else
-			$player_width = 420;
-		
-		$player_height = round($player_width * 9 / 16);
-		
-		$cover = $o['player']['cover'];
-		$skin = $o['player']['skin'];
-		
-		$defaults = compact('player_width', 'player_height', 'min_player_width', 'max_player_width', 'cover', 'skin');
-		
-		return $defaults;
-	} # defaults()
-	
-	
-	/**
-	 * get_skin
-	 *
-	 * @param string $skin
-	 * @return array $skin_details
-	 **/
-
-	function get_skin($skin = 'bekle') {
-		$skin_details = array(
-			'bekle' => array(
-				'skin' => 'bekle',
-				'skin_height' => 59,
-				),
-			'kleur' => array(
-				'skin' => 'kleur',
-				'skin_height' => 59,
-				),
-			'modieus' => array(
-				'skin' => 'modieus',
-				'skin_height' => 31,
-				),
-			);
-		
-		return isset($skin_details[$skin]) ? $skin_details[$skin] : $skin_details['bekle'];
-	} # get_skin()
-	
-	
-	/**
 	 * disable()
 	 *
 	 * @param mixed $in
@@ -686,7 +703,7 @@ EOS;
 	 **/
 
 	function disable($in = null) {
-		remove_filter('the_content', array('mediacaster', 'podcasts'), 1000);
+		remove_filter('the_content', array('mediacaster', 'podcasts'), 12);
 		
 		return $in;
 	} # disable()
@@ -700,7 +717,7 @@ EOS;
 	 **/
 	
 	function enable($in = null) {
-		add_filter('the_content', array('mediacaster', 'podcasts'), 1000);
+		add_filter('the_content', array('mediacaster', 'podcasts'), 12);
 		
 		return $in;
 	} # enable()
@@ -1092,14 +1109,14 @@ EOS;
 
 		update_option('mediacaster', $options);
 	} # init_options()
-
-
+	
+	
 	/**
 	 * admin_menu()
 	 *
 	 * @return void
 	 **/
-
+	
 	function admin_menu() {
 		add_options_page(
 			__('Mediacaster', 'mediacaster'),
