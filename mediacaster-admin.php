@@ -56,15 +56,6 @@ class mediacaster_admin {
 		
 		$attachment = $_POST['attachments'][$post_id];
 		
-		$image = trim(strip_tags($attachment['image']));
-		
-		if ( $image ) {
-			$image = addslashes(esc_url_raw($image));
-			update_post_meta($post_id, '_mc_image', $image);
-		} else {
-			delete_post_meta($post_id, '_mc_image');
-		}
-		
 		if ( !get_post_meta($post_id, '_mc_image_id', true) ) {
 			delete_post_meta($post_id, '_mc_width');
 			delete_post_meta($post_id, '_mc_height');
@@ -92,7 +83,7 @@ class mediacaster_admin {
 				@unlink(WP_CONTENT_DIR . $cover);
 			$cover = false;
 		}
-
+		
 		if ( @ $_FILES['new_cover']['name'] ) {
 			$name = $_FILES['new_cover']['name'];
 			$tmp_name = $_FILES['new_cover']['tmp_name'];
@@ -128,36 +119,51 @@ class mediacaster_admin {
 			}
 		}
 		
-		$new_ops = $_POST['mediacaster'];
-		
 		$player = array();
-		$player['position'] = in_array($new_ops['player']['position'], array('top', 'bottom', 'none'))
-			? $new_ops['player']['position']
+		$player['position'] = in_array($_POST['player']['position'], array('top', 'bottom', 'none'))
+			? $_POST['player']['position']
 			: 'top';
-		$player['skin'] = in_array($new_ops['player']['skin'], array('bekle', 'kleur', 'metarby10', 'modieus', 'silverywhite'))
-			? $new_ops['player']['skin']
+		$player['skin'] = in_array($_POST['player']['skin'], array('bekle', 'kleur', 'metarby10', 'modieus', 'silverywhite'))
+			? $_POST['player']['skin']
 			: 'modius';
 		$player['cover'] = $cover;
 		
 		$itunes = array();
 		foreach ( array('author', 'summary', 'copyright') as $var )
-			$itunes[$var] = stripslashes(strip_tags($new_ops['itunes'][$var]));
+			$itunes[$var] = strip_tags(stripslashes($_POST['itunes'][$var]));
 		for ( $i = 1; $i <= 3; $i++ )
-			$itunes['category'][$i] = stripslashes(strip_tags($new_ops['itunes']['category'][$i]));
-		$itunes['explicit'] = in_array($new_ops['itunes']['explicit'], array('yes', 'no', 'clean'))
-			? $new_ops['itunes']['explicit']
+			$itunes['category'][$i] = strip_tags(stripslashes($_POST['itunes']['category'][$i]));
+		$itunes['explicit'] = in_array($_POST['itunes']['explicit'], array('yes', 'no', 'clean'))
+			? $_POST['itunes']['explicit']
 			: 'no';
-		$itunes['block'] = in_array($new_ops['itunes']['block'], array('yes', 'no'))
-			? $new_ops['itunes']['block']
+		$itunes['block'] = in_array($_POST['itunes']['block'], array('yes', 'no'))
+			? $_POST['itunes']['block']
 			: 'no';
 		
-		$longtail = array(
-			'licensed' => false,
-			'pub_id' => '',
-			'ad_flow' => array(),
-			);
+		$longtail = array();
 		
-		$options = compact('player', 'itunes', 'longtail');
+		$longtail['agree'] = !empty($old_ops['longtail']['agree'])
+			? true
+			: isset($_POST['longtail']['agree']);
+		
+		$licensed_player = glob(plugin_dir_path(__FILE__) . 'mediaplayer-licensed*/*player*.swf');
+		if ( $licensed_player ) {
+			$licensed_player = current($licensed_player);
+			$longtail['licensed'] = basename(dirname($licensed_player)) . '/' . basename($licensed_player);
+		} else {
+			$longtail['licensed'] = false;
+		}
+		
+		$script = stripslashes($_POST['longtail']['script']);
+		if ( preg_match("/src=[\"']https?:\/\/www.ltassrv.com\/serve\/api5.4.asp\?d=\d+&s=\d+&c=(\d+)/i", $script, $match) ) {
+			$longtail['script'] = $script;
+			$longtail['channel'] = array_pop($match);
+		} else {
+			$longtail['script'] = false;
+			$longtail['channel'] = false;
+		}
+		
+		$options = compact('player', 'itunes', 'longtail', 'version');
 		update_option('mediacaster', $options);
 		
 		echo '<div class="updated fade">' . "\n"
@@ -166,6 +172,13 @@ class mediacaster_admin {
 				. __('Settings saved.', 'mediacaster')
 				. '</strong>'
 			. '</p>' . "\n"
+			. ( $longtail['licensed'] && empty($old_ops['longtail']['licensed'])
+				? ( '<p>'
+					. sprintf(__('Licensed Player successfully detected (%s). Thank you for supporting LongTail Video!', 'mediacaster'), $longtail['licensed'])
+					. '</p>' . "\n"
+					)
+				: ''
+				)
 			. '</div>' . "\n";
 	} # save_options()
 
@@ -183,8 +196,8 @@ class mediacaster_admin {
 		
 		echo '<form enctype="multipart/form-data" method="post" action="">' . "\n";
 
-		$bytes = apply_filters( 'import_upload_size_limit', wp_max_upload_size() );
-
+		$bytes = apply_filters('import_upload_size_limit', wp_max_upload_size());
+		
 		echo '<input type="hidden" name="MAX_FILE_SIZE" value="' . esc_attr($bytes) .'" />' . "\n";
 
 		wp_nonce_field('mediacaster');
@@ -192,6 +205,65 @@ class mediacaster_admin {
 		screen_icon();
 		
 		echo '<h2>'. __('Mediacaster Settings', 'mediacaster') . '</h2>' . "\n";
+		
+		if ( empty($options['longtail']['agree']) ) {
+			echo '<h3>'
+				. __('License Notice', 'mediacaster')
+				. '</h3>' . "\n";
+			
+			echo '<table class="form-table">' . "\n"
+				. '<tr>'
+				. '<th>' . __('License Notice', 'mediacaster') . '</th>' . "\n"
+				. '<td>';
+			
+			echo '<p>'
+				. sprintf(__('LongTailVideo\'s JWPlayer is distributed under a Creative Commons <a href="%s">Attribute, Share Alike, Non-Commercial license</a>.'), 'http://creativecommons.org/licenses/by-nc-sa/3.0/')
+				. '</p>' . "\n";
+			
+			global $sem_pro_version;
+			if ( get_option('sem_pro_version') || !empty($sem_pro_version) ) {
+				echo '<p><strong>'
+					. __('Your Semiologic Pro license includes a commercial JWPlayer license, complete with a Premium Skin, for use on your Semiologic Pro sites.', 'mediacaster')
+					. '</strong></p>' . "\n";
+			} else {
+				echo '<p>'
+					. __('You need to purchase a commercial license if:')
+					. '</p>' . "\n";
+
+				echo '<ul class="ul-disc">' . "\n";
+
+				echo '<li>'
+					. __('Your site serves any ads (AdSense, display banners, etc.)', 'mediacaster')
+					. '</li>' . "\n";
+
+				echo '<li>'
+					. __('You want to remove the JWPlayer\'s attribution (eliminate the right-click link)', 'mediacaster')
+					. '</li>' . "\n";
+
+				echo '<li>'
+					. __('You are a corporation (governmental or nonprofit use is free)', 'mediacaster')
+					. '</li>' . "\n";
+
+				echo '</ul>' . "\n";
+			}
+			
+			echo '<p>'
+				. '<label>'
+				. '<input type="checkbox" name="longtail[agree]" />'
+				. '&nbsp;'
+				. __('I have read the license and agree to its terms.', 'mediacaster')
+				. '</p>' . "\n";
+			
+			echo '</td>'
+				. '</tr>' . "\n"
+				. '</table>' . "\n";
+			
+			echo '<p class="submit">'
+				. '<input type="submit"'
+					. ' value="' . esc_attr(__('Save Changes', 'mediacaster')) . '"'
+					. ' />'
+				. '</p>' . "\n";
+		}
 		
 		echo '<h3>'
 				. __('Media Player', 'mediacaster')
@@ -213,7 +285,7 @@ class mediacaster_admin {
 			) as $skin_id => $skin_name ) {
 			echo '<li>'
 				. '<label>'
-				. '<input type="radio" name="mediacaster[player][skin]"'
+				. '<input type="radio" name="player[skin]"'
 					. ' value="' . $skin_id . '"'
 					. checked($options['player']['skin'], $skin_id, false)
 					. ' />'
@@ -234,7 +306,7 @@ class mediacaster_admin {
 			. '<td>'
 			. '<label for="mediacaster-player-position-top">'
 			. '<input type="radio"'
-				. ' id="mediacaster-player-position-top" name="mediacaster[player][position]"'
+				. ' id="mediacaster-player-position-top" name="player[position]"'
 				. ' value="top"'
 				. ( $options['player']['position'] == 'top'
 					? ' checked="checked"'
@@ -247,7 +319,7 @@ class mediacaster_admin {
 			. ' &nbsp; '
 			. '<label for="mediacaster-player-position-bottom">'
 			. '<input type="radio"'
-				. ' id="mediacaster-player-position-bottom" name="mediacaster[player][position]"'
+				. ' id="mediacaster-player-position-bottom" name="player[position]"'
 				. ' value="bottom"'
 				. ( $options['player']['position'] == 'bottom'
 					? ' checked="checked"'
@@ -260,7 +332,7 @@ class mediacaster_admin {
 			. ' &nbsp; '
 			. '<label for="mediacaster-player-position-none">'
 			. '<input type="radio"'
-				. ' id="mediacaster-player-position-none" name="mediacaster[player][position]"'
+				. ' id="mediacaster-player-position-none" name="player[position]"'
 				. ' value="none"'
 				. ( $options['player']['position'] == 'none'
 					? ' checked="checked"'
@@ -327,8 +399,51 @@ class mediacaster_admin {
 				. ' value="' . esc_attr(__('Save Changes', 'mediacaster')) . '"'
 				. ' />'
 			. '</p>' . "\n";
-
-
+		
+		
+		echo '<h3>'
+			. __('LongTail AdSolution', 'mediacaster')
+			. '</h3>' . "\n";
+		
+		echo '<p>'
+			. sprintf(__('<a href="%s">LongTail AdSolution</a> allows to you insert pre-roll, overlay mid- and post-roll advertisements within your Videos.', 'mediacaster'), 'http://go.semiologic.com/ltas')
+			. '</p>' . "\n";
+		
+		echo '<table class="form-table">' . "\n";
+		
+		echo '<tr>'
+			. '<th>'
+			. __('LTAS Script', 'mediacaster')
+			. '</th>' . "\n"
+			. '<td>'
+			. '<textarea name="longtail[script]" class="widefat code" cols="58" rows="3"'
+				. ( !current_user_can('unfiltered_html')
+					? ' disabled="disabled"'
+					: ''
+					)
+				. '>'
+			. ( $options['longtail']['script']
+				? esc_html($options['longtail']['script'])
+				: esc_html('<script language="JavaScript" src="http://www.ltassrv.com/serve/api5.4.asp?d=XXXX&s=XXXX&c=XXXX&v=1"></script>')
+				)
+			. '</textarea>' . "\n"
+			. '<p>'
+			. sprintf(__('You will find the needed LongTail AdSolution script after <a href="%1$s">signing up</a>, and logging into the <a href="%2$s">LTAS Dashboard</a>.', 'mediacaster'), 'http://go.semiologic.com/ltas', 'http://dashboard.longtailvideo.com/default.aspx')
+			. '</p>' . "\n"
+			. '<p>'
+			. __('Once logged in, browse Setup / Channel Setup. Create a channel if needed. Once it\'s approved, click Implement. Choose JW 4.4 or later as the player, and click get code. Copy the script, paste it into the above field, and ignore the remaining steps.', 'mediacaster')
+			. '</p>' . "\n"
+			. '<p>'
+			. sprintf(__('<strong>Important</strong>: To serve Premium Ads (from Video, Scanscout, YuMe, etc.) on your site, you additionally need to get your site explicitly approved. Please contact <a href="%s">LongTailVideo sales</a> for more details.', 'mediacaster'), 'http://go.semiologic.com/ltas')
+			. '</p>' . "\n"
+			. '<p>'
+			. __('To qualify for the latter, you must either (i) own or (ii) license your video content. Additionally, your site cannot have any violent, pornographic or inappropriate content.', 'mediacaster')
+			. '</td>' . "\n"
+			. '</tr>' . "\n";
+		
+		echo '</table>' . "\n";
+		
+		
 		echo '<h3>'
 			. __('iTunes', 'mediacaster')
 			. '</h3>' . "\n";
@@ -343,7 +458,7 @@ class mediacaster_admin {
 			. '</th>'
 			. '<td>'
 			. '<input type="text" class="widefat"'
-				. ' id="mediacaster-itunes-author" name="mediacaster[itunes][author]"'
+				. ' id="mediacaster-itunes-author" name="itunes[author]"'
 				. ' value="' . esc_attr($options['itunes']['author']) . '"'
 				. ' />' . "\n"
 			. '</td>'
@@ -358,7 +473,7 @@ class mediacaster_admin {
 			. '</th>'
 			. '<td>'
 			. '<textarea class="widefat" cols="58" rows="3"'
-				. ' id="mediacaster-itunes-summary" name="mediacaster[itunes][summary]"'
+				. ' id="mediacaster-itunes-summary" name="itunes[summary]"'
 				. ' >' . "\n"
 				. esc_html($options['itunes']['summary'])
 				. '</textarea>' . "\n"
@@ -373,7 +488,7 @@ class mediacaster_admin {
 			. '<td>';
 
 		for ( $i = 1; $i <= 3; $i++ ) {
-			echo '<select name="mediacaster[itunes][category][' . $i . ']">' . "\n"
+			echo '<select name="itunes[category][' . $i . ']">' . "\n"
 				. '<option value="">' . __('- Select -', 'mediacaster') . '</option>' . "\n";
 
 			foreach ( mediacaster_admin::get_itunes_categories() as $key => $category ) {
@@ -408,7 +523,7 @@ class mediacaster_admin {
 			'clean' => __('Clean', 'mediacaster'),
 			) as $key => $answer ) {
 			echo '<label>'
-				. '<input type="radio" name="mediacaster[itunes][explicit]"'
+				. '<input type="radio" name="itunes[explicit]"'
 				. ' value="' . esc_attr($key) . '"'
 				. ( ( $key == $options['itunes']['explicit'] )
 					? ' checked="checked"'
@@ -435,7 +550,7 @@ class mediacaster_admin {
 			'no' => __('No', 'mediacaster'),
 			) as $key => $answer ) {
 			echo '<label>'
-				. '<input type="radio" name="mediacaster[itunes][block]"'
+				. '<input type="radio" name="itunes[block]"'
 				. ' value="' . esc_attr($key) . '"'
 				. ( ( $key == $options['itunes']['block'] )
 					? ' checked="checked"'
@@ -458,7 +573,7 @@ class mediacaster_admin {
 			. '</th>'
 			. '<td>'
 			. '<textarea class="widefat" cols="58" rows="2"'
-				. ' id="mediacaster-itunes-copyright" name="mediacaster[itunes][copyright]"'
+				. ' id="mediacaster-itunes-copyright" name="itunes[copyright]"'
 				. ' >' . "\n"
 				. esc_html($options['itunes']['copyright'])
 				. '</textarea>' . "\n"
@@ -648,7 +763,9 @@ var mc = {
 		s_width = 460;
 		s_height = 345;
 		
-		jQuery("#mc-preview-" + post_id).fadeOut('fast').html('<div id="' + s_id + '"></div>').fadeIn('slow');
+		jQuery("#mc-preview-" + post_id).hide().html('<div id="' + s_id + '"></div>').fadeIn('slow');
+		jQuery("#mc-new-snapshot-" + post_id).hide();
+		jQuery("#mc-cancel-snapshot-" + post_id).show();
 		
 		var params = {};
 		params.allowfullscreen = 'false';
@@ -665,12 +782,13 @@ var mc = {
 		attributes.id = s_id;
 		attributes.name = s_id;
 
+		if ( mc.post_id )
+			mc.cancel_snapshot(mc.post_id);
 		if ( mc.interval )
 			clearInterval(mc.interval);
-		if ( mc.player )
-			mc.player = null;
+		mc.player = null;
 		
-		swfobject.embedSWF("$player", s_id, s_width, s_height, '9.0.0', false, flashvars, params);
+		swfobject.embedSWF("$player", s_id, s_width, s_height, '9.0.0', false, flashvars, params, attributes);
 		
 		mc.post_id = post_id;
 		mc.player = document.getElementById(s_id);
@@ -688,7 +806,8 @@ var mc = {
 		if ( !img )
 			return;
 		
-		clearInterval(mc.interval);
+		if ( mc.interval )
+			clearInterval(mc.interval);
 		mc.interval = null;
 		mc.player = null;
 		
@@ -696,7 +815,28 @@ var mc = {
 		
 		jQuery("#mc-image-" + mc.post_id).val('');
 		jQuery("#mc-image-id-" + mc.post_id).val(img.replace(/.*\?/, ''));
-		jQuery("#mc-preview-" + mc.post_id).fadeOut('fast').html('<img src="' + img + '" width="460" alt=""  style="float: none; display: block; margin-left: auto; margin-right: auto;"/>').fadeIn('slow');
+		jQuery("#mc-preview-src-" + mc.post_id).val(img);
+		jQuery("#mc-preview-" + mc.post_id).hide().html('<img src="' + img + '" width="460" alt="" />').fadeIn('slow');
+		
+		mc.post_id = null;
+	},
+	
+	cancel_snapshot: function(post_id) {
+		if ( mc.interval )
+			clearInterval(mc.interval);
+		mc.interval = null;
+		mc.player = null;
+		mc.post_id = null;
+		
+		var img = jQuery("#mc-preview-src-" + post_id).val();
+		
+		if ( img )
+			jQuery("#mc-preview-" + post_id).hide().html('<img src="' + img + '" width="460" alt="" />').fadeIn('slow');
+		else
+			jQuery("#mc-preview-" + post_id).hide().html('').fadeIn('slow');
+		
+		jQuery("#mc-cancel-snapshot-" + post_id).hide();
+		jQuery("#mc-new-snapshot-" + post_id).show();
 	}
 };
 
@@ -706,34 +846,27 @@ EOS;
 				$scripts = false;
 			}
 			
-			$width = get_post_meta($post->ID, '_mc_width', true);
-			$width = $width ? (int) $width : '';
-			
-			$height = get_post_meta($post->ID, '_mc_height', true);
-			$height = $height ? (int) $height : '';
-			
-			$image = get_post_meta($post->ID, '_mc_image', true);
-			$image = $image ? esc_url($image) : '';
-			
 			$image_id = get_post_meta($post->ID, '_mc_image_id', true);
 			$image_id = $image_id ? intval($image_id) : '';
 			
 			$src = esc_url(wp_get_attachment_url($post->ID));
 			
-			$preview = $image ? $image : '';
+			$preview = $image_id
+				? esc_url(wp_get_attachment_url($image_id) . '?' . $image_id)
+				: false;
 			
 			if ( $preview ) {
-				$preview = '<div id="mc-preview-' . $post->ID . '">'
-					. '<img src="' . $preview . '?' . $image_id . '" alt="" width="460" style="float: none; display: block; margin-left: auto; margin-right: auto;" />' . "\n"
+				$preview = '<input type="hidden" id="mc-preview-src-' . $post->ID . '"'
+					. ' value="' . $preview . '" />' . "\n"
+					. '<div id="mc-preview-' . $post->ID . '">'
+					. '<img src="' . $preview . '" alt="" width="460" style="float: none; display: block; margin-left: auto; margin-right: auto;" />' . "\n"
 					. '</div>' . "\n";
 			} else {
-				$preview = '<div id="mc-preview-' . $post->ID . '"></div>' . "\n";
+				$preview = '<input type="hidden" id="mc-preview-src-' . $post->ID . '" value="" />' . "\n"
+					. '<div id="mc-preview-' . $post->ID . '"></div>' . "\n";
 			}
 			
-			$nonce = $post->ID
-				? 'snapshot-' . $post->ID
-				: 'snapshot';
-			$nonce = wp_create_nonce($nonce);
+			$nonce = wp_create_nonce('snapshot-' . $post->ID);
 			
 			$post_fields['format'] = array(
 				'label' => __('Width x Height', 'mediacaster'),
@@ -763,19 +896,24 @@ EOS;
 			$post_fields['image'] = array(
 				'label' => __('Preview Image', 'mediacaster'),
 				'input' => 'html',
-				'html' => $preview
-					. '<input type="text" id="mc-image-' . $post->ID . '"'
-						. ' name="attachments[' . $post->ID . '][image]" value="' . $image . '" /><br />' . "\n"
+				'html' => '<input type="text" id="attachments[' . $post->ID . '][image]"'
+						. ' name="attachments[' . $post->ID . '][image]"'
+						. ' value="" /><br />' . "\n"
 					. '<div class="hide-if-no-js" style="float: right">'
 					. '<input type="hidden" id="mc-src-' . $post->ID . '" value="' . $src . '" />'
 					. '<input type="hidden" id="mc-image-id-' . $post->ID . '" value="' . $image_id . '" />'
-					. '<button type="button" class="button"'
+					. '<button type="button" class="button" id="mc-new-snapshot-' . $post->ID . '"'
 						. ' onclick="return mc.take_snapshot(' . $post->ID . ', \'' . $nonce . '\');">'
 						. __('New Snapshot', 'mediacaster') . '</button>'
+					. '<button type="button" class="button" id="mc-cancel-snapshot-' . $post->ID . '"'
+						. ' style="display: none;"'
+						. ' onclick="return mc.cancel_snapshot(' . $post->ID . ');">'
+						. __('Cancel Snapshot', 'mediacaster') . '</button>'
 						. '</div>' . "\n"
 					. '<p class="help">'
 						. __('The URL of a preview image when the video isn\'t playing.', 'mediacaster')
-						. '</p>' . "\n",
+						. '</p>' . "\n"
+					. $preview,
 				);
 			
 			$post_fields['autostart'] = array(
@@ -793,10 +931,22 @@ EOS;
 				'input' => 'html',
 				'html' => '<label style="font-weight: normal">'
 					. '<input type="checkbox" id="attachments[' . $post->ID . '][thickbox]"'
-						. ' name="attachments[' . $post->ID . '][thickbox]">&nbsp;'
+						. ' name="attachments[' . $post->ID . '][thickbox]" checked="checked">&nbsp;'
 					. __('Open the video in a thickbox window (requires a preview image).', 'mediacaster')
 					. '</label>',
 				);
+			
+			if ( $o['longtail']['channel'] ) {
+				$post_fields['ltas'] = array(
+					'label' => __('Insert Ads', 'mediacaster'),
+					'input' => 'html',
+					'html' => '<label style="font-weight: normal">'
+						. '<input type="checkbox" id="attachments[' . $post->ID . '][ltas]"'
+							. ' name="attachments[' . $post->ID . '][ltas]" checked="checked">&nbsp;'
+						. __('Insert Ads (requires a title and a description for premium ads).', 'mediacaster')
+						. '</label>',
+					);
+			}
 		}
 		
 		switch ( $post->post_mime_type ) {
@@ -928,11 +1078,16 @@ EOS;
 				? ( ' image="' . esc_url_raw($image) . '"' )
 				: '';
 			
-			$thickbox = !empty($attachment['thickbox'])
+			$thickbox = !empty($attachment['thickbox']) && $image
 				? ' thickbox'
 				: '';
 			
-			$html = '[mc id="' . $send_id . '"' . $width . $height . ' type="video"' . $autostart . $thickbox . $link . $image . ']'
+			$ltas = !empty($attachment['ltas'])
+				&& trim(strip_tags($post->post_title)) && trim(strip_tags($post->post_content))
+				? ' ltas'
+				: '';
+			
+			$html = '[mc id="' . $send_id . '"' . $width . $height . ' type="video"' . $autostart . $thickbox . $link . $image . $ltas . ']'
 				. $attachment['post_title']
 				. '[/mc]';
 			break;

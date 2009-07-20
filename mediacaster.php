@@ -62,6 +62,7 @@ add_action('after_db_upgrade', array('mediacaster', 'flush_cache'));
 if ( !is_admin() ) {
 	add_action('wp_print_scripts', array('mediacaster', 'scripts'), 0);
 	add_action('wp_print_styles', array('mediacaster', 'styles'), 0);
+	add_action('wp_footer', array('mediacaster', 'ltas_scripts'));
 	add_action('wp_footer', array('mediacaster', 'thickbox_images'), 20);
 	
 	add_action('template_redirect', array('mediacaster', 'template_redirect'), 0);
@@ -84,6 +85,8 @@ class mediacaster {
 			$mimes['aac'] = 'audio/aac';
 		if ( !isset($mimes['3gp|3g2']) )
 			$mimes['3gp|3g2'] = 'video/3gpp';
+		if ( !isset($mimes['diff|patch']) )
+			$mimes['diff|patch'] = 'text/plain';
 		return $mimes;
 	} # upload_mimes()
 	
@@ -98,6 +101,7 @@ class mediacaster {
 	function ext2type($types) {
 		$types['video'] = array_merge($types['video'], array('flv', 'f4b', 'f4p', 'f4v'));
 		$types['audio'] = array_merge($types['audio'], array('3pg', '3g2'));
+		$types['code'] = array_merge($types['code'], array('diff', 'patch'));
 		return $types;
 	} # ext2type()
 	
@@ -220,7 +224,7 @@ class mediacaster {
 				unset($args[$arg]);
 		}
 		
-		foreach ( array('autostart', 'thickbox') as $arg ) {
+		foreach ( array('autostart', 'thickbox', 'ltas') as $arg ) {
 			if ( isset($args[$arg]) )
 				continue;
 			$key = array_search($arg, $args);
@@ -310,15 +314,15 @@ class mediacaster {
 			$height = 0;
 		}
 		
-		$player = plugin_dir_url(__FILE__) . 'mediaplayer/player.swf';
 		$player_id = 'm' . md5($src . '_' . $count++);
 		
 		$allowfullscreen = 'false';
 		$allowscriptaccess = 'always';
+		$wmode = 'transparent';
 		
 		$flashvars = array();
 		$flashvars['file'] = esc_url_raw($src);
-		$flashvars['skin'] = esc_url_raw(plugin_dir_url(__FILE__) . 'skins/' . $skin . '.swf');
+		$flashvars['skin'] = esc_url_raw("$skin_dir/$skin.swf");
 		
 		if ( $image )
 			$flashvars['image'] = esc_url_raw($image);
@@ -354,7 +358,8 @@ class mediacaster {
 		
 		$flashvars = apply_filters('mediacaster_audio', $flashvars, $args);
 		$flashvars['plugins'] = implode(',', $flashvars['plugins']);
-		$flashvars = http_build_query($flashvars, null, '&');
+		$flashvars_js = http_build_query($flashvars, null, '&');
+		$flashvars_html = http_build_query($flashvars, null, '&amp;');
 		
 		$script = '';
 		
@@ -364,14 +369,15 @@ class mediacaster {
 var params = {};
 params.allowfullscreen = "$allowfullscreen";
 params.allowscriptaccess = "$allowscriptaccess";
-params.flashvars = "$flashvars";
+params.wmode = "$wmode";
+params.flashvars = "$flashvars_js";
 swfobject.embedSWF("$player", "$player_id", "$width", "$height", "9.0.0", false, false, params);
 </script>
 EOS;
 		
 		return <<<EOS
 
-<div class="media_container"><div class="media" style="width: {$width}px; height: {$height}px;"><object id="$player_id" classid="clsid:D27CDB6E-AE6D-11cf-96B8-444553540000" width="$width" height="$height"><param name="movie" value="$player" /><param name="allowfullscreen" value="$allowfullscreen" /><param name="allowscriptaccess" value="$allowscriptaccess" /><param name="flashvars" value="$flashvars" /><embed src="$player" pluginspage="http://www.macromedia.com/go/getflashplayer" width="$width" height="$height" allowfullscreen="$allowfullscreen" allowscriptaccess="$allowscriptaccess" flashvars="$flashvars" /></object></div></div>
+<div class="media_container"><div class="media" style="width: {$width}px; height: {$height}px;"><object id="$player_id" classid="clsid:D27CDB6E-AE6D-11cf-96B8-444553540000" width="$width" height="$height"><param name="movie" value="$player" /><param name="allowfullscreen" value="$allowfullscreen" /><param name="allowscriptaccess" value="$allowscriptaccess" /><param name="wmode" value="$wmode" /><param name="flashvars" value="$flashvars_html" /><embed src="$player" pluginspage="http://www.macromedia.com/go/getflashplayer" width="$width" height="$height" allowfullscreen="$allowfullscreen" allowscriptaccess="$allowscriptaccess" wmode="$wmode" flashvars="$flashvars_html" /></object></div></div>
 
 $script
 
@@ -480,6 +486,8 @@ EOS;
 			if ( $title )
 				$title = ' title="' . esc_attr($title) . '"';
 			
+			$image = esc_url($image);
+			
 			return <<<EOS
 
 <div class="media_container">
@@ -526,15 +534,15 @@ EOS;
 			$height = $max_height;
 		}
 		
-		$player = plugin_dir_url(__FILE__) . 'mediaplayer/player.swf';
 		$player_id = 'm' . md5($src . '_' . $count++);
 		
 		$allowfullscreen = 'true';
 		$allowscriptaccess = 'always';
+		$wmode = 'transparent';
 		
 		$flashvars = array();
 		$flashvars['file'] = esc_url_raw($src);
-		$flashvars['skin'] = esc_url_raw(plugin_dir_url(__FILE__) . 'skins/' . $skin . '.swf');
+		$flashvars['skin'] = esc_url_raw("$skin_dir/$skin.swf");
 		
 		if ( $image )
 			$flashvars['image'] = esc_url_raw($image);
@@ -562,11 +570,26 @@ EOS;
 		if ( $autostart )
 			$flashvars['autostart'] = 'true';
 		
+		if ( $ltas && !empty($script) && $width >= 300 && $height >= 250 ) {
+			$name = ' name="mediaspace"';
+			$flashvars['plugins'][] = 'ltas';
+			$flashvars['channel'] = $channel;
+			if ( $id ) {
+				$attachment = get_post($id);
+				if ( $attachment->post_content ) {
+					$flashvars['ltas.mediaid'] = md5($src);
+					$flashvars['title'] = rawurlencode(strip_tags(preg_replace("/\s+/", ' ', $attachment->post_title)));
+					$flashvars['description'] = rawurlencode(strip_tags(preg_replace("/\s+/", ' ', $attachment->post_content)));
+				}
+			}
+		} else {
+			$name = '';
+		}
+		
 		$flashvars = apply_filters('mediacaster_video', $flashvars, $args);
 		$flashvars['plugins'] = implode(',', $flashvars['plugins']);
-		$flashvars = http_build_query($flashvars, null, '&');
-		
-		$script = '';
+		$flashvars_js = http_build_query($flashvars, null, '&');
+		$flashvars_html = http_build_query($flashvars, null, '&amp;');
 		
 		if ( !is_feed() )
 			$script = <<<EOS
@@ -574,14 +597,15 @@ EOS;
 var params = {};
 params.allowfullscreen = "$allowfullscreen";
 params.allowscriptaccess = "$allowscriptaccess";
-params.flashvars = "$flashvars";
+params.wmode = "$wmode";
+params.flashvars = "$flashvars_js";
 swfobject.embedSWF("$player", "$player_id", "$width", "$height", "9.0.0", false, false, params);
 </script>
 EOS;
 		
 		return <<<EOS
 
-<div class="media_container"><div class="media" style="width: {$width}px; height: {$height}px;"><object id="$player_id" classid="clsid:D27CDB6E-AE6D-11cf-96B8-444553540000" width="$width" height="$height"><param name="movie" value="$player" /><param name="allowfullscreen" value="$allowfullscreen" /><param name="allowscriptaccess" value="$allowscriptaccess" /><param name="flashvars" value="$flashvars" /><embed src="$player" pluginspage="http://www.macromedia.com/go/getflashplayer" width="$width" height="$height" allowfullscreen="$allowfullscreen" allowscriptaccess="$allowscriptaccess" flashvars="$flashvars" /></object></div></div>
+<div class="media_container"><div class="media" $name style="width: {$width}px; height: {$height}px;"><object id="$player_id" classid="clsid:D27CDB6E-AE6D-11cf-96B8-444553540000" width="$width" height="$height" class="ltas-ad"><param name="movie" value="$player" /><param name="allowfullscreen" value="$allowfullscreen" /><param name="allowscriptaccess" value="$allowscriptaccess" /><param name="wmode" value="$wmode" /><param name="flashvars" value="$flashvars_html" /><embed src="$player" pluginspage="http://www.macromedia.com/go/getflashplayer" width="$width" height="$height" allowfullscreen="$allowfullscreen" allowscriptaccess="$allowscriptaccess" wmode="$wmode" flashvars="$flashvars_html" /></object></div></div>
 
 $script
 
@@ -617,14 +641,23 @@ EOS;
 		$cover = $o['player']['cover'];
 		$skin = $o['player']['skin'];
 		
-		$defaults = compact('min_width', 'max_width', 'cover', 'skin');
+		if ( $o['longtail']['licensed'] )
+			$player = plugin_dir_url(__FILE__) . $o['longtail']['licensed'];
+		else
+			$player = plugin_dir_url(__FILE__) . 'mediaplayer/player.swf';
+		$skin_dir = plugin_dir_url(__FILE__) . 'skins';
+		
+		$script = $o['longtail']['script'];
+		$channel = $o['longtail']['channel'];
+		
+		$defaults = compact('min_width', 'max_width', 'cover', 'skin', 'player', 'skin_dir', 'script', 'channel');
 		
 		return $defaults;
 	} # defaults()
 	
 	
 	/**
-	 * get_skin
+	 * get_skin()
 	 *
 	 * @param string $skin
 	 * @return array $skin_details
@@ -757,6 +790,20 @@ EOS;
 		wp_enqueue_style('mediacaster', $css, null, '2.0');
 		wp_enqueue_style('thickbox');
 	} # styles()
+	
+	
+	/**
+	 * ltas_scripts()
+	 *
+	 * @return void
+	 **/
+
+	function ltas_scripts() {
+		$o = get_option('mediacaster');
+		
+		if ( !empty($o['longtail']['script']) )
+			echo $o['longtail']['script'];
+	} # ltas_scripts()
 	
 	
 	/**
@@ -1104,16 +1151,27 @@ EOS;
 	function init_options() {
 		$options = array();
 
-		$options['player']['position'] = 'top';
-		$options['player']['skin'] = 'bekle';
-		$options['player']['cover'] = false;
+		$options['player'] = array(
+			'position' => 'top',
+			'skin' => 'bekle',
+			'cover' => false,
+			);
 		
-		$options['itunes']['author'] = '';
-		$options['itunes']['summary'] = get_option('blogdescription');
-		$options['itunes']['explicit'] = 'no';
-		$options['itunes']['block'] = 'no';
-		$options['itunes']['copyright'] = '';
-
+		$options['itunes'] = array(
+			'author' => '',
+			'summary' => get_option('blogdescription'),
+			'explicit' => 'no',
+			'block' => 'no',
+			'copyright' => '',
+			);
+		
+		$options['longtail'] = array(
+			'agreed' => false,
+			'licensed' => false,
+			'script' => '',
+			'channel' => '',
+			);
+		
 		$options['version'] = 2;
 
 		update_option('mediacaster', $options);
@@ -1167,9 +1225,10 @@ EOS;
 		
 		if ( !isset($ops['longtail']) )
 			$ops['longtail'] = array(
+				'agreed' => false,
 				'licensed' => false,
-				'pub_id' => '',
-				'ad_flow' => array(),
+				'script' => '',
+				'channel' => array(),
 				);
 		
 		# prevent concurrent upgrades
