@@ -154,6 +154,8 @@ class mediacaster_admin {
 			$longtail['licensed'] = false;
 		}
 		
+		/* todo: ltas */
+		/*
 		$script = stripslashes($_POST['longtail']['script']);
 		if ( preg_match("/src=[\"']https?:\/\/www.ltassrv.com\/serve\/api5.4.asp\?d=\d+&s=\d+&c=(\d+)/i", $script, $match) ) {
 			$longtail['script'] = $script;
@@ -162,6 +164,9 @@ class mediacaster_admin {
 			$longtail['script'] = false;
 			$longtail['channel'] = false;
 		}
+		*/	
+		$longtail['script'] = false;
+		$longtail['channel'] = false;
 		
 		$options = compact('player', 'itunes', 'longtail', 'version');
 		update_option('mediacaster', $options);
@@ -400,7 +405,7 @@ class mediacaster_admin {
 				. ' />'
 			. '</p>' . "\n";
 		
-		
+		/*
 		echo '<h3>'
 			. __('LongTail AdSolution', 'mediacaster')
 			. '</h3>' . "\n";
@@ -442,7 +447,7 @@ class mediacaster_admin {
 			. '</tr>' . "\n";
 		
 		echo '</table>' . "\n";
-		
+		*/
 		
 		echo '<h3>'
 			. __('iTunes', 'mediacaster')
@@ -936,6 +941,8 @@ EOS;
 					. '</label>',
 				);
 			
+			/* todo: ltas */
+			/*
 			if ( $o['longtail']['channel'] ) {
 				$post_fields['ltas'] = array(
 					'label' => __('Insert Ads', 'mediacaster'),
@@ -947,6 +954,7 @@ EOS;
 						. '</label>',
 					);
 			}
+			*/
 		}
 		
 		switch ( $post->post_mime_type ) {
@@ -1082,10 +1090,14 @@ EOS;
 				? ' thickbox'
 				: '';
 			
+			/* todo: ltas */
+			/*
 			$ltas = !empty($attachment['ltas'])
 				&& trim(strip_tags($post->post_title)) && trim(strip_tags($post->post_content))
 				? ' ltas'
 				: '';
+			*/
+			$ltas = '';
 			
 			$html = '[mc id="' . $send_id . '"' . $width . $height . ' type="video"' . $autostart . $thickbox . $link . $image . $ltas . ']'
 				. $attachment['post_title']

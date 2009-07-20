@@ -570,6 +570,8 @@ EOS;
 		if ( $autostart )
 			$flashvars['autostart'] = 'true';
 		
+		/* todo: ltas */
+		/*
 		if ( $ltas && !is_feed() && $width >= 300 && $height >= 250 && !empty($script) ) {
 			$name = ' name="mediaspace"';
 			$flashvars['plugins'][] = 'ltas';
@@ -585,6 +587,8 @@ EOS;
 		} else {
 			$name = '';
 		}
+		*/
+		$name = '';
 		
 		$flashvars = apply_filters('mediacaster_video', $flashvars, $args);
 		$flashvars['plugins'] = implode(',', $flashvars['plugins']);
@@ -799,6 +803,9 @@ EOS;
 	 **/
 
 	function ltas_scripts() {
+		/* todo: ltas */
+		return;
+		
 		$o = get_option('mediacaster');
 		
 		if ( !empty($o['longtail']['script']) )
