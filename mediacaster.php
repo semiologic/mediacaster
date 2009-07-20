@@ -576,7 +576,6 @@ EOS;
 		
 		/* todo: ltas */
 		//*
-		dump($ltas, $width, $height, $script);
 		if ( $ltas && !is_feed() && $width >= 300 && $height >= 250 && !empty($script) ) {
 			$name = ' name="mediaspace"';
 			$flashvars['plugins'][] = 'ltas';
