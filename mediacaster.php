@@ -570,7 +570,7 @@ EOS;
 		if ( $autostart )
 			$flashvars['autostart'] = 'true';
 		
-		if ( $ltas && && !is_feed() && $width >= 300 && $height >= 250 && !empty($script) ) {
+		if ( $ltas && !is_feed() && $width >= 300 && $height >= 250 && !empty($script) ) {
 			$name = ' name="mediaspace"';
 			$flashvars['plugins'][] = 'ltas';
 			$flashvars['channel'] = $channel;
