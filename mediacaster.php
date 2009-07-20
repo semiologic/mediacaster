@@ -434,11 +434,6 @@ EOS;
 				$href = user_trailingslashit(get_option('home'))
 					. '?mc_src=' . urlencode(esc_url_raw($src));
 			
-			if ( $link ) {
-				$href .= ( ( strpos($href, '?') === false ) ? '?' : '&' )
-					. 'mc_link=' . urlencode(esc_url_raw($link));
-			}
-			
 			$max_tb_width = 720;
 			$max_tb_height = 540;
 			
@@ -476,10 +471,19 @@ EOS;
 				$tb_height = $max_tb_height;
 			}
 			
+			if ( $link ) {
+				$href .= ( ( strpos($href, '?') === false ) ? '?' : '&' )
+					. 'mc_link=' . urlencode(esc_url_raw($link));
+			}
+			
+			if ( $ltas )
+				$href .= ( ( strpos($href, '?') === false ) ? '?' : '&' )
+					. '&ltas=1';
+			
 			$href = @html_entity_decode($href, ENT_COMPAT, get_option('blog_charset'));
 			$href .= ( strpos($href, '?') === false ? '?' : '&' )
-				. ( ( !$_width || !$_height ) ? "mc_width=$tb_width&mc_height=$tb_height&" : '' )
-				. "TB_iframe=true&width=$tb_width&height=" . ( $tb_height + 10 );
+				. ( ( !$_width || !$_height ) ? "mc_width=$tb_width&mc_height=$tb_height" : '' )
+				. "&TB_iframe=true&width=$tb_width&height=" . ( $tb_height + 10 );
 			$href = esc_url($href);
 			
 			$title = trim(strip_tags($content));
@@ -572,6 +576,7 @@ EOS;
 		
 		/* todo: ltas */
 		//*
+		dump($ltas, $width, $height, $script);
 		if ( $ltas && !is_feed() && $width >= 300 && $height >= 250 && !empty($script) ) {
 			$name = ' name="mediaspace"';
 			$flashvars['plugins'][] = 'ltas';

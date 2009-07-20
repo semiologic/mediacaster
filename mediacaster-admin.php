@@ -50,6 +50,9 @@ class mediacaster_admin {
 	 **/
 	
 	function save_attachment($post_id) {
+		if ( !$_POST || wp_is_post_revision($post_id) )
+			return;
+		
 		$post_id = (int) $post_id;
 		if ( !$post_id || !isset($_POST['attachments'][$post_id]['image']) )
 			return;
@@ -405,7 +408,7 @@ class mediacaster_admin {
 				. ' />'
 			. '</p>' . "\n";
 		
-		/*
+		/* todo: ltas */
 		echo '<h3>'
 			. __('LongTail AdSolution', 'mediacaster')
 			. '</h3>' . "\n";
@@ -447,7 +450,7 @@ class mediacaster_admin {
 			. '</tr>' . "\n";
 		
 		echo '</table>' . "\n";
-		*/
+		/**/
 		
 		echo '<h3>'
 			. __('iTunes', 'mediacaster')
@@ -904,9 +907,9 @@ EOS;
 				'html' => '<input type="text" id="attachments[' . $post->ID . '][image]"'
 						. ' name="attachments[' . $post->ID . '][image]"'
 						. ' value="" /><br />' . "\n"
-					. '<div class="hide-if-no-js" style="float: right">'
 					. '<input type="hidden" id="mc-src-' . $post->ID . '" value="' . $src . '" />'
-					. '<input type="hidden" id="mc-image-id-' . $post->ID . '" value="' . $image_id . '" />'
+					. '<input type="hidden" id="mc-image-id-' . $post->ID . '" name="attachments[' . $post->ID . '][image_id]" value="' . $image_id . '" />'
+					. '<div class="hide-if-no-js" style="float: right">'
 					. '<button type="button" class="button" id="mc-new-snapshot-' . $post->ID . '"'
 						. ' onclick="return mc.take_snapshot(' . $post->ID . ', \'' . $nonce . '\');">'
 						. __('New Snapshot', 'mediacaster') . '</button>'
@@ -1086,7 +1089,9 @@ EOS;
 				? ( ' image="' . esc_url_raw($image) . '"' )
 				: '';
 			
-			$thickbox = !empty($attachment['thickbox']) && $image
+			$image_id = !empty($attachment['image_id']) ? (int) $attachment['image_id'] : false;
+			
+			$thickbox = !empty($attachment['thickbox']) && ( $image || $image_id )
 				? ' thickbox'
 				: '';
 			
