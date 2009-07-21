@@ -585,8 +585,8 @@ EOS;
 		$ltas_class = '';
 		//* todo: ltas
 		if ( $ltas && !is_feed() && $width >= 300 && $height >= 250 && !empty($script) ) {
-			$ltas_id = $player_id . '-ad"';
-			$ltas_class = ' ltas-ad';
+			$ltas_id = 'id="' . $player_id . '-ad"';
+			$ltas_class = 'ltas-ad';
 			$flashvars['plugins'][] = 'ltas';
 			$flashvars['channel'] = $channel;
 			if ( $id ) {
