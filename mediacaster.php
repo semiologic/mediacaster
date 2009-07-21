@@ -582,11 +582,11 @@ EOS;
 			$flashvars['autostart'] = 'true';
 		
 		$ltas_id = '';
-		$ad_class = '';
+		$ltas_class = '';
 		//* todo: ltas
 		if ( $ltas && !is_feed() && $width >= 300 && $height >= 250 && !empty($script) ) {
-			$ltas_id = ''
-			$ad_class = $player_id . '-ad"';
+			$ltas_id = '';
+			$ltas_class = $player_id . '-ad"';
 			$flashvars['plugins'][] = 'ltas';
 			$flashvars['channel'] = $channel;
 			if ( $id ) {
