@@ -377,7 +377,7 @@ EOS;
 		
 		return <<<EOS
 
-<div class="media_container"><div class="media" style="width: {$width}px; height: {$height}px;"><object id="$player_id" classid="clsid:D27CDB6E-AE6D-11cf-96B8-444553540000" width="$width" height="$height"><param name="movie" value="$player" /><param name="allowfullscreen" value="$allowfullscreen" /><param name="allowscriptaccess" value="$allowscriptaccess" /><param name="wmode" value="$wmode" /><param name="flashvars" value="$flashvars_html" /><embed src="$player" pluginspage="http://www.macromedia.com/go/getflashplayer" width="$width" height="$height" allowfullscreen="$allowfullscreen" allowscriptaccess="$allowscriptaccess" wmode="$wmode" flashvars="$flashvars_html" /></object></div></div>
+<div class="media_container"><div class="media" style="width: {$width}px; height: {$height}px;"><div id="$player_id"><object classid="clsid:D27CDB6E-AE6D-11cf-96B8-444553540000" width="$width" height="$height"><param name="movie" value="$player" /><param name="allowfullscreen" value="$allowfullscreen" /><param name="allowscriptaccess" value="$allowscriptaccess" /><param name="wmode" value="$wmode" /><param name="flashvars" value="$flashvars_html" /><embed src="$player" pluginspage="http://www.macromedia.com/go/getflashplayer" width="$width" height="$height" allowfullscreen="$allowfullscreen" allowscriptaccess="$allowscriptaccess" wmode="$wmode" flashvars="$flashvars_html" /></object></div></div></div>
 
 $script
 
@@ -478,8 +478,8 @@ EOS;
 			
 			if ( $ltas )
 				$href .= ( ( strpos($href, '?') === false ) ? '?' : '&' )
-					. '&ltas=1';
-			
+					. 'ltas=1';
+			$href = rtrim($href, '?');
 			$href = @html_entity_decode($href, ENT_COMPAT, get_option('blog_charset'));
 			$href .= ( strpos($href, '?') === false ? '?' : '&' )
 				. ( ( !$_width || !$_height ) ? "mc_width=$tb_width&mc_height=$tb_height" : '' )
@@ -577,7 +577,8 @@ EOS;
 		/* todo: ltas */
 		//*
 		if ( $ltas && !is_feed() && $width >= 300 && $height >= 250 && !empty($script) ) {
-			$name = ' name="mediaspace"';
+			$ad_name = 'name="mediaspace"';
+			$ad_class = 'class="ltas-ad"';
 			$flashvars['plugins'][] = 'ltas';
 			$flashvars['channel'] = $channel;
 			if ( $id ) {
@@ -589,10 +590,10 @@ EOS;
 				}
 			}
 		} else {
-			$name = '';
+			$ad_name = '';
+			$ad_class = '';
 		}
 		//*/
-		//$name = '';
 		
 		$flashvars = apply_filters('mediacaster_video', $flashvars, $args);
 		$flashvars['plugins'] = implode(',', $flashvars['plugins']);
@@ -613,7 +614,7 @@ EOS;
 		
 		return <<<EOS
 
-<div class="media_container"><div class="media" $name style="width: {$width}px; height: {$height}px;"><object id="$player_id" classid="clsid:D27CDB6E-AE6D-11cf-96B8-444553540000" width="$width" height="$height" class="ltas-ad"><param name="movie" value="$player" /><param name="allowfullscreen" value="$allowfullscreen" /><param name="allowscriptaccess" value="$allowscriptaccess" /><param name="wmode" value="$wmode" /><param name="flashvars" value="$flashvars_html" /><embed src="$player" pluginspage="http://www.macromedia.com/go/getflashplayer" width="$width" height="$height" allowfullscreen="$allowfullscreen" allowscriptaccess="$allowscriptaccess" wmode="$wmode" flashvars="$flashvars_html" /></object></div></div>
+<div class="media_container"><div class="media" $ad_name style="width: {$width}px; height: {$height}px;"><div id="$player_id" $ad_class><object classid="clsid:D27CDB6E-AE6D-11cf-96B8-444553540000" width="$width" height="$height"><param name="movie" value="$player" /><param name="allowfullscreen" value="$allowfullscreen" /><param name="allowscriptaccess" value="$allowscriptaccess" /><param name="wmode" value="$wmode" /><param name="flashvars" value="$flashvars_html" /><embed src="$player" pluginspage="http://www.macromedia.com/go/getflashplayer" width="$width" height="$height" allowfullscreen="$allowfullscreen" allowscriptaccess="$allowscriptaccess" wmode="$wmode" flashvars="$flashvars_html" /></object></div></div></div>
 
 $script
 
@@ -809,8 +810,6 @@ EOS;
 	function ltas_scripts() {
 		/* todo: ltas */
 		//return;
-		
-		$o = get_option('mediacaster');
 		
 		if ( !empty($o['longtail']['script']) )
 			echo $o['longtail']['script'];
