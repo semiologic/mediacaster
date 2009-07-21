@@ -629,7 +629,7 @@ EOS;
 		
 		return <<<EOS
 
-<div class="media_container"><div class="media" style="width: {$width}px; height: {$height}px;" $ltas_toggle><div id="$player_id" name="$player_id></div></div></div>
+<div class="media_container"><div class="media" style="width: {$width}px; height: {$height}px;" $ltas_toggle><div id="$player_id" name="$player_id"></div></div></div>
 
 $script
 
