@@ -807,6 +807,8 @@ EOS;
 
 	function ltas_scripts() {
 		//* todo: ltas
+		$o = mediacaster::get_options();
+		
 		if ( !empty($o['longtail']['script']) )
 			echo $o['longtail']['script'];
 		//*/

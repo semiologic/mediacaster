@@ -466,7 +466,7 @@ class mediacaster_admin {
 			. '</th>' . "\n"
 			. '<td>'
 			. '<p>'
-			. __('Mid-roll ads do <strong>NOT</strong> work when the controlbar is inline. Only use pre- and post- roll ads.')
+			. __('Mid-roll ads do <strong>NOT</strong> work when the controlbar is inline. Only use pre- and post- roll ads.', 'mediacaster')
 			. '</p>'
 			. '</td>' . "\n"
 			. '</tr>' . "\n";
