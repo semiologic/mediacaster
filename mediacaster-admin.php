@@ -63,6 +63,8 @@ class mediacaster_admin {
 			delete_post_meta($post_id, '_mc_width');
 			delete_post_meta($post_id, '_mc_height');
 		}
+		
+		dump($_POST['attachments'][$post_id]);die;
 	} # save_attachment()
 	
 	
@@ -159,7 +161,7 @@ class mediacaster_admin {
 		
 		$longtail['script'] = false;
 		$longtail['channel'] = false;
-		/* todo: ltas
+		//* todo: ltas
 		$script = stripslashes($_POST['longtail']['script']);
 		if ( preg_match("/src=[\"']https?:\/\/www.ltassrv.com\/serve\/api5.4.asp\?d=\d+&s=\d+&c=(\d+)/i", $script, $match) ) {
 			$longtail['script'] = $script;
@@ -219,7 +221,7 @@ class mediacaster_admin {
 		
 		echo '<h2>'. __('Mediacaster Settings', 'mediacaster') . '</h2>' . "\n";
 		
-		/* todo: ltas
+		//* todo: ltas
 		if ( empty($options['longtail']['agree']) ) {
 			echo '<h3>'
 				. __('License Notice', 'mediacaster')
@@ -227,7 +229,9 @@ class mediacaster_admin {
 			
 			echo '<table class="form-table">' . "\n"
 				. '<tr>'
-				. '<th>' . __('License Notice', 'mediacaster') . '</th>' . "\n"
+				. '<th scope="row">'
+				. __('License Notice', 'mediacaster')
+				. '</th>' . "\n"
 				. '<td>';
 			
 			echo '<p>'
@@ -415,7 +419,7 @@ class mediacaster_admin {
 				. ' />'
 			. '</p>' . "\n";
 		
-		/* todo: ltas
+		//* todo: ltas
 		echo '<h3>'
 			. __('LongTail AdSolution', 'mediacaster')
 			. '</h3>' . "\n";
@@ -427,7 +431,7 @@ class mediacaster_admin {
 		echo '<table class="form-table">' . "\n";
 		
 		echo '<tr>'
-			. '<th>'
+			. '<th scope="row">'
 			. __('LTAS Script', 'mediacaster')
 			. '</th>' . "\n"
 			. '<td>'
@@ -456,13 +460,30 @@ class mediacaster_admin {
 			. '</td>' . "\n"
 			. '</tr>' . "\n";
 		
+		echo '<tr>'
+			. '<th scope="row">'
+			. __('Mid-roll Ads', 'mediacaster')
+			. '</th>' . "\n"
+			. '<td>'
+			. '<p>'
+			. __('Mid-roll ads do <strong>NOT</strong> work when the controlbar is inline. Only use pre- and post- roll ads.')
+			. '</p>'
+			. '</td>' . "\n"
+			. '</tr>' . "\n";
+
 		echo '</table>' . "\n";
+		
+		echo '<p class="submit">'
+			. '<input type="submit"'
+				. ' value="' . esc_attr(__('Save Changes', 'mediacaster')) . '"'
+				. ' />'
+			. '</p>' . "\n";
 		//*/
 		
 		echo '<h3>'
 			. __('iTunes', 'mediacaster')
 			. '</h3>' . "\n";
-
+		
 		echo '<table class="form-table">';
 		
 		echo '<tr valign="top">'
@@ -478,8 +499,8 @@ class mediacaster_admin {
 				. ' />' . "\n"
 			. '</td>'
 			. '</tr>' . "\n";
-
-
+		
+		
 		echo '<tr valign="top">'
 			. '<th scope="row">'
 			. '<label for="mediacaster-itunes-summary">'
@@ -494,8 +515,8 @@ class mediacaster_admin {
 				. '</textarea>' . "\n"
 			. '</td>'
 			. '</tr>' . "\n";
-
-
+		
+		
 		echo '<tr valign="top">'
 			. '<th scope="row">'
 				. __('Categories', 'mediacaster')
@@ -1102,7 +1123,7 @@ EOS;
 				: '';
 			
 			$ltas = '';
-			/* todo: ltas
+			//* todo: ltas
 			if ( !empty($attachment['ltas'])
 				&& trim(strip_tags($post->post_title)) && trim(strip_tags($post->post_content)) )
 				$ltas = ' ltas';

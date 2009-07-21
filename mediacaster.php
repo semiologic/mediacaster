@@ -576,7 +576,7 @@ EOS;
 		
 		$ad_name = '';
 		$ad_class = '';
-		/* todo: ltas
+		//* todo: ltas
 		if ( $ltas && !is_feed() && $width >= 300 && $height >= 250 && !empty($script) ) {
 			$ad_name = 'name="mediaspace"';
 			$ad_class = 'class="ltas-ad"';
@@ -806,7 +806,7 @@ EOS;
 	 **/
 
 	function ltas_scripts() {
-		/* todo: ltas
+		//* todo: ltas
 		if ( !empty($o['longtail']['script']) )
 			echo $o['longtail']['script'];
 		//*/
