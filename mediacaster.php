@@ -581,11 +581,12 @@ EOS;
 		if ( $autostart )
 			$flashvars['autostart'] = 'true';
 		
-		$ad_name = '';
+		$ltas_id = '';
 		$ad_class = '';
 		//* todo: ltas
 		if ( $ltas && !is_feed() && $width >= 300 && $height >= 250 && !empty($script) ) {
-			$ltas_toggle = 'id="' . $player_id . '-ad" class="ltas-ad"';
+			$ltas_id = ''
+			$ad_class = $player_id . '-ad"';
 			$flashvars['plugins'][] = 'ltas';
 			$flashvars['channel'] = $channel;
 			if ( $id ) {
@@ -629,7 +630,7 @@ EOS;
 		
 		return <<<EOS
 
-<div class="media_container"><div class="media" style="width: {$width}px; height: {$height}px;" $ltas_toggle><div id="$player_id" name="$player_id"></div></div></div>
+<div class="media_container"><div $ltas_id class="media $ltas_class" style="width: {$width}px; height: {$height}px;"><div id="$player_id" name="$player_id"></div></div></div>
 
 $script
 
