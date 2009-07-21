@@ -165,7 +165,7 @@ class mediacaster_admin {
 		$script = stripslashes($_POST['longtail']['script']);
 		if ( preg_match("/src=[\"']https?:\/\/www.ltassrv.com\/serve\/api5.4.asp\?d=\d+&s=\d+&c=(\d+)/i", $script, $match) ) {
 			if ( strpos($script, 'type="text/javascript"') === false )
-				$script = str_replace('<script', '<script type="text/javascript"'. $script);
+				$script = str_replace('<script', '<script type="text/javascript"', $script);
 			$longtail['script'] = $script;
 			$longtail['channel'] = array_pop($match);
 		}
