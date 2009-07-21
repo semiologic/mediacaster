@@ -585,6 +585,7 @@ EOS;
 		$ad_class = '';
 		//* todo: ltas
 		if ( $ltas && !is_feed() && $width >= 300 && $height >= 250 && !empty($script) ) {
+			$ad_class = 'name="mediaspace"';
 			$ad_class = 'class="ltas-ad"';
 			$flashvars['plugins'][] = 'ltas';
 			$flashvars['channel'] = $channel;
@@ -629,7 +630,7 @@ EOS;
 		
 		return <<<EOS
 
-<div class="media_container"><div class="media" style="width: {$width}px; height: {$height}px;"><div id="$player_id" name="$player_id" $ad_class></div></div></div>
+<div class="media_container"><div class="media" style="width: {$width}px; height: {$height}px;" $ad_name><div id="$player_id" name="$player_id" $ad_class></div></div></div>
 
 $script
 
