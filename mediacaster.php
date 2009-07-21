@@ -592,8 +592,8 @@ EOS;
 				$attachment = get_post($id);
 				if ( $attachment->post_content ) {
 					$flashvars['ltas.mediaid'] = md5($src);
-					$flashvars['title'] = rawurlencode(strip_tags(preg_replace("/\s+/", ' ', $attachment->post_title)));
-					$flashvars['description'] = rawurlencode(strip_tags(preg_replace("/\s+/", ' ', $attachment->post_content)));
+					$flashvars['title'] = strip_tags(preg_replace("/\s+/", ' ', $attachment->post_title));
+					$flashvars['description'] = strip_tags(preg_replace("/\s+/", ' ', $attachment->post_content));
 				}
 			}
 		}
@@ -604,6 +604,10 @@ EOS;
 		$flashvars_js = '';
 		foreach ( $flashvars as $k => $v )
 			$flashvars_js .= "flashvars['" . addslashes($k) . "'] = '" . addslashes($v) . "';\n";
+		foreach ( array('title', 'description') as $var ) {
+			if ( !empty($flashvars['title']) )
+				$flashvars['title'] = rawurlencode($flashvars['title']);
+		}
 		$flashvars_html = http_build_query($flashvars, null, '&amp;');
 		
 		if ( !is_feed() )
