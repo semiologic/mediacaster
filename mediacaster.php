@@ -583,7 +583,7 @@ EOS;
 		
 		$ltas_id = '';
 		$ltas_class = '';
-		//* todo: ltas
+		/* todo: ltas
 		if ( $ltas && !is_feed() && $width >= 300 && $height >= 250 && !empty($script) ) {
 			$ltas_id = 'id="' . $player_id . '-ad"';
 			$ltas_class = 'ltas-ad';
@@ -824,7 +824,7 @@ EOS;
 	 **/
 
 	function ltas_scripts() {
-		//* todo: ltas
+		/* todo: ltas
 		$o = get_option('mediacaster');
 		
 		if ( !empty($o['longtail']['script']) )
