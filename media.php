@@ -40,7 +40,7 @@ echo mediacaster::shortcode($args);
 ?>
 </div>
 <?php
-if ( method_exists('google_analytics', 'footer_scripts') )
+if ( defined('sem_google_analytics_debug') )
 	google_analytics::footer_scripts();
 ?>
 </body>

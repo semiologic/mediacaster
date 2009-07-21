@@ -329,7 +329,7 @@ class mediacaster {
 		
 		$flashvars['plugins'] = array('quickkeys-1');
 		
-		if ( method_exists('google_analytics', 'get_options') && !current_user_can('publish_posts') && !current_user_can('publish_pages') ) {
+		if ( defined('sem_google_analytics_debug') && !current_user_can('publish_posts') && !current_user_can('publish_pages') ) {
 			$uacct = google_analytics::get_options();
 			if ( $uacct ) {
 				$flashvars['plugins'][] = 'gapro-1';
@@ -377,7 +377,7 @@ EOS;
 		
 		return <<<EOS
 
-<div class="media_container"><div class="media" style="width: {$width}px; height: {$height}px;"><div id="$player_id"><object classid="clsid:D27CDB6E-AE6D-11cf-96B8-444553540000" width="$width" height="$height"><param name="movie" value="$player" /><param name="allowfullscreen" value="$allowfullscreen" /><param name="allowscriptaccess" value="$allowscriptaccess" /><param name="wmode" value="$wmode" /><param name="flashvars" value="$flashvars_html" /><embed src="$player" pluginspage="http://www.macromedia.com/go/getflashplayer" width="$width" height="$height" allowfullscreen="$allowfullscreen" allowscriptaccess="$allowscriptaccess" wmode="$wmode" flashvars="$flashvars_html" /></object></div></div></div>
+<div class="media_container"><div class="media" style="width: {$width}px; height: {$height}px;"><object id="$player_id" classid="clsid:D27CDB6E-AE6D-11cf-96B8-444553540000" width="$width" height="$height"><param name="movie" value="$player" /><param name="allowfullscreen" value="$allowfullscreen" /><param name="allowscriptaccess" value="$allowscriptaccess" /><param name="wmode" value="$wmode" /><param name="flashvars" value="$flashvars_html" /><embed src="$player" pluginspage="http://www.macromedia.com/go/getflashplayer" width="$width" height="$height" allowfullscreen="$allowfullscreen" allowscriptaccess="$allowscriptaccess" wmode="$wmode" flashvars="$flashvars_html" /></object></div></div>
 
 $script
 
@@ -553,7 +553,7 @@ EOS;
 		
 		$flashvars['plugins'] = array('quickkeys-1');
 		
-		if ( method_exists('google_analytics', 'get_options') && !current_user_can('publish_posts') && !current_user_can('publish_pages') ) {
+		if ( defined('sem_google_analytics_debug') && !current_user_can('publish_posts') && !current_user_can('publish_pages') ) {
 			$uacct = google_analytics::get_options();
 			if ( $uacct ) {
 				$flashvars['plugins'][] = 'gapro-1';
@@ -612,7 +612,7 @@ EOS;
 		
 		return <<<EOS
 
-<div class="media_container"><div class="media" $ad_name style="width: {$width}px; height: {$height}px;"><div id="$player_id" $ad_class><object classid="clsid:D27CDB6E-AE6D-11cf-96B8-444553540000" width="$width" height="$height"><param name="movie" value="$player" /><param name="allowfullscreen" value="$allowfullscreen" /><param name="allowscriptaccess" value="$allowscriptaccess" /><param name="wmode" value="$wmode" /><param name="flashvars" value="$flashvars_html" /><embed src="$player" pluginspage="http://www.macromedia.com/go/getflashplayer" width="$width" height="$height" allowfullscreen="$allowfullscreen" allowscriptaccess="$allowscriptaccess" wmode="$wmode" flashvars="$flashvars_html" /></object></div></div></div>
+<div class="media_container"><div class="media" $ad_name style="width: {$width}px; height: {$height}px;"><object id="$player_id" name="$player_id" $ad_class classid="clsid:D27CDB6E-AE6D-11cf-96B8-444553540000" width="$width" height="$height"><param name="movie" value="$player" /><param name="allowfullscreen" value="$allowfullscreen" /><param name="allowscriptaccess" value="$allowscriptaccess" /><param name="wmode" value="$wmode" /><param name="flashvars" value="$flashvars_html" /><embed id="{$player_id}_2" name="{$player_id}_2" src="$player" pluginspage="http://www.macromedia.com/go/getflashplayer" width="$width" height="$height" allowfullscreen="$allowfullscreen" allowscriptaccess="$allowscriptaccess" wmode="$wmode" flashvars="$flashvars_html" /></object></div></div>
 
 $script
 
@@ -736,7 +736,7 @@ EOS;
 		
 		return <<<EOS
 <div class="media_container media_attachment">
-<a href="$src" class="no_icon" style="background-image: url($icon);">
+<a href="$src" class="download_event no_icon" style="background-image: url($icon);">
 $title
 </a>
 </div>
