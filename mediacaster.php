@@ -358,7 +358,9 @@ class mediacaster {
 		
 		$flashvars = apply_filters('mediacaster_audio', $flashvars, $args);
 		$flashvars['plugins'] = implode(',', $flashvars['plugins']);
-		$flashvars_js = http_build_query($flashvars, null, '&');
+		$flashvars_js = '';
+		foreach ( $flashvars as $k => $v )
+			$flashvars_js .= "flashvars['" . addslashes($k) . "'] = '" . addslashes($v) . "';\n";
 		$flashvars_html = http_build_query($flashvars, null, '&amp;');
 		
 		$script = '';
@@ -594,7 +596,9 @@ EOS;
 		
 		$flashvars = apply_filters('mediacaster_video', $flashvars, $args);
 		$flashvars['plugins'] = implode(',', $flashvars['plugins']);
-		$flashvars_js = http_build_query($flashvars, null, '&');
+		$flashvars_js = '';
+		foreach ( $flashvars as $k => $v )
+			$flashvars_js .= "flashvars['" . addslashes($k) . "'] = '" . addslashes($v) . "';\n";
 		$flashvars_html = http_build_query($flashvars, null, '&amp;');
 		
 		if ( !is_feed() )
@@ -604,8 +608,9 @@ var params = {};
 params.allowfullscreen = "$allowfullscreen";
 params.allowscriptaccess = "$allowscriptaccess";
 params.wmode = "$wmode";
-params.flashvars = "$flashvars_js";
-swfobject.embedSWF("$player", "$player_id", "$width", "$height", "9.0.0", false, false, params);
+var flashvars = {};
+$flashvars_js
+swfobject.embedSWF("$player", "$player_id", "$width", "$height", "9.0.0", false, flashvars, params);
 </script>
 EOS;
 		
