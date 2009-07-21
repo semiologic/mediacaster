@@ -372,8 +372,13 @@ var params = {};
 params.allowfullscreen = "$allowfullscreen";
 params.allowscriptaccess = "$allowscriptaccess";
 params.wmode = "$wmode";
-params.flashvars = "$flashvars_js";
-swfobject.embedSWF("$player", "$player_id", "$width", "$height", "9.0.0", false, false, params);
+var flashvars = {};
+$flashvars_js
+var attributes = {
+  id: "$player_id",
+  name: "$player_id"
+};
+swfobject.embedSWF("$player", "$player_id", "$width", "$height", "9.0.0", false, flashvars, params, attributes);
 </script>
 EOS;
 		
@@ -610,7 +615,11 @@ params.allowscriptaccess = "$allowscriptaccess";
 params.wmode = "$wmode";
 var flashvars = {};
 $flashvars_js
-swfobject.embedSWF("$player", "$player_id", "$width", "$height", "9.0.0", false, flashvars, params);
+var attributes = {
+  id: "$player_id",
+  name: "$player_id"
+};
+swfobject.embedSWF("$player", "$player_id", "$width", "$height", "9.0.0", false, flashvars, params, attributes);
 </script>
 EOS;
 		
