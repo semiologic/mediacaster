@@ -810,7 +810,7 @@ EOS;
 		$o = get_option('mediacaster');
 		
 		if ( !empty($o['longtail']['script']) )
-			echo $o['longtail']['script'];
+			echo $o['longtail']['script'] . "\n";
 		//*/
 	} # ltas_scripts()
 	

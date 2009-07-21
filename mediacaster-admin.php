@@ -64,7 +64,7 @@ class mediacaster_admin {
 			delete_post_meta($post_id, '_mc_height');
 		}
 		
-		dump($_POST['attachments'][$post_id]);die;
+		#dump($_POST['attachments'][$post_id]);die;
 	} # save_attachment()
 	
 	
@@ -164,6 +164,8 @@ class mediacaster_admin {
 		//* todo: ltas
 		$script = stripslashes($_POST['longtail']['script']);
 		if ( preg_match("/src=[\"']https?:\/\/www.ltassrv.com\/serve\/api5.4.asp\?d=\d+&s=\d+&c=(\d+)/i", $script, $match) ) {
+			if ( strpos($script, 'type="text/javascript"') === false )
+				$script = str_replace('<script', '<script type="text/javascript"'. $script);
 			$longtail['script'] = $script;
 			$longtail['channel'] = array_pop($match);
 		}
