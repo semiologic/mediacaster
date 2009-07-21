@@ -157,19 +157,15 @@ class mediacaster_admin {
 			$longtail['licensed'] = false;
 		}
 		
-		/* todo: ltas */
-		//*
+		$longtail['script'] = false;
+		$longtail['channel'] = false;
+		/* todo: ltas
 		$script = stripslashes($_POST['longtail']['script']);
 		if ( preg_match("/src=[\"']https?:\/\/www.ltassrv.com\/serve\/api5.4.asp\?d=\d+&s=\d+&c=(\d+)/i", $script, $match) ) {
 			$longtail['script'] = $script;
 			$longtail['channel'] = array_pop($match);
-		} else {
-			$longtail['script'] = false;
-			$longtail['channel'] = false;
 		}
-		//*/	
-		//$longtail['script'] = false;
-		//$longtail['channel'] = false;
+		//*/
 		
 		$options = compact('player', 'itunes', 'longtail', 'version');
 		update_option('mediacaster', $options);
@@ -200,6 +196,15 @@ class mediacaster_admin {
 	function edit_options() {
 		$options = get_option('mediacaster');
 		
+		if ( !$options['longtail']['licensed'] ) {
+			$licensed_player = glob(plugin_dir_path(__FILE__) . 'mediaplayer-licensed*/*player*.swf');
+			if ( $licensed_player ) {
+				$licensed_player = current($licensed_player);
+				$options['longtail']['licensed'] = basename(dirname($licensed_player)) . '/' . basename($licensed_player);
+				update_option('mediacaster', $options);
+			}
+		}
+		
 		echo '<div class="wrap">' . "\n";
 		
 		echo '<form enctype="multipart/form-data" method="post" action="">' . "\n";
@@ -214,6 +219,7 @@ class mediacaster_admin {
 		
 		echo '<h2>'. __('Mediacaster Settings', 'mediacaster') . '</h2>' . "\n";
 		
+		/* todo: ltas
 		if ( empty($options['longtail']['agree']) ) {
 			echo '<h3>'
 				. __('License Notice', 'mediacaster')
@@ -272,6 +278,7 @@ class mediacaster_admin {
 					. ' />'
 				. '</p>' . "\n";
 		}
+		//*/
 		
 		echo '<h3>'
 				. __('Media Player', 'mediacaster')
@@ -408,7 +415,7 @@ class mediacaster_admin {
 				. ' />'
 			. '</p>' . "\n";
 		
-		/* todo: ltas */
+		/* todo: ltas
 		echo '<h3>'
 			. __('LongTail AdSolution', 'mediacaster')
 			. '</h3>' . "\n";
@@ -450,7 +457,7 @@ class mediacaster_admin {
 			. '</tr>' . "\n";
 		
 		echo '</table>' . "\n";
-		/**/
+		//*/
 		
 		echo '<h3>'
 			. __('iTunes', 'mediacaster')
@@ -944,8 +951,7 @@ EOS;
 					. '</label>',
 				);
 			
-			/* todo: ltas */
-			//*
+			//* todo: ltas
 			if ( $o['longtail']['channel'] ) {
 				$post_fields['ltas'] = array(
 					'label' => __('Insert Ads', 'mediacaster'),
@@ -1095,14 +1101,12 @@ EOS;
 				? ' thickbox'
 				: '';
 			
-			/* todo: ltas */
-			//*
-			$ltas = !empty($attachment['ltas'])
-				&& trim(strip_tags($post->post_title)) && trim(strip_tags($post->post_content))
-				? ' ltas'
-				: '';
+			$ltas = '';
+			/* todo: ltas
+			if ( !empty($attachment['ltas'])
+				&& trim(strip_tags($post->post_title)) && trim(strip_tags($post->post_content)) )
+				$ltas = ' ltas';
 			//*/
-			//$ltas = '';
 			
 			$html = '[mc id="' . $send_id . '"' . $width . $height . ' type="video"' . $autostart . $thickbox . $link . $image . $ltas . ']'
 				. $attachment['post_title']

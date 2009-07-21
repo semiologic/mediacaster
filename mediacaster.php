@@ -574,8 +574,9 @@ EOS;
 		if ( $autostart )
 			$flashvars['autostart'] = 'true';
 		
-		/* todo: ltas */
-		//*
+		$ad_name = '';
+		$ad_class = '';
+		/* todo: ltas
 		if ( $ltas && !is_feed() && $width >= 300 && $height >= 250 && !empty($script) ) {
 			$ad_name = 'name="mediaspace"';
 			$ad_class = 'class="ltas-ad"';
@@ -589,9 +590,6 @@ EOS;
 					$flashvars['description'] = rawurlencode(strip_tags(preg_replace("/\s+/", ' ', $attachment->post_content)));
 				}
 			}
-		} else {
-			$ad_name = '';
-			$ad_class = '';
 		}
 		//*/
 		
@@ -808,11 +806,10 @@ EOS;
 	 **/
 
 	function ltas_scripts() {
-		/* todo: ltas */
-		//return;
-		
+		/* todo: ltas
 		if ( !empty($o['longtail']['script']) )
 			echo $o['longtail']['script'];
+		//*/
 	} # ltas_scripts()
 	
 	
