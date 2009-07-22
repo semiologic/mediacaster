@@ -1045,9 +1045,6 @@ class mediacaster_admin {
 		$post = get_post($send_id);
 		
 		$file_url = wp_get_attachment_url($post->ID);
-		if ( !preg_match("/\.([a-z0-9]+)$/i", $file_url, $ext) )
-			return $html;
-		$ext = strtolower(end($ext));
 		
 		$autostart = !empty($attachment['autostart'])
 			? ' autostart'
@@ -1057,6 +1054,9 @@ class mediacaster_admin {
 		case 'audio/mpeg':
 		case 'audio/mp3':
 		case 'audio/aac':
+			if ( !preg_match("/\.([a-z0-9]+)$/i", $file_url, $ext) )
+				return $html;
+			$ext = strtolower(end($ext));
 			if ( !preg_match("/\b(?:" . implode('|', mediacaster::get_extensions('audio')) . ")\b/i", $file_url) )
 				break;
 			
@@ -1074,6 +1074,9 @@ class mediacaster_admin {
 		case 'video/x-flv':
 		case 'video/quicktime':
 		case 'video/3gpp':
+			if ( !preg_match("/\.([a-z0-9]+)$/i", $file_url, $ext) )
+				return $html;
+			$ext = strtolower(end($ext));
 			if ( !preg_match("/\b(?:" . implode('|', mediacaster::get_extensions('video')) . ")\b/i", $file_url) )
 				break;
 			
@@ -1375,23 +1378,23 @@ var mc = {
 			<table class="describe"><tbody>
 				<tr>
 					<th valign="top" scope="row" class="label">
-						<span class="alignleft"><label for="insertonly[src]">' . __('Video URL', 'mediacaster') . '</label></span>
+						<span class="alignleft"><label for="mc-src-0">' . __('File URL', 'mediacaster') . '</label></span>
 						<span class="alignright"><abbr title="required" class="required">*</abbr></span>
 					</th>
-					<td class="field"><input id="insertonly[src]" name="insertonly[src]" value="" type="text" aria-required="true"></td>
+					<td class="field"><input id="mc-src" name="attachments[0][src]" value="" type="text" aria-required="true"></td>
 				</tr>
 				<tr>
 					<th valign="top" scope="row" class="label">
-						<span class="alignleft"><label for="insertonly[title]">' . __('Title', 'mediacaster') . '</label></span>
+						<span class="alignleft"><label for="mc-title-0">' . __('Title', 'mediacaster') . '</label></span>
+						<span class="alignright"><abbr title="required" class="required">*</abbr></span>
 					</th>
-					<td class="field"><input id="insertonly[title]" name="insertonly[title]" value="" type="text"></td>
+					<td class="field"><input id="mc-title-0" name="attachments[0][title]" value="" type="text" aria-required="true"></td>
 				</tr>
-				<tr><td></td><td class="help">' . __('Link text, e.g. &#8220;Ransom Demands (PDF)&#8221;', 'mediacaster') . '</td></tr>
 				<tr>
 					<th valign="top" scope="row" class="label">
-						<span class="alignleft"><label for="insertonly[url]">' . __('Link URL', 'mediacaster') . '</label></span>
+						<span class="alignleft"><label for="attachments[0][content]">' . __('Description', 'mediacaster') . '</label></span>
 					</th>
-					<td class="field"><input id="insertonly[url]" name="insertonly[url]" value="" type="text"></td>
+					<td class="field"><textarea id="attachments[0][content]" name="attachments[0][content]"></textarea></td>
 				</tr>
 				<tr>
 					<td></td>
@@ -1414,11 +1417,57 @@ var mc = {
 	 **/
 
 	function file_send_to_editor_url($html, $src, $title) {
-		$title = stripslashes($_POST['insertonly']['title']);
-		$src = esc_url_raw(stripslashes($_POST['insertonly']['src']));
+		$title = stripslashes($_POST['attachments'][0]['title']);
+		$content = stripslashes($_POST['attachments'][0]['content']);
+		$src = esc_url_raw(stripslashes($_POST['attachments'][0]['src']));
 		
-		return "\n"
-			. '[mc src="' . $src . '" type="file"]'
+		$post_id = !empty($_POST['post_id']) ? intval($_POST['post_id']) : false;
+		if ( $post_id )
+			$post = get_post($post_id);
+		else
+			$post = false;
+		
+		$post_date = current_time('mysql');
+		$post_date_gmt = current_time('mysql', 1);
+		$post_parent = $post ? $post->ID : 0;
+		
+		if ( preg_match("/https?:\/\/(?:www\.)?youtube\.com\//", $src) ) {
+			$type = 'video/youtube';
+		} else {
+			$type = wp_check_filetype($src, null);
+			$type = $type['type'];
+			
+			if ( empty($type) )
+				$type = 'application/octet-stream';
+			
+			$details = apply_filters('wp_handle_upload', array(
+				'file' => $src,
+				'url' => $src,
+				'type' => $type,
+				));
+
+			$type = $details['type'];
+		}
+		
+		$attachment = array(
+			'post_mime_type' => $type,
+			'guid' => $src,
+			'post_parent' => $post_parent,
+			'post_title' => $title,
+			'post_name' => $title,
+			'post_content' => $content,
+			'post_date' => $post_date,
+			'post_date_gmt' => $post_date_gmt,
+			);
+		
+		$id = wp_insert_attachment($attachment, false, $post_parent);
+		if ( is_wp_error($id) )
+			die(-1);
+		
+		update_post_meta($id, '_mc_src', $src);
+		
+		return ''
+			. '[mc id="' . $id . '" type="file"]'
 			. $title
 			. '[/mc]';
 	} # file_send_to_editor_url()
@@ -1485,7 +1534,6 @@ EOS;
 	function create_snapshot($post_id, $user_id, $nonce) {
 		status_header(200);
 		header('Content-Type: text/plain; Charset: UTF-8');
-		#die(WP_CONTENT_DIR . '/test.jpg');
 		
 		$post_id = (int) $post_id;
 		$user_id = (int) $user_id;
@@ -1554,7 +1602,6 @@ EOS;
 		$details = apply_filters('wp_handle_upload', array(
 			'file' => $new_file,
 			'url' => $url,
-			'type' => $type,
 			));
 		
 		$new_file = $details['file'];

@@ -52,6 +52,8 @@ add_shortcode('mc', array('mediacaster', 'shortcode'));
 
 add_filter('ext2type', array('mediacaster', 'ext2type'));
 add_filter('upload_mimes', array('mediacaster', 'upload_mimes'));
+add_filter('wp_get_attachment_url', array('mediacaster', 'wp_get_attachment_url'), 10, 2);
+add_filter('get_attached_file', array('mediacaster', 'get_attached_file'), 10, 2);
 
 add_filter('get_the_excerpt', array('mediacaster', 'disable'), 0);
 add_filter('get_the_excerpt', array('mediacaster', 'enable'), 20);
@@ -71,6 +73,21 @@ if ( !is_admin() ) {
 }
 
 class mediacaster {
+	/**
+	 * ext2type()
+	 *
+	 * @param array $types
+	 * @return array $types
+	 **/
+
+	function ext2type($types) {
+		$types['video'] = array_merge($types['video'], array('flv', 'f4b', 'f4p', 'f4v'));
+		$types['audio'] = array_merge($types['audio'], array('3pg', '3g2'));
+		$types['code'] = array_merge($types['code'], array('diff', 'patch'));
+		return $types;
+	} # ext2type()
+	
+	
 	/**
 	 * upload_mimes()
 	 *
@@ -92,18 +109,31 @@ class mediacaster {
 	
 	
 	/**
-	 * ext2type()
+	 * wp_get_attachment_url()
 	 *
-	 * @param array $types
-	 * @return array $types
+	 * @param string $url
+	 * @param int $post_id
+	 * @return string $url
 	 **/
 
-	function ext2type($types) {
-		$types['video'] = array_merge($types['video'], array('flv', 'f4b', 'f4p', 'f4v'));
-		$types['audio'] = array_merge($types['audio'], array('3pg', '3g2'));
-		$types['code'] = array_merge($types['code'], array('diff', 'patch'));
-		return $types;
-	} # ext2type()
+	function wp_get_attachment_url($url, $post_id) {
+		$src = get_post_meta($post_id, '_mc_src', true);
+		return $src ? $src : $url;
+	} # wp_get_attachment_url()
+	
+	
+	/**
+	 * get_attached_file()
+	 *
+	 * @param string $path
+	 * @param int $post_id
+	 * @return string $path
+	 **/
+
+	function get_attached_file($path, $post_id) {
+		$src = get_post_meta($post_id, '_mc_src', true);
+		return $src ? $src : $path;
+	} # get_attached_file()
 	
 	
 	/**
