@@ -803,6 +803,14 @@ class mediacaster_admin {
 		case 'video/3gpp':
 			if ( !in_array($ext, mediacaster::get_extensions()) )
 				break;
+			$post_fields['post_title']['required'] = true;
+			$post_fields['post_title']['input'] = 'html';
+			$post_fields['post_title']['html'] = ''
+				. '<input type="text" id="mc-title-' . $post->ID . '"'
+					. ' name="attachments[' . $post->ID . '][post_title]"'
+					. ' value="' . esc_attr($post->post_title) . '"'
+					. ' aria-required="true"'
+					. ' />';
 			unset($post_fields['post_excerpt']);
 			unset($post_fields['url']);
 			$link = get_post_meta($post->ID, '_mc_link', true);
@@ -830,236 +838,7 @@ class mediacaster_admin {
 			if ( !in_array($ext, mediacaster::get_extensions('video')) )
 				break;
 			
-			static $scripts;
-			static $player;
-			
-			if ( !isset($scripts) ) {
-				$player = plugin_dir_url(__FILE__)
-					. ( $o['longtail']['licensed']
-						? $o['longtail']['licensed']
-						: 'mediaplayer/player.swf'
-						);
-				$site_url = site_url();
-				$user = wp_get_current_user();
-				
-				$scripts = <<<EOS
-<script type="text/javascript">
-var mc = {
-	player: null,
-	interval: null,
-	post_id: null,
-	
-	set_max: function(post_id) {
-		jQuery("#mc-width-" + post_id).val('');
-		jQuery("#mc-height-" + post_id).val('');
-		mc.get_scale(post_id);
-		
-		return false;
-	},
-	
-	set_16_9: function(post_id) {
-		if ( !jQuery("#mc-width-" + post_id).val() )
-			jQuery("#mc-width-" + post_id).val($default_width);
-		jQuery("#mc-height-" + post_id).val(Math.round(parseInt(jQuery("#mc-width-" + post_id).val()) * 9 / 16));
-		jQuery("#mc-scale-" + post_id).val(16 / 9);
-		
-		return false;
-	},
-	
-	set_4_3: function(post_id) {
-		if ( !jQuery("#mc-width-" + post_id).val() )
-			jQuery("#mc-width-" + post_id).val($default_width);
-		jQuery("#mc-height-" + post_id).val(Math.round(parseInt(jQuery("#mc-width-" + post_id).val()) * 3 / 4));
-		jQuery("#mc-scale-" + post_id).val(4 / 3);
-		
-		return false;
-	},
-	
-	get_scale: function(post_id) {
-		var width = parseInt(jQuery("#mc-width-" + post_id).val());
-		var height = parseInt(jQuery("#mc-height-" + post_id).val());
-		
-		if ( width && height && width > 0 && height > 0 ) {
-			if ( !jQuery("#mc-scale-" + post_id).val() )
-				jQuery("#mc-scale-" + post_id).val(width / height);
-		} else {
-			var img = jQuery("#mc-preview-" + post_id).children('img:first');
-			jQuery("#mc-scale-" + post_id).val('');
-			
-			if ( img.size() ) {
-				var img_width = img.width();
-				var img_height = img.height();
-				if ( img_width && img_height )
-					jQuery("#mc-scale-" + post_id).val(img_width / img_height);
-			}
-		}
-		
-		return false;
-	},
-	
-	set_scale: function(elt, post_id) {
-		if ( !jQuery(elt).val() ) {
-			jQuery("#mc-width-" + post_id).val('');
-			jQuery("#mc-height-" + post_id).val('');
-			return false;
-		}
-		
-		var scale = parseFloat(jQuery("#mc-scale-" + post_id).val());
-		
-		if ( !scale )
-			return false;
-		
-		if ( jQuery(elt).is("#mc-width-" + post_id) ) {
-			var width = parseInt(jQuery("#mc-width-" + post_id).val());
-			var old_height = parseInt(jQuery("#mc-height-" + post_id).val());
-			var new_height = Math.round(width / scale);
-			if ( !old_height || Math.abs(new_height - old_height) > 1 )
-				jQuery("#mc-height-" + post_id).val(new_height);
-		} else {
-			var height = jQuery("#mc-height-" + post_id).val();
-			old_width = parseInt(jQuery("#mc-width-" + post_id).val());
-			new_width = Math.round(height * scale);
-			if ( !old_width || Math.abs(new_width - old_width) > 1 )
-				jQuery("#mc-width-" + post_id).val(new_width);
-		}
-		
-		return false;
-	},
-	
-	new_snapshot: function(post_id, nonce) {
-		var s_id, s_width, s_height, s_src;
-		
-		do {
-			s_id = 'mc-snapshot-' + Math.floor(Math.random() * 10000);
-		} while ( document.getElementById(s_id) );
-		
-		s_width = 460;
-		s_height = 345;
-		
-		if ( mc.post_id )
-			mc.cancel_snapshot(mc.post_id);
-		if ( mc.interval )
-			clearInterval(mc.interval);
-		mc.player = null;
-		
-		jQuery("#mc-preview-" + post_id).hide().html('<div id="' + s_id + '"></div>').fadeIn('slow');
-		jQuery("#mc-new-snapshot-" + post_id).hide();
-		jQuery("#mc-cancel-snapshot-" + post_id).show();
-		
-		var params = {};
-		params.allowfullscreen = 'false';
-		params.allowscriptaccess = 'true';
-		
-		var flashvars = {};
-		flashvars.file = jQuery("#mc-src-" + post_id).val();
-		flashvars.controlbar = 'over';
-		flashvars.plugins = 'quickkeys-1,snapshot-1';
-		flashvars['snapshot.script'] = '$site_url/mc-snapshot.' + post_id + '.' + $user->ID + '.' + nonce + '.php';
-		flashvars.id = s_id;
-		
-		var attributes = {};
-		attributes.id = s_id;
-		attributes.name = s_id;
-
-		swfobject.embedSWF("$player", s_id, s_width, s_height, '9.0.0', false, flashvars, params, attributes);
-		
-		mc.post_id = post_id;
-		mc.player = document.getElementById(s_id);
-		mc.interval = setInterval('mc.take_snapshot();', 100);
-	},
-	
-	take_snapshot: function() {
-		var p = mc.player;
-		var post_id = mc.post_id;
-		
-		if ( !p || typeof p.getConfig != 'function' || p.getConfig()['state'] != 'IDLE' )
-			return;
-		
-		var img = p.getConfig()['image'];
-		
-		if ( !img )
-			return;
-		
-		if ( mc.interval )
-			clearInterval(mc.interval);
-		mc.interval = null;
-		mc.player = null;
-		mc.post_id = null;
-		
-		jQuery("#media-item-" + jQuery("#mc-image-id-" + post_id).val()).fadeOut('fast').html('');
-		
-		jQuery("#mc-image-" + post_id).val('');
-		jQuery("#mc-image-id-" + post_id).val(img.replace(/.*\?/, ''));
-		jQuery("#mc-preview-src-" + post_id).val(img);
-		jQuery("#mc-preview-" + post_id).hide().html('<img src="' + img + '" width="460" alt="" />').fadeIn('slow', function() {
-			var img = jQuery("#mc-preview-" + post_id).children('img:first');
-			jQuery("#mc-scale-" + post_id).val('');
-
-			if ( img.size() ) {
-				var img_width = img.width();
-				var img_height = img.height();
-				if ( img_width && img_height ) {
-					jQuery("#mc-scale-" + post_id).val(img_width / img_height);
-					var width = parseInt(jQuery("#mc-width-" + post_id).val());
-					var height = parseInt(jQuery("#mc-height-" + post_id).val());
-					if ( height && width && Math.abs(height - Math.round(width * img_height / img_width)) > 1 )
-						jQuery("#mc-height-" + post_id).val(Math.round(width * img_height / img_width));
-				}
-			}
-		});
-		
-		jQuery("#mc-cancel-snapshot-" + post_id).hide();
-		jQuery("#mc-new-snapshot-" + post_id).show();
-	},
-	
-	cancel_snapshot: function(post_id) {
-		if ( mc.post_id && post_id != mc.post_id )
-			mc.cancel_snapshot(mc.post_id);
-		
-		if ( mc.interval )
-			clearInterval(mc.interval);
-		mc.interval = null;
-		mc.player = null;
-		mc.post_id = null;
-		
-		var img = jQuery("#mc-preview-src-" + post_id).val();
-		
-		if ( img )
-			jQuery("#mc-preview-" + post_id).hide().html('<img src="' + img + '" width="460" alt="" />').fadeIn('slow');
-		else
-			jQuery("#mc-preview-" + post_id).hide().html('').fadeIn('slow');
-		
-		jQuery("#mc-cancel-snapshot-" + post_id).hide();
-		jQuery("#mc-new-snapshot-" + post_id).show();
-	},
-	
-	change_snapshot: function(post_id) {
-		jQuery("#mc-preview-src-" + post_id).val(jQuery("#mc-image-" + post_id).val());
-		mc.cancel_snapshot(post_id);
-		
-		var img = jQuery("#mc-preview-" + post_id).children('img:first');
-		jQuery("#mc-scale-" + post_id).val('');
-		
-		if ( img.size() ) {
-			var img_width = img.width();
-			var img_height = img.height();
-			if ( img_width && img_height ) {
-				jQuery("#mc-scale-" + post_id).val(img_width / img_height);
-				var width = parseInt(jQuery("#mc-width-" + post_id).val());
-				var height = parseInt(jQuery("#mc-height-" + post_id).val());
-				if ( height && width && Math.abs(height - Math.round(width * img_height / img_width)) > 1 )
-					jQuery("#mc-height-" + post_id).val(Math.round(width * img_height / img_width));
-			}
-		}
-	}
-};
-
-</script>
-EOS;
-			} else {
-				$scripts = false;
-			}
-			
+			$user = wp_get_current_user();
 			$src = esc_url(wp_get_attachment_url($post->ID));
 			
 			$image_id = get_post_meta($post->ID, '_mc_image_id', true);
@@ -1076,7 +855,8 @@ EOS;
 			$post_fields['format'] = array(
 				'label' => __('Width x Height', 'mediacaster'),
 				'input' => 'html',
-				'html' => '<input id="mc-scale-' . $post->ID . '" type="hidden" value="" />'
+				'html' => ''
+					. '<input id="mc-scale-' . $post->ID . '" type="hidden" value="" />'
 					. '<input id="mc-width-' . $post->ID . '"'
 						. ' name="attachments[' . $post->ID . '][width]"'
 						. ' onfocus="mc.get_scale(' . $post->ID . ');"'
@@ -1114,13 +894,17 @@ EOS;
 				: false;
 			
 			if ( $preview ) {
-				$preview = '<input type="hidden" id="mc-preview-src-' . $post->ID . '"'
-					. ' value="' . $preview . '" />' . "\n"
-					. '<div id="mc-preview-' . $post->ID . '">'
-					. '<img src="' . $preview . '" alt="" width="460" style="float: none; display: block; margin-left: auto; margin-right: auto;" />' . "\n"
+				$preview = ''
+					. '<input type="hidden" id="mc-preview-src-' . $post->ID . '"'
+						. ' value="' . $preview . '" />' . "\n"
+					. '<div id="mc-preview-' . $post->ID . '" style="clear: both;">'
+					. '<img src="' . $preview . '" alt="" width="460"'
+						.' style="display: block;"'
+						. ' />' . "\n"
 					. '</div>' . "\n";
 			} else {
-				$preview = '<input type="hidden" id="mc-preview-src-' . $post->ID . '" value="" />' . "\n"
+				$preview = ''
+					. '<input type="hidden" id="mc-preview-src-' . $post->ID . '" value="" />' . "\n"
 					. '<div id="mc-preview-' . $post->ID . '"></div>' . "\n";
 			}
 			
@@ -1129,7 +913,7 @@ EOS;
 			$post_fields['image'] = array(
 				'label' => __('Preview Image', 'mediacaster'),
 				'input' => 'html',
-				'html' => $scripts
+				'html' => '<div style="width: 460px;">'
 					. '<input type="text" id="mc-image-' . $post->ID . '"'
 						. ' name="attachments[' . $post->ID . '][image]"'
 						. ' onchange="return mc.change_snapshot(' . $post->ID . ');"'
@@ -1138,13 +922,14 @@ EOS;
 					. '<input type="hidden" id="mc-image-id-' . $post->ID . '" name="attachments[' . $post->ID . '][image_id]" value="' . $image_id . '" />'
 					. '<div class="hide-if-no-js" style="float: right">'
 					. '<button type="button" class="button" id="mc-new-snapshot-' . $post->ID . '"'
-						. ' onclick="return mc.new_snapshot(' . $post->ID . ', \'' . $nonce . '\');">'
+						. ' onclick="return mc.new_snapshot(' . $post->ID . ', ' . $user->ID . ', \'' . $nonce . '\');">'
 						. __('New Snapshot', 'mediacaster') . '</button>'
 					. '<button type="button" class="button" id="mc-cancel-snapshot-' . $post->ID . '"'
 						. ' style="display: none;"'
 						. ' onclick="return mc.cancel_snapshot(' . $post->ID . ');">'
 						. __('Cancel Snapshot', 'mediacaster') . '</button>'
 						. '</div>' . "\n"
+					. '</div>' . "\n"
 					. '<p class="help">'
 						. __('The URL of a preview image when the video isn\'t playing.', 'mediacaster')
 						. '</p>' . "\n"
@@ -1155,7 +940,7 @@ EOS;
 				'label' => __('Thickbox', 'mediacaster'),
 				'input' => 'html',
 				'html' => '<label style="font-weight: normal">'
-					. '<input type="checkbox" id="attachments[' . $post->ID . '][thickbox]"'
+					. '<input type="checkbox" id="mc-thickbox-' . $post->ID . '"'
 						. ' name="attachments[' . $post->ID . '][thickbox]" checked="checked">&nbsp;'
 					. __('Open the video in a thickbox window (requires a preview image).', 'mediacaster')
 					. '</label>',
@@ -1178,19 +963,46 @@ EOS;
 					);
 			}
 			//*/
-		
+			
+			$type = 'video';
+			
 		case 'audio/mpeg':
 		case 'audio/mp3':
 		case 'audio/aac':
 		case 'video/3gpp':
+			if ( empty($type) )
+				$type = 'audio';
+			
 			$post_fields['autostart'] = array(
 				'label' => __('Autostart', 'mediacaster'),
 				'input' => 'html',
 				'html' => '<label style="font-weight: normal">'
-					. '<input type="checkbox" id="attachments[' . $post->ID . '][autostart]"'
+					. '<input type="checkbox" id="mc-autostart-' . $post->ID . '"'
 						. ' name="attachments[' . $post->ID . '][autostart]">&nbsp;'
 					. __('Automatically start the (first) media player (bandwidth intensive).', 'mediacaster')
 					. '</label>',
+				);
+			$post_fields['insert_as'] = array(
+				'label' => __('Insert As', 'mediacaster'),
+				'input' => 'html',
+				'html' => '<label style="font-weight: normal; margin-right: 15px; display: inline;">'
+					. '<input type="radio" id="mc-insert-' . $post->ID . '-player"'
+						. ' name="attachments[' . $post->ID . '][insert_as]" value="' . $type . '" checked="checked">&nbsp;'
+					. __('Media Player', 'mediacaster')
+					. '</label>'
+					. ' '
+					. '<label style="font-weight: normal; margin-right: 15px; display: inline;">'
+					. '<input type="radio" id="mc-insert-' . $post->ID . '-file"'
+						. ' name="attachments[' . $post->ID . '][insert_as]" value="file">&nbsp;'
+					. __('Download Link', 'mediacaster')
+					. '</label>'
+					. ' '
+					. '<button type="button" class="button"'
+						. ' onclick="return mc.get_shortcode(' . $post->ID . ');" />'
+						. __('Get Shortcode', 'mediacaster') . '</button>'
+					. '<textarea class="code" id="mc-shortcode-' . $post->ID . '"'
+						. ' onfocus="var this_val=eval(this); this_val.select();"'
+						. ' style="display: none;"></textarea>',
 				);
 		}
 		
@@ -1248,7 +1060,11 @@ EOS;
 			if ( !preg_match("/\b(?:" . implode('|', mediacaster::get_extensions('audio')) . ")\b/i", $file_url) )
 				break;
 			
-			$html = '[mc id="' . $send_id . '" type="audio"' . $autostart . ']'
+			$type = $attachment['insert_as'] != 'file'
+				? 'audio'
+				: 'file';
+			
+			$html = '[mc id="' . $send_id . '" type="' . $type . '"' . $autostart . ']'
 			 	. $attachment['post_title']
 			 	. '[/mc]';
 			break;
@@ -1261,6 +1077,10 @@ EOS;
 			if ( !preg_match("/\b(?:" . implode('|', mediacaster::get_extensions('video')) . ")\b/i", $file_url) )
 				break;
 			
+			$type = $attachment['insert_as'] != 'file'
+				? 'video'
+				: 'file';
+			
 			$image = !empty($attachment['image']) && trim(stripslashes($attachment['image']));
 			$image_id = !empty($attachment['image_id']) && intval($attachment['image_id']);
 			
@@ -1268,7 +1088,7 @@ EOS;
 				? ' thickbox'
 				: '';
 			
-			$html = '[mc id="' . $send_id . '" type="video"' . $autostart . $thickbox . ']'
+			$html = '[mc id="' . $send_id . '" type="' . $type . '"' . $autostart . $thickbox . ']'
 				. $attachment['post_title']
 				. '[/mc]';
 			break;
@@ -1611,14 +1431,46 @@ var mc = {
 	 **/
 
 	function admin_scripts() {
+		global $parent_file;
 		global $wp_scripts;
-		if ( !is_a($wp_scripts, 'WP_Scripts') || !$wp_scripts->query('admin-gallery', 'queue') )
+		if ( $parent_file != 'upload.php' && !$wp_scripts->query('swfupload-handlers') )
 			return;
 		
 		$folder = plugin_dir_url(__FILE__);
 		wp_enqueue_script('swfobject');
 		wp_enqueue_script('mediacaster_admin', $folder . 'js/admin.js', array('jquery-ui-sortable'), '2.0', true);
+		add_action('admin_print_footer_scripts', array('mediacaster_admin', 'footer_scripts'), 30);
 	} # admin_scripts()
+	
+	
+	/**
+	 * footer_scripts()
+	 *
+	 * @return void
+	 **/
+	
+	function footer_scripts() {
+		global $content_width;
+		$o = get_option('mediacaster');
+		
+		$default_width = !empty($content_width) && intval($content_width) ? (int) $content_width : 420;
+		$mediaplayer = esc_url_raw(plugin_dir_url(__FILE__)
+			. ( $o['longtail']['licensed']
+				? $o['longtail']['licensed']
+				: 'mediaplayer/player.swf'
+				));
+		
+		echo <<<EOS
+
+<script type="text/javascript">
+jQuery(document).ready(function() {
+	mc.default_width = $default_width;
+	mc.mediaplayer = '$mediaplayer';
+});
+</script>
+
+EOS;
+	} # footer_scripts()
 	
 	
 	/**
@@ -1739,6 +1591,8 @@ var mc = {
 			if ( $old_snapshot_id )
 				wp_delete_attachment($old_snapshot_id);
 			update_post_meta($attachment->ID, '_mc_image_id', $snapshot_id);
+			update_post_meta($attachment->ID, '_mc_image_width', $meta['width']);
+			update_post_meta($attachment->ID, '_mc_image_height', $meta['height']);
 			delete_post_meta($attachment->ID, '_mc_image');
 			delete_post_meta($attachment->ID, '_mc_width');
 			delete_post_meta($attachment->ID, '_mc_heigth');

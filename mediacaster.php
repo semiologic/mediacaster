@@ -411,21 +411,20 @@ EOS;
 				$$arg = false;
 		}
 		
-		if ( $standalone ) {
+		$snapshot_id = $id ? get_post_meta($id, '_mc_image_id', true) : false;
+		
+		if ( $standalone )
 			$image = false;
-		} elseif ( $id && !$image ) {
-			$snapshot_id = get_post_meta($id, '_mc_image_id', true);
-			if ( $snapshot_id )
-				$image = wp_get_attachment_url($snapshot_id);
-		}
+		elseif ( $id && !$image && $snapshot_id )
+			$image = wp_get_attachment_url($snapshot_id);
 		
 		if ( $id ) {
 			$_width = 2 * (int) get_post_meta($id, '_mc_width', true);
 			$_height = 2 * (int) get_post_meta($id, '_mc_height', true);
 			
 			if ( !$_width || !$_height ) {
-				$_width = false;
-				$_height = false;
+				$_width = 2 * (int) get_post_meta($id, '_mc_image_width', true);
+				$_height = 2 * (int) get_post_meta($id, '_mc_image_height', true);
 			}
 		}
 		
@@ -478,6 +477,8 @@ EOS;
 				$tb_height = $max_tb_height;
 			}
 			
+			$tb_height += 10; // title bar
+			
 			if ( $link ) {
 				$href .= ( ( strpos($href, '?') === false ) ? '?' : '&' )
 					. 'mc_link=' . urlencode(esc_url_raw($link));
@@ -486,11 +487,11 @@ EOS;
 			if ( $ltas )
 				$href .= ( ( strpos($href, '?') === false ) ? '?' : '&' )
 					. 'ltas=1';
+			
 			$href = rtrim($href, '?');
 			$href = @html_entity_decode($href, ENT_COMPAT, get_option('blog_charset'));
 			$href .= ( strpos($href, '?') === false ? '?' : '&' )
-				. ( ( !$_width || !$_height ) ? "mc_width=$tb_width&mc_height=$tb_height" : '' )
-				. "&TB_iframe=true&width=$tb_width&height=" . ( $tb_height + 10 );
+				. "TB_iframe=true&width=$tb_width&height=$tb_height";
 			$href = esc_url($href);
 			
 			$title = trim(strip_tags($content));
