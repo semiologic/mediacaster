@@ -132,7 +132,17 @@ class mediacaster {
 
 	function get_attached_file($path, $post_id) {
 		$src = get_post_meta($post_id, '_mc_src', true);
-		return $src ? $src : $path;
+		if ( !$src )
+			return $path;
+		
+		$ext = get_post_meta($post_id, '_mc_ext', true);
+		if ( !$ext )
+			return $src;
+		
+		$post = get_post($post_id);
+		$file = sanitize_title($post->post_title);
+		
+		return "$src -- $file.$ext";
 	} # get_attached_file()
 	
 	

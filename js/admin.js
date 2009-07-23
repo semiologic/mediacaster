@@ -1,10 +1,10 @@
-jQuery(document).ready(function($) {
+jQuery(document).ready(function() {
 	var mc = {
 		player: null,
 		interval: null,
 		post_id: null,
 		default_width: 420,
-		mediaplayer: null,
+		media_player: null,
 
 		set_max: function(post_id) {
 			jQuery("#mc-width-" + post_id).val('');
@@ -86,6 +86,9 @@ jQuery(document).ready(function($) {
 		new_snapshot: function(post_id, user_id, nonce) {
 			var s_id, s_width, s_height, s_src;
 			
+			if ( !jQuery("#mc-src-" + post_id).val() )
+				return jQuery("#mc-src-" + post_id).focus();
+			
 			do {
 				s_id = 'mc-snapshot-' + Math.floor(Math.random() * 10000);
 			} while ( document.getElementById(s_id) );
@@ -93,7 +96,7 @@ jQuery(document).ready(function($) {
 			s_width = 460;
 			s_height = 345;
 			
-			if ( mc.post_id )
+			if ( mc.post_id || mc.post_id === 0 )
 				mc.cancel_snapshot(mc.post_id);
 			if ( mc.interval )
 				clearInterval(mc.interval);
@@ -113,14 +116,14 @@ jQuery(document).ready(function($) {
 				flashvars.file = jQuery("#mc-src-" + post_id).val();
 				flashvars.controlbar = 'over';
 				flashvars.plugins = 'quickkeys-1,snapshot-1';
-				flashvars['snapshot.script'] = '$site_url/mc-snapshot.' + post_id + '.' + user_id + '.' + nonce + '.php';
+				flashvars['snapshot.script'] = mc.siteurl + '/mc-snapshot.' + post_id + '.' + user_id + '.' + nonce + '.php';
 				flashvars.id = s_id;
 
 				var attributes = {};
 				attributes.id = s_id;
 				attributes.name = s_id;
 
-				swfobject.embedSWF(mc.mediaplayer, s_id, s_width, s_height, '9.0.0', false, flashvars, params, attributes);
+				swfobject.embedSWF(mc.media_player, s_id, s_width, s_height, '9.0.0', false, flashvars, params, attributes);
 
 				mc.post_id = post_id;
 				mc.player = document.getElementById(s_id);
@@ -177,7 +180,7 @@ jQuery(document).ready(function($) {
 		},
 
 		cancel_snapshot: function(post_id) {
-			if ( mc.post_id && post_id != mc.post_id )
+			if ( ( mc.post_id || mc.post_id === 0 ) && post_id != mc.post_id )
 				mc.cancel_snapshot(mc.post_id);
 			
 			if ( mc.interval )
