@@ -94,7 +94,7 @@ class mediacaster {
 	 * @param array $mines
 	 * @return array $mines
 	 **/
-
+	
 	function upload_mimes($mimes) {
 		if ( !isset($mimes['flv|f4b|f4p|f4v']) )
 			$mimes['flv|f4b|f4p|f4v'] = 'video/x-flv';
@@ -359,8 +359,9 @@ class mediacaster {
 		
 		$flashvars['plugins'] = array('quickkeys-1');
 		
-		if ( defined('sem_google_analytics_debug') && !current_user_can('publish_posts') && !current_user_can('publish_pages') ) {
-			$uacct = google_analytics::get_options();
+		if ( defined('sem_google_analytics_debug') && method_exists(array('google_analytics', 'get_uacct'))
+			&& !current_user_can('publish_posts') && !current_user_can('publish_pages') ) {
+			$uacct = google_analytics::get_uacct();
 			if ( $uacct ) {
 				$flashvars['plugins'][] = 'gapro-1';
 				$flashvars['gapro.accountid'] = $uacct;
@@ -591,8 +592,9 @@ EOS;
 		
 		$flashvars['plugins'] = array('quickkeys-1');
 		
-		if ( defined('sem_google_analytics_debug') && !current_user_can('publish_posts') && !current_user_can('publish_pages') ) {
-			$uacct = google_analytics::get_options();
+		if ( defined('sem_google_analytics_debug') && method_exists(array('google_analytics', 'get_uacct'))
+			&& !current_user_can('publish_posts') && !current_user_can('publish_pages') ) {
+			$uacct = google_analytics::get_uacct();
 			if ( $uacct ) {
 				$flashvars['plugins'][] = 'gapro-1';
 				$flashvars['gapro.accountid'] = $uacct;
