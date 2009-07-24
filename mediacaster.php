@@ -291,7 +291,7 @@ class mediacaster {
 			$width = $max_width;
 		}
 		
-		$hd = $width >= 480 && $height >= 320 ? 1 : 0; // 480px wide, 6:4 format
+		$hd = $width >= 480 && $height >= 270 ? 1 : 0; // 480px wide, 16:9 format
 		
 		$height += 25; // player
 		

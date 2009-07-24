@@ -70,9 +70,10 @@ jQuery(document).ready(function() {
 		set_4_3: function(post_id) {
 			var default_width = mc.default_width;
 			var template = jQuery(window.parent.document.getElementById('page_template')).val();
+			
 			if ( template == 'letter.php' )
 				default_width = 620;
-			else if ( template = 'monocolumn.php' && default_width != mc.max_width )
+			else if ( template == 'monocolumn.php' && default_width != mc.max_width )
 				default_width = mc.max_width;
 			if ( !jQuery("#mc-width-" + post_id).val() )
 				jQuery("#mc-width-" + post_id).val(default_width);
@@ -86,7 +87,7 @@ jQuery(document).ready(function() {
 			var template = jQuery(window.parent.document.getElementById('page_template')).val();
 			if ( template == 'letter.php' )
 				default_width = 620;
-			else if ( template = 'monocolumn.php' && default_width != mc.max_width )
+			else if ( template == 'monocolumn.php' && default_width != mc.max_width )
 				default_width = mc.max_width;
 			if ( !jQuery("#mc-width-" + post_id).val() )
 				jQuery("#mc-width-" + post_id).val(default_width);
@@ -100,7 +101,7 @@ jQuery(document).ready(function() {
 			var template = jQuery(window.parent.document.getElementById('page_template')).val();
 			if ( template == 'letter.php' )
 				default_width = 620;
-			else if ( template = 'monocolumn.php' && default_width != mc.max_width )
+			else if ( template == 'monocolumn.php' && default_width != mc.max_width )
 				default_width = mc.max_width;
 			if ( !jQuery("#mc-width-" + post_id).val() )
 				jQuery("#mc-width-" + post_id).val(default_width);
@@ -115,7 +116,7 @@ jQuery(document).ready(function() {
 			var template = jQuery(window.parent.document.getElementById('page_template')).val();
 			if ( template == 'letter.php' )
 				default_width = 620;
-			else if ( template = 'monocolumn.php' && default_width != mc.max_width )
+			else if ( template == 'monocolumn.php' && default_width != mc.max_width )
 				default_width = mc.max_width;
 			if ( !jQuery("#mc-width-" + post_id).val() )
 				jQuery("#mc-width-" + post_id).val(default_width);
