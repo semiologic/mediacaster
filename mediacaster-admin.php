@@ -101,6 +101,8 @@ class mediacaster_admin {
 			delete_post_meta($post_id, '_mc_image_id');
 		}
 		
+		delete_post_meta($post_id, '_mc_image_size');
+		
 		foreach ( array('width', 'height') as $var ) {
 			if ( !empty($attachment[$var]) && intval($attachment[$var]) )
 				update_post_meta($post_id, '_mc_' . $var, $attachment[$var]);
@@ -175,7 +177,7 @@ class mediacaster_admin {
 		$player['position'] = in_array($_POST['player']['position'], array('top', 'bottom', 'none'))
 			? $_POST['player']['position']
 			: 'top';
-		$player['skin'] = in_array($_POST['player']['skin'], array('bekle', 'kleur', 'metarby10', 'modieus', 'silverywhite'))
+		$player['skin'] = in_array($_POST['player']['skin'], array('bekle', 'kleur', 'modieus'))
 			? $_POST['player']['skin']
 			: 'modius';
 		$player['cover'] = $cover;
@@ -1488,7 +1490,9 @@ class mediacaster_admin {
 				
 				if ( !empty($attachment['image_id']) && intval($attachment['image_id']) )
 					update_post_meta($att_id, '_mc_image_id', $attachment['image_id']);
-
+				
+				delete_post_meta($post_id, '_mc_image_size');
+				
 				foreach ( array('width', 'height') as $var ) {
 					if ( !empty($attachment[$var]) && intval($attachment[$var]) )
 						update_post_meta($att_id, '_mc_' . $var, $attachment[$var]);
@@ -1676,6 +1680,7 @@ EOS;
 			update_post_meta($attachment->ID, '_mc_image_width', $meta['width']);
 			update_post_meta($attachment->ID, '_mc_image_height', $meta['height']);
 			delete_post_meta($attachment->ID, '_mc_image');
+			delete_post_meta($attachment->ID, '_mc_image_size');
 			delete_post_meta($attachment->ID, '_mc_width');
 			delete_post_meta($attachment->ID, '_mc_heigth');
 		}
