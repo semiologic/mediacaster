@@ -369,7 +369,7 @@ class mediacaster {
 		
 		$flashvars['plugins'] = array('quickkeys-1');
 		
-		if ( defined('sem_google_analytics_debug') && method_exists(array('google_analytics', 'get_uacct'))
+		if ( defined('sem_google_analytics_debug') && method_exists('google_analytics', 'get_uacct')
 			&& !current_user_can('publish_posts') && !current_user_can('publish_pages') ) {
 			$uacct = google_analytics::get_uacct();
 			if ( $uacct ) {
@@ -602,7 +602,7 @@ EOS;
 		
 		$flashvars['plugins'] = array('quickkeys-1');
 		
-		if ( defined('sem_google_analytics_debug') && method_exists(array('google_analytics', 'get_uacct'))
+		if ( defined('sem_google_analytics_debug') && method_exists('google_analytics', 'get_uacct')
 			&& !current_user_can('publish_posts') && !current_user_can('publish_pages') ) {
 			$uacct = google_analytics::get_uacct();
 			if ( $uacct ) {

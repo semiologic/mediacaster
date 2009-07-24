@@ -82,7 +82,7 @@ jQuery(document).ready(function() {
 
 			return false;
 		},
-
+		
 		new_snapshot: function(post_id, user_id, nonce) {
 			var s_id, s_width, s_height, s_src;
 			
