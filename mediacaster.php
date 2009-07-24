@@ -316,13 +316,16 @@ class mediacaster {
 		extract(mediacaster::defaults());
 		extract(mediacaster::get_skin($skin));
 		
-		foreach ( array('width', 'height', 'id', 'standalone') as $arg ) {
+		foreach ( array('width', 'height', 'id', 'standalone', 'link') as $arg ) {
 			if ( empty($$arg) )
 				$$arg = false;
 		}
 		
 		$thickbox = false;
 		$autostart = mediacaster::autostart($autostart);
+		
+		if ( $id && !$link )
+			$link = get_post_meta($id, '_mc_link', true);
 		
 		# exception: external audio files
 		if ( !$id && $cover ) {
@@ -447,7 +450,7 @@ EOS;
 		extract(mediacaster::defaults());
 		extract(mediacaster::get_skin($skin));
 		
-		foreach ( array('width', 'height', '_width', '_height', 'id', 'standalone') as $arg ) {
+		foreach ( array('width', 'height', '_width', '_height', 'id', 'standalone', 'link') as $arg ) {
 			if ( empty($$arg) )
 				$$arg = false;
 		}
@@ -458,6 +461,9 @@ EOS;
 			$image = false;
 		elseif ( $id && !$image && $snapshot_id )
 			$image = wp_get_attachment_url($snapshot_id);
+		
+		if ( $id && !$link )
+			$link = get_post_meta($id, '_mc_link', true);
 		
 		if ( $id ) {
 			$_width = 2 * (int) get_post_meta($id, '_mc_width', true);
