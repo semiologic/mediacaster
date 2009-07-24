@@ -65,6 +65,22 @@ jQuery(document).ready(function() {
 			return false;
 		},
 
+		set_4_3: function(post_id) {
+			if ( !jQuery("#mc-width-" + post_id).val() )
+				jQuery("#mc-width-" + post_id).val(mc.default_width);
+			jQuery("#mc-height-" + post_id).val(Math.round(parseInt(jQuery("#mc-width-" + post_id).val()) * 3 / 4));
+			jQuery("#mc-scale-" + post_id).val(4 / 3);
+			return false;
+		},
+
+		set_3_2: function(post_id) {
+			if ( !jQuery("#mc-width-" + post_id).val() )
+				jQuery("#mc-width-" + post_id).val(mc.default_width);
+			jQuery("#mc-height-" + post_id).val(Math.round(parseInt(jQuery("#mc-width-" + post_id).val()) * 2 / 3));
+			jQuery("#mc-scale-" + post_id).val(3 / 2);
+			return false;
+		},
+
 		set_16_9: function(post_id) {
 			if ( !jQuery("#mc-width-" + post_id).val() )
 				jQuery("#mc-width-" + post_id).val(mc.default_width);
@@ -74,11 +90,12 @@ jQuery(document).ready(function() {
 			return false;
 		},
 
-		set_4_3: function(post_id) {
+		set_239_1: function(post_id) {
 			if ( !jQuery("#mc-width-" + post_id).val() )
 				jQuery("#mc-width-" + post_id).val(mc.default_width);
-			jQuery("#mc-height-" + post_id).val(Math.round(parseInt(jQuery("#mc-width-" + post_id).val()) * 3 / 4));
-			jQuery("#mc-scale-" + post_id).val(4 / 3);
+			jQuery("#mc-height-" + post_id).val(Math.round(parseInt(jQuery("#mc-width-" + post_id).val()) / 2.39));
+			jQuery("#mc-scale-" + post_id).val(2.39);
+
 			return false;
 		},
 
