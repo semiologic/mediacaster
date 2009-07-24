@@ -1565,9 +1565,28 @@ class mediacaster_admin {
 	
 	function footer_scripts() {
 		global $content_width;
+		global $sem_options;
 		$o = get_option('mediacaster');
 		
 		$default_width = !empty($content_width) && intval($content_width) ? (int) $content_width : 420;
+		$max_width = $default_width;
+		
+		if ( get_option('template') == 'sem-reloaded' ) {
+			switch ( $sem_options['active_layout'] ) {
+			case 'm':
+				$max_width = 550;
+				break;
+			case 'mm':
+			case 'ms':
+			case 'sm':
+				$max_width = 680;
+				break;
+			default:
+				$max_width = 880;
+				break;
+			}
+		}
+		
 		$media_player = esc_url_raw(plugin_dir_url(__FILE__)
 			. ( $o['longtail']['licensed']
 				? $o['longtail']['licensed']
@@ -1580,6 +1599,7 @@ class mediacaster_admin {
 <script type="text/javascript">
 jQuery(document).ready(function() {
 	mc.default_width = $default_width;
+	mc.max_width = $max_width;
 	mc.media_player = '$media_player';
 	mc.site_url = '$site_url';
 });

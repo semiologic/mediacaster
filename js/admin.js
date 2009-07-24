@@ -4,6 +4,8 @@ jQuery(document).ready(function() {
 		interval: null,
 		post_id: null,
 		default_width: 420,
+		max_width: 420,
+		letter_width: 620,
 		media_player: null,
 		site_url: null,
 		
@@ -66,24 +68,42 @@ jQuery(document).ready(function() {
 		},
 
 		set_4_3: function(post_id) {
+			var default_width = mc.default_width;
+			var template = jQuery(window.parent.document.getElementById('page_template')).val();
+			if ( template == 'letter.php' )
+				default_width = 620;
+			else if ( template = 'monocolumn.php' && default_width != mc.max_width )
+				default_width = mc.max_width;
 			if ( !jQuery("#mc-width-" + post_id).val() )
-				jQuery("#mc-width-" + post_id).val(mc.default_width);
+				jQuery("#mc-width-" + post_id).val(default_width);
 			jQuery("#mc-height-" + post_id).val(Math.round(parseInt(jQuery("#mc-width-" + post_id).val()) * 3 / 4));
 			jQuery("#mc-scale-" + post_id).val(4 / 3);
 			return false;
 		},
 
 		set_3_2: function(post_id) {
+			var default_width = mc.default_width;
+			var template = jQuery(window.parent.document.getElementById('page_template')).val();
+			if ( template == 'letter.php' )
+				default_width = 620;
+			else if ( template = 'monocolumn.php' && default_width != mc.max_width )
+				default_width = mc.max_width;
 			if ( !jQuery("#mc-width-" + post_id).val() )
-				jQuery("#mc-width-" + post_id).val(mc.default_width);
+				jQuery("#mc-width-" + post_id).val(default_width);
 			jQuery("#mc-height-" + post_id).val(Math.round(parseInt(jQuery("#mc-width-" + post_id).val()) * 2 / 3));
 			jQuery("#mc-scale-" + post_id).val(3 / 2);
 			return false;
 		},
 
 		set_16_9: function(post_id) {
+			var default_width = mc.default_width;
+			var template = jQuery(window.parent.document.getElementById('page_template')).val();
+			if ( template == 'letter.php' )
+				default_width = 620;
+			else if ( template = 'monocolumn.php' && default_width != mc.max_width )
+				default_width = mc.max_width;
 			if ( !jQuery("#mc-width-" + post_id).val() )
-				jQuery("#mc-width-" + post_id).val(mc.default_width);
+				jQuery("#mc-width-" + post_id).val(default_width);
 			jQuery("#mc-height-" + post_id).val(Math.round(parseInt(jQuery("#mc-width-" + post_id).val()) * 9 / 16));
 			jQuery("#mc-scale-" + post_id).val(16 / 9);
 
@@ -91,8 +111,14 @@ jQuery(document).ready(function() {
 		},
 
 		set_185_1: function(post_id) {
+			var default_width = mc.default_width;
+			var template = jQuery(window.parent.document.getElementById('page_template')).val();
+			if ( template == 'letter.php' )
+				default_width = 620;
+			else if ( template = 'monocolumn.php' && default_width != mc.max_width )
+				default_width = mc.max_width;
 			if ( !jQuery("#mc-width-" + post_id).val() )
-				jQuery("#mc-width-" + post_id).val(mc.default_width);
+				jQuery("#mc-width-" + post_id).val(default_width);
 			jQuery("#mc-height-" + post_id).val(Math.ceil(parseInt(jQuery("#mc-width-" + post_id).val()) / 1.85));
 			jQuery("#mc-scale-" + post_id).val(1.85);
 
