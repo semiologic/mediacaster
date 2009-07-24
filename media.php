@@ -19,8 +19,6 @@ if ( !is_attachment() ) {
 <meta name="robots" content="noindex,nofollow" />
 <?php
 wp_print_scripts('swfobject');
-if ( method_exists('hitslink', 'header_scripts') )
-	hitslink::header_scripts();
 ?>
 <style type="text/css">
 body {
@@ -39,9 +37,5 @@ body {
 echo mediacaster::shortcode($args);
 ?>
 </div>
-<?php
-if ( defined('sem_google_analytics_debug') )
-	google_analytics::footer_scripts();
-?>
 </body>
 </html>
