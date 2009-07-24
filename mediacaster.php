@@ -150,55 +150,30 @@ class mediacaster {
 			$user_id = array_pop($match);
 			$post_id = array_pop($match);
 			mediacaster_admin::create_snapshot($post_id, $user_id, $nonce);
+			die;
 		} elseif ( isset($_GET['podcasts']) && intval($_GET['podcasts']) ) {
 			mediacaster::display_playlist_xml($_GET['podcasts']);
 			die;
-		} elseif ( !empty($_GET['mc_src']) ) {
-			$src = trim(stripslashes($_GET['mc_src']));
-			if ( $src )
-				$src = esc_url_raw($src);
-			
-			if ( !$src )
-				return;
-			
-			$attachment = false;
-		} else {
-			if ( !is_attachment() )
-				return;
-			
-			global $wp_the_query;
-			$attachment = $wp_the_query->get_queried_object();
-			
-			$src = wp_get_attachment_url($attachment->ID);
-			$regexp = mediacaster::get_extensions();
-			$regexp = '/\\.' . implode('|', $regexp) . '$/i';
-			
-			if ( !preg_match($regexp, $src) )
-				return;
+		} elseif ( !is_attachment() ) {
+			return;
 		}
+		
+		global $wp_the_query;
+		$attachment = $wp_the_query->get_queried_object();
+		
+		$src = wp_get_attachment_url($attachment->ID);
+		$regexp = mediacaster::get_extensions();
+		$regexp = '/\\.' . implode('|', $regexp) . '$/i';
+		
+		if ( !preg_match($regexp, $src) )
+			return;
 		
 		$args = array(
-			'src' => $src,
-			'autostart' => !is_preview() ? 'autostart' : false,
+			'id' => $attachment->ID,
+			'post_id' => $attachment->post_parent,
+			'autostart' => 'autostart',
 			'standalone' => 'standalone',
 			);
-		
-		if ( $attachment ) {
-			$args['id'] = $attachment->ID;
-			$args['post_id'] = $attachment->post_parent;
-		}
-		
-		if ( isset($_GET['mc_width']) && intval($_GET['mc_width']) )
-			$width = intval($_GET['mc_width']);
-		
-		if ( isset($_GET['mc_height']) && intval($_GET['mc_height']) )
-			$height = intval($_GET['mc_height']);
-		
-		if ( !empty($_GET['mc_link']) ) {
-			$link = trim(strip_tags(stripslashes($_GET['mc_link'])));
-			if ( $link )
-				$args['link'] = $link;
-		}
 		
 		include dirname(__FILE__) . '/media.php';
 		die;
@@ -559,17 +534,10 @@ EOS;
 			}
 		}
 		
-		if ( !is_feed() && $thickbox && $image ) {
+		if ( !is_feed() && $thickbox && $image && $id ) {
 			$image = esc_url($image);
 			
-			if ( $id )
-				$href = apply_filters('the_permalink', get_permalink($id));
-			elseif ( in_the_loop() )
-				$href = apply_filters('the_permalink', get_permalink())
-					. '?mc_src=' . urlencode(esc_url_raw($src));
-			else
-				$href = user_trailingslashit(get_option('home'))
-					. '?mc_src=' . urlencode(esc_url_raw($src));
+			$href = apply_filters('the_permalink', get_permalink($id));
 			
 			$max_tb_width = 720;
 			$max_tb_height = 540;
@@ -609,15 +577,6 @@ EOS;
 			}
 			
 			$tb_height += 10; // title bar
-			
-			if ( $link ) {
-				$href .= ( ( strpos($href, '?') === false ) ? '?' : '&' )
-					. 'mc_link=' . urlencode(esc_url_raw($link));
-			}
-			
-			if ( $ltas )
-				$href .= ( ( strpos($href, '?') === false ) ? '?' : '&' )
-					. 'ltas=1';
 			
 			$href = rtrim($href, '?');
 			$href = @html_entity_decode($href, ENT_COMPAT, get_option('blog_charset'));
