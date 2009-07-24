@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: 2.0\n"
 "Report-Msgid-Bugs-To: https://tickets.semiologic.com\n"
-"POT-Creation-Date: 2009-07-20 22:31+0200\n"
+"POT-Creation-Date: 2009-07-24 18:40+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -20,149 +20,80 @@ msgstr ""
 msgid "Media"
 msgstr ""
 
-#: mediacaster-admin.php:100
+#: mediacaster-admin.php:62
 msgid "Invalid Cover File."
 msgstr ""
 
-#: mediacaster-admin.php:172
+#: mediacaster-admin.php:137
 msgid "Settings saved."
 msgstr ""
 
-#: mediacaster-admin.php:177
+#: mediacaster-admin.php:142
 #, php-format
 msgid ""
 "Licensed Player successfully detected (%s). Thank you for supporting "
 "LongTail Video!"
 msgstr ""
 
-#: mediacaster-admin.php:207
+#: mediacaster-admin.php:181
 msgid "Mediacaster Settings"
 msgstr ""
 
-#: mediacaster-admin.php:211 mediacaster-admin.php:216
-msgid "License Notice"
-msgstr ""
-
-#: mediacaster-admin.php:220
-#, php-format
-msgid ""
-"LongTailVideo's JWPlayer is distributed under a Creative Commons <a href=\"%s"
-"\">Attribute, Share Alike, Non-Commercial license</a>."
-msgstr ""
-
-#: mediacaster-admin.php:226
-msgid ""
-"Your Semiologic Pro license includes a commercial JWPlayer license, complete "
-"with a Premium Skin, for use on your Semiologic Pro sites."
-msgstr ""
-
-#: mediacaster-admin.php:230
-msgid "You need to purchase a commercial license if:"
-msgstr ""
-
-#: mediacaster-admin.php:236
-msgid "Your site serves any ads (AdSense, display banners, etc.)"
-msgstr ""
-
-#: mediacaster-admin.php:240
-msgid ""
-"You want to remove the JWPlayer's attribution (eliminate the right-click "
-"link)"
-msgstr ""
-
-#: mediacaster-admin.php:244
-msgid "You are a corporation (governmental or nonprofit use is free)"
-msgstr ""
-
-#: mediacaster-admin.php:254
-msgid "I have read the license and agree to its terms."
-msgstr ""
-
-#: mediacaster-admin.php:263 mediacaster-admin.php:399
-#: mediacaster-admin.php:582
-msgid "Save Changes"
-msgstr ""
-
-#: mediacaster-admin.php:269
+#: mediacaster-admin.php:247 mediacaster-admin.php:996
+#: mediacaster-admin.php:1325
 msgid "Media Player"
 msgstr ""
 
-#: mediacaster-admin.php:276
+#: mediacaster-admin.php:254
 msgid "Player Skin"
 msgstr ""
 
-#: mediacaster-admin.php:282
+#: mediacaster-admin.php:260
 msgid "Bekle"
 msgstr ""
 
-#: mediacaster-admin.php:283
+#: mediacaster-admin.php:261
 msgid "Kleur"
 msgstr ""
 
-#: mediacaster-admin.php:284
+#: mediacaster-admin.php:262
 msgid "Modieus"
 msgstr ""
 
-#: mediacaster-admin.php:304
+#: mediacaster-admin.php:282
 msgid "MP3 Playlist Position"
 msgstr ""
 
-#: mediacaster-admin.php:317
+#: mediacaster-admin.php:295
 msgid "Top"
 msgstr ""
 
-#: mediacaster-admin.php:330
+#: mediacaster-admin.php:308
 msgid "Bottom"
 msgstr ""
 
-#: mediacaster-admin.php:343
+#: mediacaster-admin.php:321
 msgid "None (manual inserts only)"
 msgstr ""
 
-#: mediacaster-admin.php:352
+#: mediacaster-admin.php:330
 msgid "MP3 Playlist Cover"
 msgstr ""
 
-#: mediacaster-admin.php:375
+#: mediacaster-admin.php:353
 msgid "Delete"
 msgstr ""
 
-#: mediacaster-admin.php:378
+#: mediacaster-admin.php:356
 msgid "Your cover is not writable by the server."
 msgstr ""
 
-#: mediacaster-admin.php:386
+#: mediacaster-admin.php:364
 msgid "New Image (jpg or png)"
 msgstr ""
 
-#: mediacaster-admin.php:405
-msgid "LongTail AdSolution"
-msgstr ""
-
-#: mediacaster-admin.php:409
-#, php-format
-msgid ""
-"<a href=\"%s\">LongTail AdSolution</a> allows to you insert pre-roll, "
-"overlay mid- and post-roll advertisements within your Videos."
-msgstr ""
-
-#: mediacaster-admin.php:416
-msgid "LTAS Script"
-msgstr ""
-
-#: mediacaster-admin.php:431
-#, php-format
-msgid ""
-"You will find the needed LongTail AdSolution script after <a href=\"%1$s"
-"\">signing up</a>, and logging into the <a href=\"%2$s\">LTAS Dashboard</a>."
-msgstr ""
-
-#: mediacaster-admin.php:434
-msgid ""
-"Once logged in, browse Setup / Channel Setup. Create a channel if needed. "
-"Once it's approved, click Implement. Choose JW 4.4 or later as the player, "
-"and click get code. Copy the script, paste it into the above field, and "
-"ignore the remaining steps."
+#: mediacaster-admin.php:377 mediacaster-admin.php:582
+msgid "Save Changes"
 msgstr ""
 
 #: mediacaster-admin.php:443
@@ -477,128 +408,120 @@ msgstr ""
 msgid "TV & Film"
 msgstr ""
 
-#: mediacaster-admin.php:867 mediacaster-admin.php:1230
-msgid "Width x Height"
+#: mediacaster-admin.php:821 mediacaster-admin.php:1183
+#: mediacaster-admin.php:1198
+msgid "Link URL"
 msgstr ""
 
-#: mediacaster-admin.php:880 mediacaster-admin.php:1233
-msgid "Default"
-msgstr ""
-
-#: mediacaster-admin.php:883 mediacaster-admin.php:1234
-msgid "16:9"
-msgstr ""
-
-#: mediacaster-admin.php:886 mediacaster-admin.php:1235
-msgid "4:3"
-msgstr ""
-
-#: mediacaster-admin.php:888
-msgid "(optional)"
-msgstr ""
-
-#: mediacaster-admin.php:892 mediacaster-admin.php:1239
-msgid "Preview Image"
-msgstr ""
-
-#: mediacaster-admin.php:902
-msgid "New Snapshot"
-msgstr ""
-
-#: mediacaster-admin.php:906
-msgid "Cancel Snapshot"
-msgstr ""
-
-#: mediacaster-admin.php:909 mediacaster-admin.php:1243
-msgid "The URL of a preview image when the video isn't playing."
-msgstr ""
-
-#: mediacaster-admin.php:915 mediacaster-admin.php:960
-#: mediacaster-admin.php:1120 mediacaster-admin.php:1247
-msgid "Autostart"
-msgstr ""
-
-#: mediacaster-admin.php:920 mediacaster-admin.php:965
-msgid "Automatically start the (first) media player (NB: bandwidth intensive)."
-msgstr ""
-
-#: mediacaster-admin.php:925 mediacaster-admin.php:1253
-msgid "Thickbox"
-msgstr ""
-
-#: mediacaster-admin.php:930 mediacaster-admin.php:1255
-msgid "Open the video in a thickbox window (requires a preview image)."
-msgstr ""
-
-#: mediacaster-admin.php:957
+#: mediacaster-admin.php:823 mediacaster-admin.php:1190
 msgid ""
 "The link URL to which the player should direct users to (e.g. an affiliate "
 "link)."
 msgstr ""
 
-#: mediacaster-admin.php:1098
-msgid "Audio File URL"
+#: mediacaster-admin.php:866 mediacaster-admin.php:1210
+msgid "Width x Height"
 msgstr ""
 
-#: mediacaster-admin.php:1105 mediacaster-admin.php:1216
-#: mediacaster-admin.php:1363
+#: mediacaster-admin.php:885 mediacaster-admin.php:1229
+msgid "Max"
+msgstr ""
+
+#: mediacaster-admin.php:888 mediacaster-admin.php:1232
+msgid "16:9"
+msgstr ""
+
+#: mediacaster-admin.php:891 mediacaster-admin.php:1235
+msgid "4:3"
+msgstr ""
+
+#: mediacaster-admin.php:894 mediacaster-admin.php:1238
+msgid "(optional)"
+msgstr ""
+
+#: mediacaster-admin.php:924 mediacaster-admin.php:1248
+msgid "Preview Image"
+msgstr ""
+
+#: mediacaster-admin.php:936 mediacaster-admin.php:1260
+msgid "New Snapshot"
+msgstr ""
+
+#: mediacaster-admin.php:940 mediacaster-admin.php:1264
+msgid "Cancel Snapshot"
+msgstr ""
+
+#: mediacaster-admin.php:944 mediacaster-admin.php:1268
+msgid "The URL of a preview image when the video isn't playing."
+msgstr ""
+
+#: mediacaster-admin.php:950 mediacaster-admin.php:1278
+msgid "Thickbox"
+msgstr ""
+
+#: mediacaster-admin.php:955 mediacaster-admin.php:1281
+msgid "Open the video in a thickbox window (requires a preview image)."
+msgstr ""
+
+#: mediacaster-admin.php:982 mediacaster-admin.php:1309
+msgid "Autostart"
+msgstr ""
+
+#: mediacaster-admin.php:987 mediacaster-admin.php:1312
+msgid "Automatically start the (first) media player (bandwidth intensive)."
+msgstr ""
+
+#: mediacaster-admin.php:991 mediacaster-admin.php:1319
+msgid "Insert As"
+msgstr ""
+
+#: mediacaster-admin.php:1002 mediacaster-admin.php:1331
+msgid "Download Link"
+msgstr ""
+
+#: mediacaster-admin.php:1007
+msgid "Get Shortcode"
+msgstr ""
+
+#: mediacaster-admin.php:1158
+msgid "File URL"
+msgstr ""
+
+#: mediacaster-admin.php:1165
 msgid "Title"
 msgstr ""
 
-#: mediacaster-admin.php:1109
-msgid "Link text, e.g. &#8220;Still Alive by Jonathan Coulton&#8221;"
+#: mediacaster-admin.php:1174
+msgid "Description"
 msgstr ""
 
-#: mediacaster-admin.php:1113 mediacaster-admin.php:1223
-#: mediacaster-admin.php:1370
-msgid "Link URL"
-msgstr ""
-
-#: mediacaster-admin.php:1117
+#: mediacaster-admin.php:1202
+#, php-format
 msgid ""
-"The link URL to which the player should direct users to (e.g. an affiliate "
-"link). Only applicable for mp3, m4a and aac files."
+"Not available, but don't miss YouTube's <a href=\"%s\" onclick=\"window.open"
+"(this.href); return false;\">video annotation</a> features."
 msgstr ""
 
-#: mediacaster-admin.php:1122
-msgid "Automatically start the (first) podcast (NB: bandwidth intensive)."
-msgstr ""
-
-#: mediacaster-admin.php:1127 mediacaster-admin.php:1260
-#: mediacaster-admin.php:1377
+#: mediacaster-admin.php:1340
 msgid "Insert into Post"
 msgstr ""
 
-#: mediacaster-admin.php:1209 mediacaster-admin.php:1356
-msgid "Video URL"
-msgstr ""
-
-#: mediacaster-admin.php:1220
-msgid "Link text, e.g. &#8220;Lucy on YouTube&#8221;"
-msgstr ""
-
-#: mediacaster-admin.php:1227
-msgid ""
-"The link URL to which the player should direct users to (e.g. an affiliate "
-"link). Only applicable for flv, mp4, m4v, mov and YouTube files."
-msgstr ""
-
-#: mediacaster-admin.php:1249
-msgid "Automatically start the (first) video (NB: bandwidth intensive)."
-msgstr ""
-
-#: mediacaster-admin.php:1288
+#: mediacaster-admin.php:1399
 msgid "YouTube Video"
 msgstr ""
 
-#: mediacaster-admin.php:1367
-msgid "Link text, e.g. &#8220;Ransom Demands (PDF)&#8221;"
+#: mediacaster-admin.php:1415
+msgid "MP3 Playlist"
 msgstr ""
 
-#: mediacaster-admin.php:1510
+#: mediacaster-admin.php:1432 mediacaster-admin.php:1454
+msgid "Untitled Media"
+msgstr ""
+
+#: mediacaster-admin.php:1669
 msgid "Video Snapshot"
 msgstr ""
 
-#: mediacaster.php:1189 mediacaster.php:1190
+#: mediacaster.php:1350 mediacaster.php:1351
 msgid "Mediacaster"
 msgstr ""

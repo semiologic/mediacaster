@@ -132,17 +132,7 @@ class mediacaster {
 
 	function get_attached_file($path, $post_id) {
 		$src = get_post_meta($post_id, '_mc_src', true);
-		if ( !$src )
-			return $path;
-		
-		$ext = get_post_meta($post_id, '_mc_ext', true);
-		if ( !$ext )
-			return $src;
-		
-		$post = get_post($post_id);
-		$file = sanitize_title($post->post_title);
-		
-		return "$src -- $file.$ext";
+		return $src ? $src : $path;
 	} # get_attached_file()
 	
 	
@@ -277,6 +267,9 @@ class mediacaster {
 		}
 		
 		switch ( $args['type'] ) {
+		case 'youtube':
+			return mediacaster::youtube($args);
+		
 		case 'mp3':
 		case 'm4a':
 		case 'aac':
@@ -292,7 +285,6 @@ class mediacaster {
 		case 'mov':
 		case '3gp':
 		case '3g2':
-		case 'youtube':
 		case 'video':
 			return mediacaster::video($args, $content);
 		
@@ -300,6 +292,67 @@ class mediacaster {
 			return mediacaster::file($args, $content);
 		}
 	} # shortcode()
+	
+	
+	/**
+	 * youtube()
+	 *
+	 * @param array $args
+	 * @return void
+	 **/
+
+	function youtube($args) {
+		static $count = 0;
+		extract($args, EXTR_SKIP);
+		extract(mediacaster::defaults());
+		
+		if ( empty($width) )
+			$width = $max_width;
+		if ( empty($height) )
+			$height = (int) round($max_width * 9 / 16);
+		
+		if ( $width > $max_width ) {
+			$height = round($height * $max_width / $width);
+			$width = $max_width;
+		}
+		
+		$hd = $width >= 480 && $height >= 320 ? 1 : 0; // 480px wide, 6:4 format
+		
+		$height += 25; // player
+		
+		$allowscriptaccess = 'false';
+		$allowfullscreen = 'true';
+		$wmode = 'transparent';
+		
+		$src = trim($src, ' "');
+		$src = trim($src);
+		$src = preg_replace("|/v/([^/]+)/?|", "/?v=$1&", $src); // e.g. http://www.youtube.com/v/jF-kELmmvgA
+		$src = str_replace(array('&amp;', '&#038;'), '&', $src);
+		$src = @parse_url($src);
+		
+		if ( !isset($src['query']) )
+			return '';
+		
+		parse_str($src['query'], $src);
+		
+		if ( !isset($src['v']) )
+			return '';
+		
+		$src = preg_replace("/[^0-9a-z_-]/i", '', $src['v']);
+		
+		if ( !$src )
+			return '';
+		
+		$player = 'http://www.youtube.com/v/' . $src . '&fs=1&rel=0&border=0&showinfo=0&showsearch=0&hd=' . $hd;
+		
+		return <<<EOS
+
+<div class="media_container"><div class="media" style="width: {$width}px; height: {$height}px;"><object classid="clsid:D27CDB6E-AE6D-11cf-96B8-444553540000" width="$width" height="$height"><param name="movie" value="$player" /><param name="allowfullscreen" value="$allowfullscreen" /><param name="allowscriptaccess" value="$allowscriptaccess" /><param name="wmode" value="$wmode" /><param name="flashvars" value="$flashvars_html" /><embed src="$player" pluginspage="http://www.macromedia.com/go/getflashplayer" width="$width" height="$height" allowfullscreen="$allowfullscreen" allowscriptaccess="$allowscriptaccess" wmode="$wmode" flashvars="$flashvars_html" /></object></div></div>
+
+$script
+
+EOS;
+	} # youtube()
 	
 	
 	/**
@@ -354,6 +407,7 @@ class mediacaster {
 			$image = false;
 			if ( !$width )
 				$width = 360;
+			$width = max($width, $max_width);
 			$height = 0;
 		}
 		

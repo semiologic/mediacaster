@@ -783,14 +783,11 @@ class mediacaster_admin {
 	 **/
 
 	function attachment_fields_to_edit($post_fields, $post) {
-		$mc_type = get_post_meta($post->ID, '_mc_type', true);
 		$file_url = wp_get_attachment_url($post->ID);
 		
-		if ( !$mc_type ) {
-			if ( !preg_match("/\.([a-z0-9]+)$/i", $file_url, $ext) )
-				return $post_fields;
-			$ext = esc_attr(strtolower(end($ext)));
-		}
+		if ( !preg_match("/\.([a-z0-9]+)$/i", $file_url, $ext) )
+			return $post_fields;
+		$ext = esc_attr(strtolower(end($ext)));
 		
 		global $content_width;
 		$o = get_option('mediacaster');
@@ -805,7 +802,7 @@ class mediacaster_admin {
 		case 'video/x-flv':
 		case 'video/quicktime':
 		case 'video/3gpp':
-			if ( !in_array($mc_type, array('audio', 'video')) && !in_array($ext, mediacaster::get_extensions()) )
+			if ( !in_array($ext, mediacaster::get_extensions()) )
 				break;
 			
 			$post_fields['post_title']['required'] = true;
@@ -829,7 +826,7 @@ class mediacaster_admin {
 			break;
 		
 		default:
-			if ( $mc_type != 'file' && !preg_match("/^(?:application|text)\//", $post->post_mime_type) )
+			if ( !preg_match("/^(?:application|text)\//", $post->post_mime_type) )
 				break;
 			$post_fields['post_title']['required'] = true;
 			$post_fields['post_title']['input'] = 'html';
@@ -848,7 +845,7 @@ class mediacaster_admin {
 		case 'video/mp4':
 		case 'video/x-flv':
 		case 'video/quicktime':
-			if ( $mc_type != 'video' && !in_array($ext, mediacaster::get_extensions('video')) )
+			if ( !in_array($ext, mediacaster::get_extensions('video')) )
 				break;
 			
 			$user = wp_get_current_user();
@@ -977,15 +974,10 @@ class mediacaster_admin {
 			}
 			//*/
 			
-			$type = 'video';
-			
 		case 'audio/mpeg':
 		case 'audio/mp3':
 		case 'audio/aac':
 		case 'video/3gpp':
-			if ( empty($type) )
-				$type = 'audio';
-			
 			$post_fields['autostart'] = array(
 				'label' => __('Autostart', 'mediacaster'),
 				'input' => 'html',
@@ -1000,7 +992,7 @@ class mediacaster_admin {
 				'input' => 'html',
 				'html' => '<label style="font-weight: normal; margin-right: 15px; display: inline;">'
 					. '<input type="radio" id="mc-insert-' . $post->ID . '-player"'
-						. ' name="attachments[' . $post->ID . '][insert_as]" value="' . $type . '" checked="checked">&nbsp;'
+						. ' name="attachments[' . $post->ID . '][insert_as]" value="player" checked="checked">&nbsp;'
 					. __('Media Player', 'mediacaster')
 					. '</label>'
 					. ' '
@@ -1051,13 +1043,12 @@ class mediacaster_admin {
 	 **/
 
 	function media_send_to_editor($html, $send_id, $attachment) {
-		if ( preg_match("/^\[/", $html) || empty($attachment['insert_as']) )
+		if ( preg_match("/^\[/", $html) )
 			return $html;
 		
 		$send_id = intval($send_id);
 		$att = get_post($send_id);
 		
-		$mc_type = get_post_meta($att->ID, '_mc_type', true);
 		$file_url = wp_get_attachment_url($att->ID);
 		
 		if ( !$file_url )
@@ -1067,12 +1058,13 @@ class mediacaster_admin {
 		case 'audio/mpeg':
 		case 'audio/mp3':
 		case 'audio/aac':
-			// assume a playlist was passed if the following test fails
-			if ( $mc_type != 'audio' && preg_match("/\.([a-z0-9]+)$/i", $file_url, $ext) ) {
+			if ( preg_match("/\.([a-z0-9]+)$/i", $file_url, $ext) ) {
 				$ext = strtolower(end($ext));
 				if ( !preg_match("/\b(?:" . implode('|', mediacaster::get_extensions('audio')) . ")\b/i", $file_url) )
 					return $html;
 			}
+			if ( $attachment['insert_as'] != 'file' )
+				$attachment['insert_as'] = 'video';
 			break;
 		
 		case 'video/mpeg':
@@ -1080,17 +1072,19 @@ class mediacaster_admin {
 		case 'video/x-flv':
 		case 'video/quicktime':
 		case 'video/3gpp':
-			// assume a playlist was passed if the following test fails
-			if ( $mc_type != 'video' && preg_match("/\.([a-z0-9]+)$/i", $file_url, $ext) ) {
+			if ( preg_match("/\.([a-z0-9]+)$/i", $file_url, $ext) ) {
 				$ext = strtolower(end($ext));
 				if ( !preg_match("/\b(?:" . implode('|', mediacaster::get_extensions('video')) . ")\b/i", $file_url) )
 					return $html;
 			}
+			if ( $attachment['insert_as'] != 'file' )
+				$attachment['insert_as'] = 'audio';
 			break;
 			
 		default:
-			if ( !$mc_type && !preg_match("/^(?:application|text)\//", $att->post_mime_type) )
+			if ( !preg_match("/^(?:application|text)\//", $att->post_mime_type) )
 				return $html;
+			$attachment['insert_as'] = 'file';
 			break;
 		}
 		
@@ -1164,7 +1158,7 @@ class mediacaster_admin {
 						<span class="alignleft"><label for="mc-src-0">' . __('File URL', 'mediacaster') . '</label></span>
 						<span class="alignright"><abbr title="required" class="required">*</abbr></span>
 					</th>
-					<td class="field"><input id="mc-src-0" name="attachments[0][src]" value="" type="text" aria-required="true"></td>
+					<td class="field"><input id="mc-src-0" name="attachments[0][src]" value="" type="text" aria-required="true" onchange="return mc.set_type();"></td>
 				</tr>
 				<tr>
 					<th valign="top" scope="row" class="label">
@@ -1172,8 +1166,10 @@ class mediacaster_admin {
 						<span class="alignright"><abbr title="required" class="required">*</abbr></span>
 					</th>
 					<td class="field"><input id="mc-title-0" name="attachments[0][post_title]" value="" type="text" aria-required="true"></td>
-				</tr>
-				<tr>
+				</tr>';	
+		
+		$o .= '
+				<tr id="mc-content-row">
 					<th valign="top" scope="row" class="label">
 						<span class="alignleft"><label for="attachments[0][post_content]">' . __('Description', 'mediacaster') . '</label></span>
 					</th>
@@ -1181,11 +1177,8 @@ class mediacaster_admin {
 				</tr>';
 		
 		
-		switch ( $type ) {
-		case 'audio':
-		case 'video':
-			$o .= '
-				<tr>
+		$o .= '
+				<tr id="mc-link-row" ' . ( $type == 'file' ? ' style="display: none;"' : '' ) . '>
 					<th valign="top" scope="row" class="label">
 						<span class="alignleft"><label for="mc-width-0">' . __('Link URL', 'mediacaster') . '</label></span>
 					</th>
@@ -1198,12 +1191,21 @@ class mediacaster_admin {
 					. '</p>' . "\n"
 					. '</td>
 				</tr>';
-		}
 		
-		switch ( $type ) {
-		case 'video':
-			$o .= '
-				<tr>
+		$o .= '
+				<tr id="mc-youtube-row" style="display: none;">
+					<th valign="top" scope="row" class="label">
+						<span class="alignleft"><label>' . __('Link URL', 'mediacaster') . '</label></span>
+					</th>
+					<td class="field">'
+				. '<p class="help">'
+					. sprintf(__('Not available, but don\'t miss YouTube\'s <a href="%s" onclick="window.open(this.href); return false;">video annotation</a> features.', 'mediacaster'), 'http://www.google.com/support/youtube/bin/answer.py?answer=92710&topic=14354')
+					. '</p>' . "\n"
+					. '</td>
+				</tr>';	
+		
+		$o .= '
+				<tr id="mc-format-row" ' . ( $type != 'video' ? ' style="display: none;"' : '' ) . '>
 					<th valign="top" scope="row" class="label">
 						<span class="alignleft"><label for="mc-width-0">' . __('Width x Height', 'mediacaster') . '</label></span>
 					</th>
@@ -1237,11 +1239,11 @@ class mediacaster_admin {
 					. '</td>
 				</tr>';
 			
-			$user = wp_get_current_user();
-			$nonce = wp_create_nonce('snapshot-0');
+		$user = wp_get_current_user();
+		$nonce = wp_create_nonce('snapshot-0');
 			
-			$o .= '
-				<tr>
+		$o .= '
+				<tr id="mc-preview-row" ' . ( $type != 'video' ? ' style="display: none;"' : '' ) . '>
 					<th valign="top" scope="row" class="label">
 						<span class="alignleft"><label for="mc-autostart-0">' . __('Preview Image', 'mediacaster') . '</label></span>
 					</th>
@@ -1270,8 +1272,8 @@ class mediacaster_admin {
 					. '</td>
 				</tr>';
 			
-			$o .= '
-				<tr>
+		$o .= '
+				<tr id="mc-thickbox-row" ' . ( $type != 'video' ? ' style="display: none;"' : '' ) . '>
 					<th valign="top" scope="row" class="label">
 						<span class="alignleft"><label for="mc-autostart-0">' . __('Thickbox', 'mediacaster') . '</label></span>
 					</th>
@@ -1281,11 +1283,11 @@ class mediacaster_admin {
 				</tr>';
 			
 			
-			/* todo: ltas
-			$ops = get_option('mediacaster');
-			if ( $ops['longtail']['channel'] ) {
-				$o .= '
-				<tr>
+		/* todo: ltas
+		$ops = get_option('mediacaster');
+		if ( $ops['longtail']['channel'] ) {
+			$o .= '
+				<tr id="mc-ltas-row" ' . ( $type != 'video' ? ' style="display: none;"' : '' ) . '>
 					<th valign="top" scope="row" class="label">
 						<span class="alignleft"><label for="mc-autostart-0">' . __('Insert Ads', 'mediacaster') . '</label></span>
 					</th>
@@ -1298,12 +1300,11 @@ class mediacaster_admin {
 						. '</label>'
 					. '</td>
 				</tr>';
-			}
-			//*/
+		}
+		//*/
 			
-		case 'audio':
-			$o .= '
-				<tr>
+		$o .= '
+				<tr id="mc-autostart-row" ' . ( $type == 'file' ? ' style="display: none;"' : '' ) . '>
 					<th valign="top" scope="row" class="label">
 						<span class="alignleft"><label for="mc-autostart-0">' . __('Autostart', 'mediacaster') . '</label></span>
 					</th>
@@ -1312,15 +1313,15 @@ class mediacaster_admin {
 					. '</td>
 				</tr>';
 			
-			$o .= '
-				<tr>
+		$o .= '
+				<tr id="mc-player-row" ' . ( $type == 'file' ? ' style="display: none;"' : '' ) . '>
 					<th valign="top" scope="row" class="label">
 						<span class="alignleft"><label>' . __('Insert As', 'mediacaster') . '</label></span>
 					</th>
 					<td class="field">'
 				. '<label style="font-weight: normal; margin-right: 15px; display: inline;">'
 				. '<input type="radio" id="mc-insert-0-player"'
-					. ' name="attachments[0][insert_as]" value="' . $type . '" checked="checked">&nbsp;'
+					. ' name="attachments[0][insert_as]" value="player" checked="checked">&nbsp;'
 				. __('Media Player', 'mediacaster')
 				. '</label>'
 				. ' '
@@ -1331,8 +1332,6 @@ class mediacaster_admin {
 				. '</label>'
 				. '</td>
 				</tr>';
-			break;
-		}
 		
 		$o .= '
 				<tr>
@@ -1342,13 +1341,6 @@ class mediacaster_admin {
 					</td>
 				</tr>
 			</tbody></table>';
-		
-		switch ( $type ) {
-		case 'file':
-			$o .= '
-			<input name="attachments[0][insert_as]" value="file" type="hidden">';
-			break;
-		}
 		
 		return $o;
 	} # type_url_form()
@@ -1403,32 +1395,51 @@ class mediacaster_admin {
 		$guid = rtrim('ext:' . str_replace(array('?', '&'), '/', $src), '/');
 		
 		if ( preg_match("/https?:\/\/(?:[^\/]+\.)?youtube\.com\//", $src) ) {
-			$ext = 'mov';
-			$mime_type = 'video/youtube';
-			$guid .= '/youtube-video.mov';
+			if ( !$post_title )
+				$post_title = __('YouTube Video', 'mediacaster');
+			
+			$width = !empty($attachment['width']) && intval($attachment['width'])
+				? ( ' width="' . $attachment['width'] . '"' )
+				: '';
+			
+			$height = !empty($attachment['height']) && intval($attachment['height'])
+				? ( ' height="' . $attachment['height'] . '"' )
+				: '';
+			
+			return ''
+				. '[mc src="' . $src . '"' . $width . $height . ']'
+				. $post_title
+				. '[/mc]';
 		} elseif ( preg_match("/\b(rss2?|xml|feed|atom)\b/i", $src) ) {
-			$ext = 'mp3';
-			$mime_type = 'audio/mp3'; // an xml playlist
-			$guid .= '/external-playlist.mp3';
+			if ( !$post_title )
+				$post_title = __('MP3 Playlist', 'mediacaster');
+			
+			$autostart = !empty($attachment['image'])
+				? ' autostart'
+				: '';
+			
+			return ''
+				. '[mc src="' . $src . '"' . $autostart . ']'
+				. $post_title
+				. '[/mc]';
 		} else {
 			$mime_type = wp_check_filetype($src, null);
-			$ext = false;
+			$ext = $mime_type['ext'];
 			$mime_type = $mime_type['type'];
 			
-			if ( !$mime_type ) {
-				$src2 = urldecode($src); // e.g. http://blip.tv/play/guQ1gZOTeAI%2Em4v
-				$mime_type = wp_check_filetype($src2, null);
-				$ext = $mime_type['ext'];
-				$mime_type = $mime_type['type'];
-				if ( $ext )
-					$guid .= '/' . basename($src2);
+			if ( !$mime_type || !in_array($ext, mediacaster::get_extensions()) && $type != 'file' ) {
+				if ( !$post_title )
+					$post_title = __('Untitled Media', 'mediacaster');
+				
+				return '<a href="' . esc_url($src) . '">'
+					. $post_title
+					. '</a>';
 			}
 			
-			if ( !$mime_type ) {
-				$mime_type = 'application/octet-stream';
-				$ext = 'app';
-				$guid .= '/external-file.app';
-			}
+			if ( in_array($ext, mediacaster::get_extensions('audio')) && $type != 'audio' )
+				$type = 'audio';
+			elseif ( in_array($ext, mediacaster::get_extensions('video')) && $type != 'video' )
+				$type = 'video';
 		}
 		
 		global $wpdb;
@@ -1458,58 +1469,57 @@ class mediacaster_admin {
 				die(-1);
 			
 			update_post_meta($att_id, '_mc_src', $src);
-			if ( $ext )
-				update_post_meta($att_id, '_mc_ext', $ext);
-			update_post_meta($att_id, '_mc_type', $type);
 			
-			$link = false;
-			if ( !empty($attachment['link']) ) {
-				$link = $attachment['link'];
-				$link = trim(strip_tags($link));
+			if ( in_array($type, array('audio', 'video')) ) {
+				$link = false;
+				if ( !empty($attachment['link']) ) {
+					$link = $attachment['link'];
+					$link = trim(strip_tags($link));
+					if ( $link )
+						$link = esc_url_raw($link);
+				}
 				if ( $link )
-					$link = esc_url_raw($link);
-			}
-			if ( $link )
-				update_post_meta($att_id, '_mc_link', addslashes($link));
-		
-			if ( isset($attachment['image']) ) {
-				$image = false;
-				if ( !empty($attachment['image']) ) {
-					$image = $attachment['image'];
-					$image = trim(strip_tags($image));
-					if ( $image )
-						$image = esc_url_raw($image);
-				}
-				if ( $image ) {
-					update_post_meta($att_id, '_mc_image', addslashes($image));
-					if ( !empty($attachment['image_id']) && intval($attachment['image_id']) ) {
-						wp_delete_attachment($attachment['image_id']);
-						unset($attachment['image_id']);
-					}
-				}
-				
-				if ( !empty($attachment['image_id']) && intval($attachment['image_id']) ) {
-					update_post_meta($att_id, '_mc_image_id', $attachment['image_id']);
-					if ( $post_parent ) {
-						global $wpdb;
-						$wpdb->query("
-							UPDATE $wpdb->posts
-							SET		post_parent = " . intval($post_parent) . "
-							WHERE	ID = " . intval($attachment['image_id'])
-							);
-						clean_post_cache($attachment['image_id']);
-					}
-				}
-				
-				delete_post_meta($post_id, '_mc_image_size');
-				
-				foreach ( array('width', 'height') as $var ) {
-					if ( !empty($attachment[$var]) && intval($attachment[$var]) )
-						update_post_meta($att_id, '_mc_' . $var, $attachment[$var]);
-				}
+					update_post_meta($att_id, '_mc_link', addslashes($link));
 
-				if ( !empty($attachment['ltas']) )
-					update_post_meta($att_id, '_mc_ltas', '1');
+				if ( isset($attachment['image']) ) {
+					$image = false;
+					if ( !empty($attachment['image']) ) {
+						$image = $attachment['image'];
+						$image = trim(strip_tags($image));
+						if ( $image )
+							$image = esc_url_raw($image);
+					}
+					if ( $image ) {
+						update_post_meta($att_id, '_mc_image', addslashes($image));
+						if ( !empty($attachment['image_id']) && intval($attachment['image_id']) ) {
+							wp_delete_attachment($attachment['image_id']);
+							unset($attachment['image_id']);
+						}
+					}
+
+					if ( !empty($attachment['image_id']) && intval($attachment['image_id']) ) {
+						update_post_meta($att_id, '_mc_image_id', $attachment['image_id']);
+						if ( $post_parent ) {
+							global $wpdb;
+							$wpdb->query("
+								UPDATE $wpdb->posts
+								SET		post_parent = " . intval($post_parent) . "
+								WHERE	ID = " . intval($attachment['image_id'])
+								);
+							clean_post_cache($attachment['image_id']);
+						}
+					}
+
+					delete_post_meta($post_id, '_mc_image_size');
+
+					foreach ( array('width', 'height') as $var ) {
+						if ( !empty($attachment[$var]) && intval($attachment[$var]) )
+							update_post_meta($att_id, '_mc_' . $var, $attachment[$var]);
+					}
+
+					if ( !empty($attachment['ltas']) )
+						update_post_meta($att_id, '_mc_ltas', '1');
+				}
 			}
 		} elseif ( !$post_title ) {
 			$att = get_post($att_id);
