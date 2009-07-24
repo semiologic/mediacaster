@@ -90,11 +90,11 @@ jQuery(document).ready(function() {
 			return false;
 		},
 
-		set_239_1: function(post_id) {
+		set_185_1: function(post_id) {
 			if ( !jQuery("#mc-width-" + post_id).val() )
 				jQuery("#mc-width-" + post_id).val(mc.default_width);
-			jQuery("#mc-height-" + post_id).val(Math.round(parseInt(jQuery("#mc-width-" + post_id).val()) / 2.39));
-			jQuery("#mc-scale-" + post_id).val(2.39);
+			jQuery("#mc-height-" + post_id).val(Math.ceil(parseInt(jQuery("#mc-width-" + post_id).val()) / 1.85));
+			jQuery("#mc-scale-" + post_id).val(1.85);
 
 			return false;
 		},
