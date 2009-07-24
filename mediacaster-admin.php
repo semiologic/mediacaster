@@ -26,98 +26,6 @@ add_action('admin_print_scripts', array('mediacaster_admin', 'admin_scripts'), 1
 
 class mediacaster_admin {
 	/**
-	 * save_entry()
-	 *
-	 * @param int $post_id
-	 * @return void
-	 **/
-
-	function save_entry($post_id) {
-		if ( !$_POST || wp_is_post_revision($post_id) || !current_user_can('edit_post', $post_id) )
-			return;
-		
-		delete_post_meta($post_id, '_mc_enclosures');
-		delete_post_meta($post_id, '_mc_enclosed');
-	} # save_entry()
-	
-	
-	/**
-	 * save_attachment()
-	 *
-	 * @return void
-	 **/
-	
-	function save_attachment($post_id) {
-		if ( !$_POST || wp_is_post_revision($post_id) )
-			return;
-		
-		$post_id = (int) $post_id;
-		if ( !$post_id || !isset($_POST['attachments'][$post_id]['link']) )
-			return;
-		
-		$attachment = $_POST['attachments'][$post_id];
-		
-		$link = false;
-		if ( !empty($attachment['link']) ) {
-			$link = $attachment['link'];
-			$link = trim(strip_tags(stripslashes($link)));
-			if ( $link )
-				$link = esc_url_raw($link);
-		}
-		if ( $link )
-			update_post_meta($post_id, '_mc_link', addslashes($link));
-		else
-			delete_post_meta($post_id, '_mc_link');
-		
-		if ( !isset($attachment['image']) )
-			return;
-		
-		$image = false;
-		if ( !empty($attachment['image']) ) {
-			$image = $attachment['image'];
-			$image = trim(strip_tags(stripslashes($image)));
-			if ( $image )
-				$image = esc_url_raw($image);
-		}
-		if ( $image ) {
-			update_post_meta($post_id, '_mc_image', addslashes($image));
-			unset($attachment['image_id']);
-			if ( $old_image_id = get_post_meta($post_id, '_mc_image_id', true) ) {
-				delete_post_meta($post_id, '_mc_image_id');
-				wp_delete_attachment($old_image_id);
-			}
-		} else {
-			delete_post_meta($post_id, '_mc_image');
-		}
-		
-		if ( !empty($attachment['image_id']) && intval($attachment['image_id']) ) {
-			$image_id = $attachment['image_id'];
-			$old_image_id = get_post_meta($post_id, '_mc_image_id', true);
-			if ( $old_image_id != $image_id ) {
-				update_post_meta($post_id, '_mc_image_id', $image_id);
-				wp_delete_attachment($old_image_id);
-			}
-		} else {
-			delete_post_meta($post_id, '_mc_image_id');
-		}
-		
-		delete_post_meta($post_id, '_mc_image_size');
-		
-		foreach ( array('width', 'height') as $var ) {
-			if ( !empty($attachment[$var]) && intval($attachment[$var]) )
-				update_post_meta($post_id, '_mc_' . $var, $attachment[$var]);
-			else
-				delete_post_meta($post_id, '_mc_' . $var);
-		}
-		
-		if ( !empty($attachment['ltas']) )
-			update_post_meta($post_id, '_mc_ltas', '1');
-		else
-			delete_post_meta($post_id, '_mc_ltas');
-	} # save_attachment()
-	
-	
-	/**
 	 * save_options()
 	 *
 	 * @return void
@@ -772,6 +680,98 @@ class mediacaster_admin {
 			'TV & Film' => __('TV & Film', 'mediacaster'),
 		);
 	} # get_itunes_categories()
+	
+	
+	/**
+	 * save_entry()
+	 *
+	 * @param int $post_id
+	 * @return void
+	 **/
+
+	function save_entry($post_id) {
+		if ( !$_POST || wp_is_post_revision($post_id) || !current_user_can('edit_post', $post_id) )
+			return;
+		
+		delete_post_meta($post_id, '_mc_enclosures');
+		delete_post_meta($post_id, '_mc_enclosed');
+	} # save_entry()
+	
+	
+	/**
+	 * save_attachment()
+	 *
+	 * @return void
+	 **/
+	
+	function save_attachment($post_id) {
+		if ( !$_POST || wp_is_post_revision($post_id) )
+			return;
+		
+		$post_id = (int) $post_id;
+		if ( !$post_id || !isset($_POST['attachments'][$post_id]['link']) )
+			return;
+		
+		$attachment = $_POST['attachments'][$post_id];
+		
+		$link = false;
+		if ( !empty($attachment['link']) ) {
+			$link = $attachment['link'];
+			$link = trim(strip_tags(stripslashes($link)));
+			if ( $link )
+				$link = esc_url_raw($link);
+		}
+		if ( $link )
+			update_post_meta($post_id, '_mc_link', addslashes($link));
+		else
+			delete_post_meta($post_id, '_mc_link');
+		
+		if ( !isset($attachment['image']) )
+			return;
+		
+		$image = false;
+		if ( !empty($attachment['image']) ) {
+			$image = $attachment['image'];
+			$image = trim(strip_tags(stripslashes($image)));
+			if ( $image )
+				$image = esc_url_raw($image);
+		}
+		if ( $image ) {
+			update_post_meta($post_id, '_mc_image', addslashes($image));
+			unset($attachment['image_id']);
+			if ( $old_image_id = get_post_meta($post_id, '_mc_image_id', true) ) {
+				delete_post_meta($post_id, '_mc_image_id');
+				wp_delete_attachment($old_image_id);
+			}
+		} else {
+			delete_post_meta($post_id, '_mc_image');
+		}
+		
+		if ( !empty($attachment['image_id']) && intval($attachment['image_id']) ) {
+			$image_id = $attachment['image_id'];
+			$old_image_id = get_post_meta($post_id, '_mc_image_id', true);
+			if ( $old_image_id != $image_id ) {
+				update_post_meta($post_id, '_mc_image_id', $image_id);
+				wp_delete_attachment($old_image_id);
+			}
+		} else {
+			delete_post_meta($post_id, '_mc_image_id');
+		}
+		
+		delete_post_meta($post_id, '_mc_image_size');
+		
+		foreach ( array('width', 'height') as $var ) {
+			if ( !empty($attachment[$var]) && intval($attachment[$var]) )
+				update_post_meta($post_id, '_mc_' . $var, $attachment[$var]);
+			else
+				delete_post_meta($post_id, '_mc_' . $var);
+		}
+		
+		if ( !empty($attachment['ltas']) )
+			update_post_meta($post_id, '_mc_ltas', '1');
+		else
+			delete_post_meta($post_id, '_mc_ltas');
+	} # save_attachment()
 	
 	
 	/**
@@ -1595,10 +1595,10 @@ EOS;
 			$_POST['post_id'] = $post->ID; // for the uploads folder plugin
 		
 		$user = wp_set_current_user($user_id);
-		if ( !$user || !$user->has_cap('upload_files') || $post->ID && !$user->has_cap('edit_post') )
+		if ( !$user || !$user->has_cap('upload_files') || $post->ID && !$user->has_cap('edit_post', $post->ID) )
 			die(-1);
 		
-		if ( wp_verify_nonce($nonce, 'snapshot' . ( $attachment->ID ? "-$attachment->ID" : '' )) !== 1 )
+		if ( wp_verify_nonce($nonce, 'snapshot-' . ( $attachment->ID ? $attachment->ID : '0' )) !== 1 )
 			die(-1);
 		
 		$time = current_time('mysql');
@@ -1645,7 +1645,6 @@ EOS;
 		
 		$new_file = $details['file'];
 		$url = $details['url'];
-		$type = $details['type'];
 		
 		$title = __('Video Snapshot', 'mediacaster');
 		$content = '';
