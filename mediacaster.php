@@ -416,6 +416,7 @@ var params = {};
 params.allowfullscreen = "$allowfullscreen";
 params.allowscriptaccess = "$allowscriptaccess";
 params.wmode = "$wmode";
+
 var flashvars = {};
 $flashvars_js
 var attributes = {
@@ -696,6 +697,7 @@ var params = {};
 params.allowfullscreen = "$allowfullscreen";
 params.allowscriptaccess = "$allowscriptaccess";
 params.wmode = "$wmode";
+
 var flashvars = {};
 $flashvars_js
 var attributes = {
