@@ -1579,10 +1579,10 @@ class mediacaster_admin {
 			case 'mm':
 			case 'ms':
 			case 'sm':
-				$max_width = 680;
+				$max_width = 650;
 				break;
 			default:
-				$max_width = 880;
+				$max_width = 800;
 				break;
 			}
 		}
