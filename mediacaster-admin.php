@@ -1488,8 +1488,18 @@ class mediacaster_admin {
 					}
 				}
 				
-				if ( !empty($attachment['image_id']) && intval($attachment['image_id']) )
+				if ( !empty($attachment['image_id']) && intval($attachment['image_id']) ) {
 					update_post_meta($att_id, '_mc_image_id', $attachment['image_id']);
+					if ( $post_parent ) {
+						global $wpdb;
+						$wpdb->query("
+							UPDATE $wpdb->posts
+							SET		post_parent = " . intval($post_parent) . "
+							WHERE	ID = " . intval($attachment['image_id'])
+							);
+						clean_post_cache($attachment['image_id']);
+					}
+				}
 				
 				delete_post_meta($post_id, '_mc_image_size');
 				
