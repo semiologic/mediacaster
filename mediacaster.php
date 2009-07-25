@@ -320,9 +320,30 @@ class mediacaster {
 		
 		$player = 'http://www.youtube.com/v/' . $src . '&fs=1&rel=0&border=0&showinfo=0&showsearch=0&hd=' . $hd;
 		
+		$player_id = 'm' . md5($src . '_' . $count++);
+		
+		$script = '';
+		
+		if ( !is_feed() )
+			$script = <<<EOS
+<script type="text/javascript">
+var params = {};
+params.allowfullscreen = "$allowfullscreen";
+params.allowscriptaccess = "$allowscriptaccess";
+params.wmode = "$wmode";
+
+var flashvars = {};
+
+var attributes = {
+  id: "$player_id"
+};
+swfobject.embedSWF("$player", "$player_id", "$width", "$height", "9.0.0", false, flashvars, params, attributes);
+</script>
+EOS;
+		
 		return <<<EOS
 
-<div class="media_container"><div class="media" style="width: {$width}px; height: {$height}px;"><object classid="clsid:D27CDB6E-AE6D-11cf-96B8-444553540000" width="$width" height="$height"><param name="movie" value="$player" /><param name="allowfullscreen" value="$allowfullscreen" /><param name="allowscriptaccess" value="$allowscriptaccess" /><param name="wmode" value="$wmode" /><param name="flashvars" value="$flashvars_html" /><embed src="$player" pluginspage="http://www.macromedia.com/go/getflashplayer" width="$width" height="$height" allowfullscreen="$allowfullscreen" allowscriptaccess="$allowscriptaccess" wmode="$wmode" flashvars="$flashvars_html" /></object></div></div>
+<div class="media_container"><div class="media" style="width: {$width}px; height: {$height}px;"><object id="$player_id" classid="clsid:D27CDB6E-AE6D-11cf-96B8-444553540000" width="$width" height="$height"><param name="movie" value="$player" /><param name="allowfullscreen" value="$allowfullscreen" /><param name="allowscriptaccess" value="$allowscriptaccess" /><param name="wmode" value="$wmode" /><param name="flashvars" value="$flashvars_html" /><embed src="$player" pluginspage="http://www.macromedia.com/go/getflashplayer" width="$width" height="$height" allowfullscreen="$allowfullscreen" allowscriptaccess="$allowscriptaccess" wmode="$wmode" flashvars="$flashvars_html" /></object></div></div>
 
 $script
 
