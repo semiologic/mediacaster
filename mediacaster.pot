@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: 2.0\n"
 "Report-Msgid-Bugs-To: https://tickets.semiologic.com\n"
-"POT-Creation-Date: 2009-07-25 20:54+0200\n"
+"POT-Creation-Date: 2009-07-25 22:02+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -188,8 +188,9 @@ msgstr ""
 
 #: mediacaster-admin.php:423
 msgid ""
-"Mid-roll ads do <strong>NOT</strong> work when the controlbar is inline. "
-"Only use pre- and post- roll ads."
+"Premium Advertisers disallow mid-roll ads when the controlbar is inline, as "
+"is done in Mediacaster. Use pre- and post- roll ads only if your site is "
+"accepted to serve premium ads."
 msgstr ""
 
 #: mediacaster-admin.php:438

@@ -420,7 +420,7 @@ class mediacaster_admin {
 			. '</th>' . "\n"
 			. '<td>'
 			. '<p>'
-			. __('Mid-roll ads do <strong>NOT</strong> work when the controlbar is inline. Only use pre- and post- roll ads.', 'mediacaster')
+			. __('Premium Advertisers disallow mid-roll ads when the controlbar is inline, as is done in Mediacaster. Use pre- and post- roll ads only if your site is accepted to serve premium ads.', 'mediacaster')
 			. '</p>'
 			. '</td>' . "\n"
 			. '</tr>' . "\n";
