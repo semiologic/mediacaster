@@ -9,6 +9,11 @@ jQuery(document).ready(function() {
 		media_player: null,
 		site_url: null,
 		
+		show_crossdomain: function() {
+			jQuery("#mc-crossdomain").not(":visible").fadeIn('fast');
+			return false;
+		},
+		
 		set_type: function() {
 			mc.cancel_snapshot(0);
 			mc.set_max(0);

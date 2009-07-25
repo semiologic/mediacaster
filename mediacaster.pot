@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: 2.0\n"
 "Report-Msgid-Bugs-To: https://tickets.semiologic.com\n"
-"POT-Creation-Date: 2009-07-24 20:17+0200\n"
+"POT-Creation-Date: 2009-07-25 20:46+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -40,7 +40,7 @@ msgid "Mediacaster Settings"
 msgstr ""
 
 #: mediacaster-admin.php:247 mediacaster-admin.php:1000
-#: mediacaster-admin.php:1333
+#: mediacaster-admin.php:1353
 msgid "Media Player"
 msgstr ""
 
@@ -463,43 +463,43 @@ msgstr ""
 msgid "Clear"
 msgstr ""
 
-#: mediacaster-admin.php:928 mediacaster-admin.php:1256
+#: mediacaster-admin.php:928 mediacaster-admin.php:1258
 msgid "Preview Image"
 msgstr ""
 
-#: mediacaster-admin.php:940 mediacaster-admin.php:1268
+#: mediacaster-admin.php:940 mediacaster-admin.php:1270
 msgid "New Snapshot"
 msgstr ""
 
-#: mediacaster-admin.php:944 mediacaster-admin.php:1272
+#: mediacaster-admin.php:944 mediacaster-admin.php:1274
 msgid "Cancel Snapshot"
 msgstr ""
 
-#: mediacaster-admin.php:948 mediacaster-admin.php:1276
+#: mediacaster-admin.php:948 mediacaster-admin.php:1278
 msgid "The URL of a preview image when the video isn't playing."
 msgstr ""
 
-#: mediacaster-admin.php:954 mediacaster-admin.php:1286
+#: mediacaster-admin.php:954 mediacaster-admin.php:1306
 msgid "Thickbox"
 msgstr ""
 
-#: mediacaster-admin.php:959 mediacaster-admin.php:1289
+#: mediacaster-admin.php:959 mediacaster-admin.php:1309
 msgid "Open the video in a thickbox window (requires a preview image)."
 msgstr ""
 
-#: mediacaster-admin.php:986 mediacaster-admin.php:1317
+#: mediacaster-admin.php:986 mediacaster-admin.php:1337
 msgid "Autostart"
 msgstr ""
 
-#: mediacaster-admin.php:991 mediacaster-admin.php:1320
+#: mediacaster-admin.php:991 mediacaster-admin.php:1340
 msgid "Automatically start the (first) media player (bandwidth intensive)."
 msgstr ""
 
-#: mediacaster-admin.php:995 mediacaster-admin.php:1327
+#: mediacaster-admin.php:995 mediacaster-admin.php:1347
 msgid "Insert As"
 msgstr ""
 
-#: mediacaster-admin.php:1006 mediacaster-admin.php:1339
+#: mediacaster-admin.php:1006 mediacaster-admin.php:1359
 msgid "Download Link"
 msgstr ""
 
@@ -526,26 +526,45 @@ msgid ""
 "(this.href); return false;\">video annotation</a> features."
 msgstr ""
 
-#: mediacaster-admin.php:1348
+#: mediacaster-admin.php:1283
+#, php-format
+msgid ""
+"Important: To work on third party sites, the snapshot generator requires a "
+"<a href=\"%s\" onclick=\"window.open(this.href); return false;\">crossdomain."
+"xml</a> policy file. <a href=\"#\" onclick=\"return mc.show_crossdomain();"
+"\">Sample file</a>."
+msgstr ""
+
+#: mediacaster-admin.php:1296
+msgid ""
+"Paste the above in a plain text file, and upload it so it's available as:"
+msgstr ""
+
+#: mediacaster-admin.php:1297
+msgid ""
+"http://your-account-id.your-video-host.com/<strong>crossdomain.xml</strong>"
+msgstr ""
+
+#: mediacaster-admin.php:1368
 msgid "Insert into Post"
 msgstr ""
 
-#: mediacaster-admin.php:1407
+#: mediacaster-admin.php:1427
 msgid "YouTube Video"
 msgstr ""
 
-#: mediacaster-admin.php:1423
+#: mediacaster-admin.php:1443
 msgid "MP3 Playlist"
 msgstr ""
 
-#: mediacaster-admin.php:1440 mediacaster-admin.php:1462
+#: mediacaster-admin.php:1460 mediacaster-admin.php:1482
 msgid "Untitled Media"
 msgstr ""
 
-#: mediacaster-admin.php:1697
+#: mediacaster-admin.php:1717
 msgid "Video Snapshot"
 msgstr ""
 
-#: mediacaster.php:1309 mediacaster.php:1310
+#: mediacaster.php:1338 mediacaster.php:1339
 msgid "Mediacaster"
 msgstr ""

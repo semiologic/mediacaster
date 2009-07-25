@@ -1068,7 +1068,7 @@ class mediacaster_admin {
 					return $html;
 			}
 			if ( $attachment['insert_as'] != 'file' )
-				$attachment['insert_as'] = 'video';
+				$attachment['insert_as'] = 'audio';
 			break;
 		
 		case 'video/mpeg':
@@ -1082,7 +1082,7 @@ class mediacaster_admin {
 					return $html;
 			}
 			if ( $attachment['insert_as'] != 'file' )
-				$attachment['insert_as'] = 'audio';
+				$attachment['insert_as'] = 'video';
 			break;
 			
 		default:
@@ -1249,7 +1249,9 @@ class mediacaster_admin {
 			
 		$user = wp_get_current_user();
 		$nonce = wp_create_nonce('snapshot-0');
-			
+		$site_host = parse_url($site_url);
+		$site_host = $site_domain['host'];
+		
 		$o .= '
 				<tr id="mc-preview-row" ' . ( $type != 'video' ? ' style="display: none;"' : '' ) . '>
 					<th valign="top" scope="row" class="label">
@@ -1277,6 +1279,24 @@ class mediacaster_admin {
 					. '</p>' . "\n"
 			. '<input type="hidden" id="mc-preview-src-0" value="" />' . "\n"
 			. '<div id="mc-preview-0"></div>'
+			. '<p class="help">'
+			. sprintf(__('Important: To work on third party sites, the snapshot generator requires a <a href="%s" onclick="window.open(this.href); return false;">crossdomain.xml</a> policy file. <a href="#" onclick="return mc.show_crossdomain();">Sample file</a>.', 'mediacaster'), 'http://www.adobe.com/devnet/articles/crossdomain_policy_file_spec.html')
+			. '</p>' . "\n"
+			. '<div id="mc-crossdomain" style="display: none;">'
+			. '<textarea class="code" rows="7">'
+			. esc_html(
+				  '<?xml version="1.0"?>' . "\n"
+				. '<!DOCTYPE cross-domain-policy SYSTEM "http://www.macromedia.com/xml/dtds/cross-domain-policy.dtd">' . "\n"
+				. '<cross-domain-policy>' . "\n"
+				. '<allow-access-from domain="' . $site_host . '"/>' . "\n"
+				. '</cross-domain-policy>'
+				)
+			. '</textarea>' . "\n"
+			. '<p class="help">'
+			. __('Paste the above in a plain text file, and upload it so it\'s available as:', 'mediacaster') . '<br />' . "\n"
+			. '<code>' . __('http://your-account-id.your-video-host.com/<strong>crossdomain.xml</strong>', 'mediacaster') . '</code>'
+			. '</p>' . "\n"
+			. '</div>' . "\n"
 					. '</td>
 				</tr>';
 			
