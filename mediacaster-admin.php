@@ -118,7 +118,6 @@ class mediacaster_admin {
 		
 		$longtail['script'] = false;
 		$longtail['channel'] = false;
-		/* todo: ltas
 		$script = stripslashes($_POST['longtail']['script']);
 		if ( preg_match("/src=[\"']https?:\/\/www.ltassrv.com\/serve\/api5.4.asp\?d=\d+&s=\d+&c=(\d+)/i", $script, $match) ) {
 			if ( strpos($script, 'type="text/javascript"') === false )
@@ -126,7 +125,6 @@ class mediacaster_admin {
 			$longtail['script'] = $script;
 			$longtail['channel'] = array_pop($match);
 		}
-		//*/
 		
 		$options = compact('player', 'itunes', 'longtail', 'version');
 		update_option('mediacaster', $options);
@@ -180,7 +178,6 @@ class mediacaster_admin {
 		
 		echo '<h2>'. __('Mediacaster Settings', 'mediacaster') . '</h2>' . "\n";
 		
-		/* todo: ltas
 		if ( empty($options['longtail']['agree']) ) {
 			echo '<h3>'
 				. __('License Notice', 'mediacaster')
@@ -241,7 +238,6 @@ class mediacaster_admin {
 					. ' />'
 				. '</p>' . "\n";
 		}
-		//*/
 		
 		echo '<h3>'
 				. __('Media Player', 'mediacaster')
@@ -378,7 +374,6 @@ class mediacaster_admin {
 				. ' />'
 			. '</p>' . "\n";
 		
-		/* todo: ltas
 		echo '<h3>'
 			. __('LongTail AdSolution', 'mediacaster')
 			. '</h3>' . "\n";
@@ -437,7 +432,7 @@ class mediacaster_admin {
 				. ' value="' . esc_attr(__('Save Changes', 'mediacaster')) . '"'
 				. ' />'
 			. '</p>' . "\n";
-		//*/
+		
 		
 		echo '<h3>'
 			. __('iTunes', 'mediacaster')
@@ -960,7 +955,6 @@ class mediacaster_admin {
 					. '</label>',
 				);
 			
-			/* todo: ltas
 			if ( $o['longtail']['channel'] ) {
 				$ltas = get_post_meta($post->ID, '_mc_ltas', true);
 				
@@ -976,7 +970,6 @@ class mediacaster_admin {
 						. '</label>',
 					);
 			}
-			//*/
 			
 		case 'audio/mpeg':
 		case 'audio/mp3':
@@ -1311,7 +1304,6 @@ class mediacaster_admin {
 				</tr>';
 			
 			
-		/* todo: ltas
 		$ops = get_option('mediacaster');
 		if ( $ops['longtail']['channel'] ) {
 			$o .= '
@@ -1329,7 +1321,6 @@ class mediacaster_admin {
 					. '</td>
 				</tr>';
 		}
-		//*/
 			
 		$o .= '
 				<tr id="mc-autostart-row" ' . ( $type == 'file' ? ' style="display: none;"' : '' ) . '>

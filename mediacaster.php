@@ -704,7 +704,6 @@ EOS;
 		
 		$ltas_id = '';
 		$ltas_class = '';
-		/* todo: ltas
 		if ( $ltas && !is_feed() && $width >= 300 && $height >= 250 && !empty($script) ) {
 			$ltas_id = 'id="' . $player_id . '-ad"';
 			$ltas_class = 'ltas-ad';
@@ -719,7 +718,6 @@ EOS;
 				}
 			}
 		}
-		//*/
 		
 		$flashvars = apply_filters('mediacaster_video', $flashvars, $args);
 		$flashvars['plugins'] = implode(',', $flashvars['plugins']);
@@ -946,12 +944,10 @@ EOS;
 	 **/
 
 	function ltas_scripts() {
-		/* todo: ltas
 		$o = get_option('mediacaster');
 		
 		if ( !empty($o['longtail']['script']) )
 			echo $o['longtail']['script'] . "\n";
-		//*/
 	} # ltas_scripts()
 	
 	
