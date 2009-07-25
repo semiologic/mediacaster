@@ -301,7 +301,9 @@ class mediacaster {
 		
 		$src = trim($src, ' "');
 		$src = trim($src);
-		$src = preg_replace("|/v/([^/]+)/?|", "/?v=$1&", $src); // e.g. http://www.youtube.com/v/jF-kELmmvgA
+		$src = preg_replace("|.*/p/([^/]+)/?|", "/?p=$1&", $src); // http://www.youtube.com/p/foobar
+		$src = preg_replace("|.*/v/([^/]+)/?|", "/?v=$1&", $src); // http://www.youtube.com/v/foobar
+		$src = preg_replace("|.*#play/user/([^/]+)|", "/?p=$1", $src); // http://www.youtube.com/user/foo#play/user/bar
 		$src = str_replace(array('&amp;', '&#038;'), '&', $src);
 		$src = @parse_url($src);
 		
@@ -310,15 +312,21 @@ class mediacaster {
 		
 		parse_str($src['query'], $src);
 		
-		if ( !isset($src['v']) )
+		if ( isset($src['p']) ) {
+			$src = preg_replace("/[^0-9a-z_-]/i", '', $src['p']);
+			if ( !$src )
+				return '';
+			$src = 'p/' . $src;
+		} elseif ( isset($src['v']) ) {
+			$src = preg_replace("/[^0-9a-z_-]/i", '', $src['v']);
+			if ( !$src )
+				return '';
+			$src = 'v/' . $src;
+		} else {
 			return '';
+		}
 		
-		$src = preg_replace("/[^0-9a-z_-]/i", '', $src['v']);
-		
-		if ( !$src )
-			return '';
-		
-		$player = 'http://www.youtube.com/v/' . $src . '&fs=1&rel=0&border=0&showinfo=0&showsearch=0&hd=' . $hd;
+		$player = 'http://www.youtube.com/' . $src . '&fs=1&rel=0&border=0&showinfo=0&showsearch=0&hd=' . $hd;
 		
 		$player_id = 'm' . md5($src . '_' . $count++);
 		
