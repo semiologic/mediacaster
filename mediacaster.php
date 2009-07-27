@@ -528,15 +528,13 @@ EOS;
 			$link = get_post_meta($id, '_mc_link', true);
 		
 		if ( $id ) {
-			$_width = 2 * (int) get_post_meta($id, '_mc_width', true);
-			$_height = 2 * (int) get_post_meta($id, '_mc_height', true);
+			$width = (int) get_post_meta($id, '_mc_width', true);
+			$height = (int) get_post_meta($id, '_mc_height', true);
 			
-			if ( !$_width || !$_height ) {
-				$_width = 2 * (int) get_post_meta($id, '_mc_image_width', true);
-				$_height = 2 * (int) get_post_meta($id, '_mc_image_height', true);
-			}
+			$_width = 2 * (int) get_post_meta($id, '_mc_image_width', true);
+			$_height = 2 * (int) get_post_meta($id, '_mc_image_height', true);
 			
-			if ( $image && !($_width && $_height) ) {
+			if ( $image && !( $_width && $_height ) ) {
 				$image_size = get_post_meta($id, '_mc_image_size', true);
 				if ( $image_size === '' ) {
 					$image_size = @getimagesize($image);
@@ -635,6 +633,14 @@ EOS;
 		if ( $standalone ) {
 			$max_width = 720;
 			$max_height = 540;
+			
+			if ( $_width ) {
+				$width = $_width;
+				$height = $_height;
+			} else {
+				$width = 2 * $width;
+				$height = 2 * $height;
+			}
 		} else {
 			$max_height = false;
 		}

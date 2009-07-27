@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: 2.0\n"
 "Report-Msgid-Bugs-To: https://tickets.semiologic.com\n"
-"POT-Creation-Date: 2009-07-25 22:02+0200\n"
+"POT-Creation-Date: 2009-07-27 14:21+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -670,6 +670,6 @@ msgstr ""
 msgid "Video Snapshot"
 msgstr ""
 
-#: mediacaster.php:1334 mediacaster.php:1335
+#: mediacaster.php:1340 mediacaster.php:1341
 msgid "Mediacaster"
 msgstr ""
