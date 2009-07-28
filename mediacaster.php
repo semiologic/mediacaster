@@ -420,6 +420,8 @@ EOS;
 		if ( $image )
 			$flashvars['image'] = esc_url_raw($image);
 		
+		$flashvars['repeat'] = 'list';
+		
 		$flashvars['plugins'] = array('quickkeys-1');
 		
 		if ( defined('sem_google_analytics_debug') && method_exists('google_analytics', 'get_uacct')
@@ -678,6 +680,8 @@ EOS;
 		
 		if ( $image )
 			$flashvars['image'] = esc_url_raw($image);
+		
+		$flashvars['repeat'] = 'list';
 		
 		$flashvars['plugins'] = array('quickkeys-1');
 		
