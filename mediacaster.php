@@ -609,7 +609,7 @@ EOS;
 			
 			$image = esc_url($image);
 			
-			$tip_text = __('Click to Play the Video', 'Mediacaster');
+			$tip_text = __('Click to Play the Video', 'mediacaster');
 			
 			return <<<EOS
 
