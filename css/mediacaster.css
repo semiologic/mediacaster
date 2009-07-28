@@ -21,3 +21,17 @@
 	margin-left: auto;
 	margin-right: auto;
 }
+
+.media_caption a {
+	text-decoration: none !important;
+	color: inherit;
+	font-size: 9pt;
+}
+
+.media_caption img {
+	margin-bottom: 2px;
+}
+
+.media a img {
+	border: 0px;
+}

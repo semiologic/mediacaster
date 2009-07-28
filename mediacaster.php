@@ -214,7 +214,7 @@ class mediacaster {
 		}
 		
 		if ( empty($args['type']) ) {
-			if ( preg_match("/^https?:\/\/(?:www\.)?youtube.com\//i", $args['src']) ) {
+			if ( preg_match("/^https?:\/\/(?:www\.)?youtube\.com\//i", $args['src']) ) {
 				$args['type'] = 'youtube';
 			} elseif ( preg_match("/\b(rss2?|xml|feed|atom)\b/i", $args['src']) ) {
 				$args['type'] = 'audio';
@@ -293,7 +293,7 @@ class mediacaster {
 		
 		$hd = $width >= 480 && $height >= 270 ? 1 : 0; // 480px wide, 16:9 format
 		
-		$height += 25; // player
+		$height += 25; // controlbar
 		
 		$allowscriptaccess = 'false';
 		$allowfullscreen = 'true';
@@ -379,19 +379,10 @@ EOS;
 		}
 		
 		$thickbox = false;
-		$autostart = mediacaster::autostart($autostart);
+		$autostart = mediacaster::autostart($autostart) || $standalone;
 		
 		if ( $id && !$link )
 			$link = get_post_meta($id, '_mc_link', true);
-		
-		# exception: external audio files
-		if ( !$id && $cover ) {
-			$src_d = @parse_url($src);
-			$home_d = @parse_url(get_option('home'));
-			
-			if ( strtolower($src_d['host']) != strtolower($home_d['host']) )
-				$cover = false;
-		}
 		
 		if ( $cover ) {
 			$image = WP_CONTENT_URL . $cover;
@@ -411,7 +402,8 @@ EOS;
 			$image = false;
 			if ( !$width )
 				$width = 360;
-			$width = max($width, $max_width);
+			else
+				$width = max($width, $max_width);
 			$height = 0;
 		}
 		
@@ -431,7 +423,7 @@ EOS;
 		$flashvars['plugins'] = array('quickkeys-1');
 		
 		if ( defined('sem_google_analytics_debug') && method_exists('google_analytics', 'get_uacct')
-			&& !current_user_can('publish_posts') && !current_user_can('publish_pages') ) {
+			&& !current_user_can('publish_posts') && !current_user_can('publish_pages') && !is_feed() ) {
 			$uacct = google_analytics::get_uacct();
 			if ( $uacct ) {
 				$flashvars['plugins'][] = 'gapro-1';
@@ -617,18 +609,21 @@ EOS;
 			
 			$image = esc_url($image);
 			
+			$tip_text = __('Click to Play the Video', 'Mediacaster');
+			
 			return <<<EOS
 
 <div class="media_container">
-<div class="media">
-<a href="$href" class="thickbox no_icon" $title><img src="$image" width="$width" height="$height" alt="" /></a>
+<div class="media media_caption">
+<a href="$href" class="thickbox no_icon" $title><img src="$image" width="$width" height="$height" alt="" /><br />$tip_text</a>
 </div>
 </div>
 
 EOS;
 		}
 		
-		$autostart = mediacaster::autostart($autostart);
+		$autostart = mediacaster::autostart($autostart) || $standalone;
+		$thickbox = $thickbox && !is_feed();
 		
 		if ( $standalone ) {
 			$max_width = 720;
@@ -687,7 +682,7 @@ EOS;
 		$flashvars['plugins'] = array('quickkeys-1');
 		
 		if ( defined('sem_google_analytics_debug') && method_exists('google_analytics', 'get_uacct')
-			&& !current_user_can('publish_posts') && !current_user_can('publish_pages') ) {
+			&& !current_user_can('publish_posts') && !current_user_can('publish_pages') && !is_feed() ) {
 			$uacct = google_analytics::get_uacct();
 			if ( $uacct ) {
 				$flashvars['plugins'][] = 'gapro-1';
@@ -786,7 +781,7 @@ EOS;
 		if ( $max_width && !defined('sem_version') )
 			$max_width -= 10; # add some margin space
 		
-		if ( !$max_width )
+		if ( !$max_width || is_feed() )
 			$max_width = 420;
 		
 		$cover = $o['player']['cover'];
@@ -1094,6 +1089,9 @@ EOS;
 		
 		$podcasts = mediacaster::get_enclosures($post_ID, true);
 		
+		#status_header(200);
+		#dump($podcasts);die;
+		
 		# Reset WP
 		$levels = ob_get_level();
 		for ($i=0; $i<$levels; $i++)
@@ -1127,6 +1125,14 @@ EOS;
 				. wp_get_attachment_url($podcast->ID)
 				. '</location>' . "\n";
 
+			$link = get_post_meta($podcast->ID, '_mc_link', true);
+			
+			if ( $link ) {
+				echo '<info>'
+					. esc_url($link)
+					. '</info>' . "\n";
+			}
+			
 			echo '</track>' . "\n";
 		}
 
@@ -1162,11 +1168,11 @@ EOS;
 		$options = get_option('mediacaster');
 
 		echo "\n\t\t"
-			. '<copyright>' . apply_filters('the_excerpt_rss', $options['itunes']['copyright']) . '</copyright>' . "\n\t\t"
-			. '<itunes:author>' . apply_filters('the_excerpt_rss', $options['itunes']['author']) . '</itunes:author>' . "\n\t\t"
-			. '<itunes:summary>' . apply_filters('the_excerpt_rss', $options['itunes']['summary']) . '</itunes:summary>' . "\n\t\t"
-			. '<itunes:explicit>' . apply_filters('the_excerpt_rss', $options['itunes']['explicit']) . '</itunes:explicit>' . "\n\t\t"
-			. '<itunes:block>' . apply_filters('the_excerpt_rss', $options['itunes']['block']) . '</itunes:block>' . "\n\t\t"
+			. '<copyright>' . htmlentities($options['itunes']['copyright'], ENT_COMPAT, get_option('blog_charset')) . '</copyright>' . "\n\t\t"
+			. '<itunes:author>' . htmlentities($options['itunes']['author'], ENT_COMPAT, get_option('blog_charset')) . '</itunes:author>' . "\n\t\t"
+			. '<itunes:summary>' . htmlentities($options['itunes']['summary'], ENT_COMPAT, get_option('blog_charset')) . '</itunes:summary>' . "\n\t\t"
+			. '<itunes:explicit>' . htmlentities(ucfirst($options['itunes']['explicit']), ENT_COMPAT, get_option('blog_charset')) . '</itunes:explicit>' . "\n\t\t"
+			. '<itunes:block>' . htmlentities(ucfirst($options['itunes']['block']), ENT_COMPAT, get_option('blog_charset')) . '</itunes:block>' . "\n\t\t"
 			;
 		
 		$cover = $options['player']['cover'];
@@ -1185,12 +1191,12 @@ EOS;
 				$cat = trim($cat);
 
 				if ( $cat ) {
-					$category = '<itunes:category text="' . apply_filters('the_excerpt_rss', $cat) . '" />' . "\n\t\t";
+					$category = '<itunes:category text="' . esc_attr(htmlentities($cat, ENT_COMPAT, get_option('blog_charset'))) . '" />' . "\n\t\t";
 
 					if ( $cat = array_pop($cats) ) {
 						$cat = trim($cat);
 
-						$category = '<itunes:category text="' . apply_filters('the_excerpt_rss', $cat) . '">' . "\n\t\t\t"
+						$category = '<itunes:category text="' . esc_attr(htmlentities($cat, ENT_COMPAT, get_option('blog_charset'))) . '">' . "\n\t\t\t"
 							. $category
 							. '</itunes:category>' . "\n\t\t";
 					}
@@ -1211,12 +1217,12 @@ EOS;
 	 **/
 
 	function display_feed_enclosures() {
-		if ( !in_the_loop() )
+		if ( !in_the_loop() || !is_feed() )
 			return;
-		else
-			$post_ID = get_the_ID();
 		
-		$enclosures = mediacaster::get_enclosures($post_ID);
+		$post_ID = get_the_ID();
+		
+		$enclosures = mediacaster::get_enclosures($post_ID, false);
 		
 		if ( !$enclosures )
 			return;
@@ -1226,55 +1232,65 @@ EOS;
 		foreach ( $enclosures as $enclosure ) {
 			$file = get_attached_file($enclosure->ID);
 			$file_url = esc_url(wp_get_attachment_url($enclosure->ID));
-			$size = @filesize($file);
+			$mime = $enclosure->post_mime_type;
+			$size = strpos($file, 'http') !== 0 ? @filesize($file) : false;
 			
-			echo "\n\t\t"
-				. '<enclosure' . ' url="' .  $file_url . '" length="' . $size . '" type="' . $mime . '" />';
+			if ( $size ) {
+				echo "\n\t\t"
+					. '<enclosure' . ' url="' .  $file_url . '" length="' . $size . '" type="' . $mime . '" />';
+			} else {
+				echo "\n\t\t"
+					. '<enclosure' . ' url="' .  $file_url . '" type="' . $mime . '" />';
+			}
 			
 			$add_itunes_tags = true;
 		}
 
-		if ( $add_itunes_tags && is_feed() ) {
-			$author = get_the_author();
+		if ( !$add_itunes_tags )
+			return;
 
-			$summary = get_post_meta($post_ID, '_description', true);
-			if ( !$summary ) {
-				$summary = get_the_excerpt();
+		$author = get_the_author();
+		
+		$summary = get_post_meta($post_ID, '_description', true);
+		if ( !$summary )
+			$summary = get_the_excerpt();
+
+		$keywords = get_post_meta($post_ID, '_keywords', true);
+		if ( !$keywords ) {
+			$keywords = array();
+			$cats = get_the_category($post_ID);
+			$tags = get_the_tags($post_ID);
+			
+			if ( $cats && !is_wp_error($cats) ) {
+				foreach ( $cats as $cat )
+					$keywords[] = $cat->name;
 			}
 
-			$keywords = get_post_meta($post_ID, '_keywords', true);
-			if ( !$keywords ) {
-				$keywords = array();
-
-				if ( $cats = get_the_category($post_ID) )
-					foreach ( $cats as $cat )
-						$keywords[] = $cat->name;
-
-				if ( $tags = get_the_tags($post_ID) )
-					foreach ( $tags as $tag )
-						$keywords[] = $tag->name;
-
-				$keywords = array_unique($keywords);
-				$keywords = implode(', ', $keywords);
+			if ( $tags && !is_wp_error($tags) ) {
+				foreach ( $tags as $tag )
+					$keywords[] = $tag->name;
 			}
 
-			foreach ( array(
-					'author',
-					'summary',
-					'keywords'
-					) as $field ) {
-				$$field = strip_tags($$field);
-				$$field = preg_replace("/\s+/", " ", $$field);
-				$$field = trim($$field);
-			}
-
-			echo "\n\t\t"
-				. '<itunes:author>' . apply_filters('the_excerpt_rss', $author) . '</itunes:author>' . "\n\t\t"
-				. '<itunes:summary>' . apply_filters('the_excerpt_rss', $summary) . '</itunes:summary>' . "\n\t\t"
-				. '<itunes:keywords>' . apply_filters('the_excerpt_rss', $keywords) . '</itunes:keywords>' . "\n\t\t"
-				;
+			$keywords = array_unique($keywords);
+			$keywords = implode(', ', $keywords);
 		}
 
+		foreach ( array(
+				'author',
+				'summary',
+				'keywords'
+				) as $field ) {
+			$$field = strip_tags($$field);
+			$$field = preg_replace("/\s+/", " ", $$field);
+			$$field = trim($$field);
+		}
+
+		echo "\n\t\t"
+			. '<itunes:author>' . htmlentities($author, ENT_COMPAT, get_option('blog_charset')) . '</itunes:author>' . "\n\t\t"
+			. '<itunes:summary>' . htmlentities($summary, ENT_COMPAT, get_option('blog_charset')) . '</itunes:summary>' . "\n\t\t"
+			. '<itunes:keywords>' . htmlentities($keywords, ENT_COMPAT, get_option('blog_charset')) . '</itunes:keywords>' . "\n\t\t"
+			;
+		
 		echo "\n";
 	} # display_feed_enclosures()
 	
@@ -1510,7 +1526,7 @@ EOS;
 			# process inline attachments
 			foreach ( $attachments as $j => $attachment ) {
 				$find = preg_quote($attachment);
-				$repl = '[mc src="' . $folder_url . rawurlencode($attachment) . '" type="file"/]';
+				$repl = '[mc src="' . $folder_url . str_replace(' ', rawurlencode(' '), $attachment) . '" type="file"/]';
 				
 				$post->post_content = preg_replace(
 					"/\[media:\s*($find)\s*\]/",
@@ -1521,7 +1537,7 @@ EOS;
 			# process inline audios
 			foreach ( $audios as $j => $audio ) {
 				$find = preg_quote($audio);
-				$repl = '[mc src="' . $folder_url . rawurlencode($audio) . '" type="audio"/]';
+				$repl = '[mc src="' . $folder_url . str_replace(' ', rawurlencode(' '), $audio) . '" type="audio"/]';
 				
 				if ( preg_match("/\[(?:audio|video|media):\s*($find)\s*\]/", $post->post_content) )
 					$audios[$audio] = $repl;
@@ -1550,9 +1566,9 @@ EOS;
 			
 			foreach ( $videos as $video => $image ) {
 				$find = preg_quote($video);
-				$repl = ( '[mc src="' . $folder_url . rawurlencode($video) . '"' )
+				$repl = ( '[mc src="' . $folder_url . str_replace(' ', rawurlencode(' '), $video) . '"' )
 					. ( $image
-					? ( ' image="' . $folder_url . rawurlencode($image) . '"' )
+					? ( ' image="' . $folder_url . str_replace(' ', rawurlencode(' '), $image) . '"' )
 					: ''
 					)
 					. $format . ' type="video"/]';
@@ -1621,7 +1637,7 @@ EOS;
 		$file = array_pop($match);
 		
 		if ( preg_match("/^https?:\/\/[^\/]*\byoutube\.com\//", $file) ) {
-			return "[mc src=\"$file\" type=\"video\"/]";
+			return "[mc src=\"$file\" type=\"youtube\"/]";
 		} elseif ( preg_match("/^https?:\/\/video\.google\.com\//", $file) ) {
 			$file = parse_url($file);
 			$file = $file['query'];
@@ -1634,9 +1650,9 @@ EOS;
 			
 			$ops = get_option('mediacaster');
 			
-			$width = intval($ops['player']['width']);
-			$height = intval($ops['player']['height']);
-			$height += 26;
+			$width = 420;
+			$height = 315;
+			$height += 26; // controlbar
 			
 			$player = 'http://video.google.com/googleplayer.swf?docId=' . $file;
 			$id = md5($i++ . $player);

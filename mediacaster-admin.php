@@ -95,12 +95,12 @@ class mediacaster_admin {
 			$itunes[$var] = strip_tags(stripslashes($_POST['itunes'][$var]));
 		for ( $i = 1; $i <= 3; $i++ )
 			$itunes['category'][$i] = strip_tags(stripslashes($_POST['itunes']['category'][$i]));
-		$itunes['explicit'] = in_array($_POST['itunes']['explicit'], array('yes', 'no', 'clean'))
-			? $_POST['itunes']['explicit']
-			: 'no';
-		$itunes['block'] = in_array($_POST['itunes']['block'], array('yes', 'no'))
-			? $_POST['itunes']['block']
-			: 'no';
+		$itunes['explicit'] = in_array(ucfirst($_POST['itunes']['explicit']), array('Yes', 'No', 'Clean'))
+			? ucfirst($_POST['itunes']['explicit'])
+			: 'No';
+		$itunes['block'] = in_array(ucfirst($_POST['itunes']['block']), array('Yes', 'No'))
+			? ucfirst($_POST['itunes']['block'])
+			: 'No';
 		
 		$longtail = array();
 		
@@ -119,7 +119,7 @@ class mediacaster_admin {
 		$longtail['script'] = false;
 		$longtail['channel'] = false;
 		$script = stripslashes($_POST['longtail']['script']);
-		if ( preg_match("/src=[\"']https?:\/\/www.ltassrv.com\/serve\/api5.4.asp\?d=\d+&s=\d+&c=(\d+)/i", $script, $match) ) {
+		if ( preg_match("/src=[\"']https?:\/\/www.ltassrv.com\/[^\?\"']+\?d=\d+&s=\d+&c=(\d+)/i", $script, $match) ) {
 			if ( strpos($script, 'type="text/javascript"') === false )
 				$script = str_replace('<script', '<script type="text/javascript"', $script);
 			$longtail['script'] = $script;
@@ -379,7 +379,7 @@ class mediacaster_admin {
 			. '</h3>' . "\n";
 		
 		echo '<p>'
-			. sprintf(__('<a href="%s">LongTail AdSolution</a> allows to you insert pre-roll, overlay mid- and post-roll advertisements within your Videos.', 'mediacaster'), 'http://go.semiologic.com/ltas')
+			. sprintf(__('<a href="%s">LongTail AdSolution</a> (LTAS) allows you to insert pre-roll, overlay mid-roll, and post-roll advertisements within your Videos.', 'mediacaster'), 'http://go.semiologic.com/ltas')
 			. '</p>' . "\n";
 		
 		echo '<table class="form-table">' . "\n";
@@ -406,22 +406,20 @@ class mediacaster_admin {
 			. '<p>'
 			. __('Once logged in, browse Setup / Channel Setup. Create a channel if needed. Once it\'s approved, click Implement. Choose JW 4.4 or later as the player, and click get code. Copy the script, paste it into the above field, and ignore the remaining steps.', 'mediacaster')
 			. '</p>' . "\n"
-			. '<p>'
-			. sprintf(__('<strong>Important</strong>: To serve Premium Ads (from Video, Scanscout, YuMe, etc.) on your site, you additionally need to get your site explicitly approved. Please contact <a href="%s">LongTailVideo sales</a> for more details.', 'mediacaster'), 'http://go.semiologic.com/ltas')
-			. '</p>' . "\n"
-			. '<p>'
-			. __('To qualify for the latter, you must either (i) own or (ii) license your video content. Additionally, your site cannot have any violent, pornographic or inappropriate content.', 'mediacaster')
 			. '</td>' . "\n"
-			. '</tr>' . "\n";
-		
-		echo '<tr>'
+			. '</tr>' . "\n"
 			. '<th scope="row">'
-			. __('Mid-roll Ads', 'mediacaster')
+			. __('Premium Ads', 'mediacaster')
 			. '</th>' . "\n"
 			. '<td>'
 			. '<p>'
-			. __('Premium Advertisers disallow mid-roll ads when the controlbar is inline, as is done in Mediacaster. Use pre- and post- roll ads only if your site is accepted to serve premium ads.', 'mediacaster')
-			. '</p>'
+			. sprintf(__('To serve Premium Ads (from Video, Scanscout, YuMe, etc.) on your site, you additionally need to get your site explicitly approved. Please contact <a href="%s">LongTailVideo sales</a> for more details.', 'mediacaster'), 'http://go.semiologic.com/ltas')
+			. '</p>' . "\n"
+			. '<p>'
+			. __('To qualify for the latter, you must either (i) own or (ii) license your video content. Additionally, your site cannot have any violent, pornographic or inappropriate content.', 'mediacaster')
+			. '<p>'
+			. __('Note that premium Advertisers disallow mid-roll ads when the controlbar is inline, as is done in Mediacaster. Use pre- and post- roll ads only, if your site is accepted to serve premium ads.', 'mediacaster')
+			. '</p>' . "\n"
 			. '</td>' . "\n"
 			. '</tr>' . "\n";
 
@@ -508,14 +506,14 @@ class mediacaster_admin {
 			. '<td>';
 
 		foreach ( array(
-			'yes' => __('Yes', 'mediacaster'),
-			'no' => __('No', 'mediacaster'),
-			'clean' => __('Clean', 'mediacaster'),
+			'Yes' => __('Yes', 'mediacaster'),
+			'No' => __('No', 'mediacaster'),
+			'Clean' => __('Clean', 'mediacaster'),
 			) as $key => $answer ) {
 			echo '<label>'
 				. '<input type="radio" name="itunes[explicit]"'
 				. ' value="' . esc_attr($key) . '"'
-				. ( ( $key == $options['itunes']['explicit'] )
+				. ( ( $key == ucfirst($options['itunes']['explicit']) )
 					? ' checked="checked"'
 					: ''
 					)
@@ -536,13 +534,13 @@ class mediacaster_admin {
 			. '<td>';
 
 		foreach ( array(
-			'yes' => __('Yes', 'mediacaster'),
-			'no' => __('No', 'mediacaster'),
+			'Yes' => __('Yes', 'mediacaster'),
+			'No' => __('No', 'mediacaster'),
 			) as $key => $answer ) {
 			echo '<label>'
 				. '<input type="radio" name="itunes[block]"'
 				. ' value="' . esc_attr($key) . '"'
-				. ( ( $key == $options['itunes']['block'] )
+				. ( ( $key == ucfirst($options['itunes']['block']) )
 					? ' checked="checked"'
 					: ''
 					)
