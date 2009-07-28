@@ -1009,7 +1009,7 @@ EOS;
 			WHERE	post_type = 'attachment'
 			AND		post_parent = $post->ID
 			AND		post_mime_type NOT LIKE 'image/%'
-			ORDER BY ID
+			ORDER BY menu_order, post_title, ID
 			");
 		update_post_cache($enclosures);
 		
