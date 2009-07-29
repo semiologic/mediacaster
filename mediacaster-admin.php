@@ -917,6 +917,33 @@ class mediacaster_admin {
 			
 			$nonce = wp_create_nonce('snapshot-' . $post->ID);
 			
+			$file = get_attached_file($post->ID);
+			$crossdomain = '';
+			if ( preg_match("/https?:\/\//i", $file) ) {
+				$site_host = parse_url(get_option('home'));
+				$site_host = $site_host['host'];
+
+				$crossdomain = ''
+					. '<p class="help">'
+					. sprintf(__('Important: To work on third party sites, preview images and the snapshot generator require a <a href="%s" onclick="window.open(this.href); return false;">crossdomain.xml</a> policy file. <a href="#" onclick="return mc.show_crossdomain(' . $post->ID . ');">Sample file</a>.', 'mediacaster'), 'http://www.adobe.com/devnet/articles/crossdomain_policy_file_spec.html')
+					. '</p>' . "\n"
+					. '<div id="mc-crossdomain-' . $post->ID . '" style="display: none;">'
+					. '<textarea class="code" rows="7">'
+					. esc_html(
+						  '<?xml version="1.0"?>' . "\n"
+						. '<!DOCTYPE cross-domain-policy SYSTEM "http://www.macromedia.com/xml/dtds/cross-domain-policy.dtd">' . "\n"
+						. '<cross-domain-policy>' . "\n"
+						. '<allow-access-from domain="' . $site_host . '"/>' . "\n"
+						. '</cross-domain-policy>'
+						)
+					. '</textarea>' . "\n"
+					. '<p class="help">'
+					. __('Paste the above in a plain text file, and upload it so it\'s available as:', 'mediacaster') . '<br />' . "\n"
+					. '<code>' . __('http://your-account-id.your-video-host.com/<strong>crossdomain.xml</strong>', 'mediacaster') . '</code>'
+					. '</p>' . "\n"
+					. '</div>' . "\n";
+			}
+			
 			$post_fields['image'] = array(
 				'label' => __('Preview Image', 'mediacaster'),
 				'input' => 'html',
@@ -940,7 +967,9 @@ class mediacaster_admin {
 					. '<p class="help">'
 						. __('The URL of a preview image when the video isn\'t playing.', 'mediacaster')
 						. '</p>' . "\n"
-					. $preview,
+					. $preview
+					. $crossdomain
+					,
 				);
 			
 			$post_fields['thickbox'] = array(
@@ -1043,6 +1072,11 @@ class mediacaster_admin {
 		
 		$send_id = intval($send_id);
 		$att = get_post($send_id);
+		
+		if ( !$attachment['post_title'] )
+			$attachment['post_title'] = strip_tags($att->post_title);
+		if ( !$attachment['post_title'] )
+			$attachment['post_title'] = __('Untitled Media', 'mediacaster');
 		
 		$file_url = wp_get_attachment_url($att->ID);
 		
@@ -1240,8 +1274,8 @@ class mediacaster_admin {
 			
 		$user = wp_get_current_user();
 		$nonce = wp_create_nonce('snapshot-0');
-		$site_host = parse_url($site_url);
-		$site_host = $site_domain['host'];
+		$site_host = parse_url(get_option('home'));
+		$site_host = $site_host['host'];
 		
 		$o .= '
 				<tr id="mc-preview-row" ' . ( $type != 'video' ? ' style="display: none;"' : '' ) . '>
@@ -1271,9 +1305,9 @@ class mediacaster_admin {
 			. '<input type="hidden" id="mc-preview-src-0" value="" />' . "\n"
 			. '<div id="mc-preview-0"></div>'
 			. '<p class="help">'
-			. sprintf(__('Important: To work on third party sites, the snapshot generator requires a <a href="%s" onclick="window.open(this.href); return false;">crossdomain.xml</a> policy file. <a href="#" onclick="return mc.show_crossdomain();">Sample file</a>.', 'mediacaster'), 'http://www.adobe.com/devnet/articles/crossdomain_policy_file_spec.html')
+			. sprintf(__('Important: To work on third party sites, preview images and the snapshot generator require a <a href="%s" onclick="window.open(this.href); return false;">crossdomain.xml</a> policy file. <a href="#" onclick="return mc.show_crossdomain(0);">Sample file</a>.', 'mediacaster'), 'http://www.adobe.com/devnet/articles/crossdomain_policy_file_spec.html')
 			. '</p>' . "\n"
-			. '<div id="mc-crossdomain" style="display: none;">'
+			. '<div id="mc-crossdomain-0" style="display: none;">'
 			. '<textarea class="code" rows="7">'
 			. esc_html(
 				  '<?xml version="1.0"?>' . "\n"
@@ -1538,9 +1572,6 @@ class mediacaster_admin {
 						update_post_meta($att_id, '_mc_ltas', '1');
 				}
 			}
-		} elseif ( !$post_title ) {
-			$att = get_post($att_id);
-			$attachment['post_title'] = strip_tags($att->post_title);
 		}
 		
 		return mediacaster_admin::media_send_to_editor('', $att_id, $attachment);

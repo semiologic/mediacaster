@@ -9,8 +9,8 @@ jQuery(document).ready(function() {
 		media_player: null,
 		site_url: null,
 		
-		show_crossdomain: function() {
-			jQuery("#mc-crossdomain").not(":visible").fadeIn('fast');
+		show_crossdomain: function(post_id) {
+			jQuery("#mc-crossdomain-" + post_id).not(":visible").fadeIn('fast');
 			return false;
 		},
 		

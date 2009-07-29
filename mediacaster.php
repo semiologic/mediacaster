@@ -3,7 +3,7 @@
 Plugin Name: Mediacaster
 Plugin URI: http://www.semiologic.com/software/mediacaster/
 Description: Lets you add podcasts, videos, and formatted download links in your site's posts and pages.
-Version: 2.0 beta3
+Version: 2.0 rc1
 Author: Denis de Bernardy
 Author URI: http://www.getsemiologic.com
 Text Domain: mediacaster
@@ -937,7 +937,7 @@ EOS;
 		$folder = plugin_dir_url(__FILE__);
 		$css = $folder . 'css/mediacaster.css';
 		
-		wp_enqueue_style('mediacaster', $css, null, '2.0');
+		wp_enqueue_style('mediacaster', $css, null, '2.0-rc1');
 		wp_enqueue_style('thickbox');
 	} # styles()
 	
