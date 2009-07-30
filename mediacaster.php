@@ -391,8 +391,14 @@ EOS;
 			if ( !isset($cover_size) )
 				$cover_size = getimagesize(WP_CONTENT_DIR . $cover);
 			
-			$width = $cover_size[0];
-			$height = $cover_size[1];
+			if ( $cover_size && $cover_size[0] && $cover_size[1] ) {
+				if ( !$width ) {
+					$width = $cover_size[0];
+					$height = $cover_size[1];
+				} elseif ( !$height ) {
+					$height = (int) round($width * $cover_size[1] / $cover_size[0]);
+				}
+			}
 			
 			if ( $width > $max_width ) {
 				$height = round($height * $max_width / $width);
@@ -522,8 +528,10 @@ EOS;
 			$link = get_post_meta($id, '_mc_link', true);
 		
 		if ( $id ) {
-			$width = (int) get_post_meta($id, '_mc_width', true);
-			$height = (int) get_post_meta($id, '_mc_height', true);
+			if ( !$width ) {
+				$width = (int) get_post_meta($id, '_mc_width', true);
+				$height = (int) get_post_meta($id, '_mc_height', true);
+			}
 			
 			$_width = 2 * (int) get_post_meta($id, '_mc_image_width', true);
 			$_height = 2 * (int) get_post_meta($id, '_mc_image_height', true);

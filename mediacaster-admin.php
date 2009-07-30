@@ -1139,8 +1139,16 @@ class mediacaster_admin {
 			$thickbox = !empty($attachment['thickbox']) && ( $image || $image_id )
 				? ' thickbox'
 				: '';
-		
-			$html = '[mc id="' . $send_id . '" type="video"' . $autostart . $thickbox . ']'
+			
+			$width = !empty($attachment['width']) && intval($attachment['width'])
+				? ' width="' . $attachment['width'] . '"'
+				: '';
+			
+			$height = !empty($attachment['height']) && intval($attachment['height'])
+				? ' height="' . $attachment['height'] . '"'
+				: '';
+			
+			$html = '[mc id="' . $send_id . '" type="video"' . $width . $height . $autostart . $thickbox . ']'
 				. $attachment['post_title']
 				. '[/mc]';
 			break;
