@@ -26,7 +26,7 @@ jQuery(document).ready(function() {
 				return mc.set_invalid();
 			else if ( src.match(/^(https?:\/\/)?([^\/]+\.)?youtube\.com/i) )
 				return mc.set_youtube();
-			else if ( src.match(/\.(mp3|m4a|aac)$/i) )
+			else if ( src.match(/\.(mp3|m4a|aac)$/i) || src.match(/\b(rss2?|xml|feed|atom)\b/i) )
 				return mc.set_audio();
 			else if ( src.match(/\.(flv|f4b|f4p|f4v|mp4|m4v|mov|3pg|3g2)$/i) )
 				return mc.set_video();
@@ -332,7 +332,17 @@ jQuery(document).ready(function() {
 			shortcode += '[mc id="' + post_id + '"';
 			
 			if ( jQuery("#mc-insert-" + post_id + '-player').attr('checked') ) {
-				shortcode += ' type="' + jQuery("#mc-insert-" + post_id + '-player').val() + '"';
+				var src = jQuery("#mc-src-" + post_id).val();
+				var type;
+				
+				if ( src.match(/^(https?:\/\/)?([^\/]+\.)?youtube\.com/i) )
+					type = 'youtube';
+				else if ( src.match(/\.(mp3|m4a|aac)$/i) || src.match(/\b(rss2?|xml|feed|atom)\b/i) )
+					type = 'audio';
+				else if ( src.match(/\.(flv|f4b|f4p|f4v|mp4|m4v|mov|3pg|3g2)$/i) )
+					type = 'video';
+				
+				shortcode += ' type="' + type + '"';
 				
 				if ( jQuery("#mc-width-" + post_id).val() ) {
 					shortcode += ' width="' + jQuery("#mc-width-" + post_id).val() + '"';
@@ -340,10 +350,10 @@ jQuery(document).ready(function() {
 						shortcode += ' height="' + jQuery("#mc-height-" + post_id).val() + '"';
 				}
 				
-				if ( jQuery("#mc-thickbox-" + post_id).size() && jQuery("#mc-thickbox-" + post_id).attr('checked') )
+				if ( type == 'video' && jQuery("#mc-thickbox-" + post_id).size() && jQuery("#mc-thickbox-" + post_id).attr('checked') )
 					shortcode += ' thickbox';
 				
-				if ( jQuery("#mc-autostart-" + post_id).attr('checked') )
+				if ( type != 'youtube' && jQuery("#mc-autostart-" + post_id).attr('checked') )
 					shortcode += ' autostart';
 			} else {
 				shortcode += ' type="file"';
