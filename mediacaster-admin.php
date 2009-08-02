@@ -5,25 +5,6 @@
  * @package Mediacaster
  **/
 
-add_action('save_post', array('mediacaster_admin', 'save_entry'));
-add_action('add_attachment', array('mediacaster_admin', 'save_attachment'));
-add_action('edit_attachment', array('mediacaster_admin', 'save_attachment'));
-
-add_action('settings_page_mediacaster', array('mediacaster_admin', 'save_options'), 0);
-
-add_filter('attachment_fields_to_edit', array('mediacaster_admin', 'attachment_fields_to_edit'), 20, 2);
-add_filter('attachment_fields_to_save', array('mediacaster_admin', 'attachment_fields_to_save'), 20, 2);
-add_filter('media_send_to_editor', array('mediacaster_admin', 'media_send_to_editor'), 20, 3);
-
-add_filter('type_url_form_audio', array('mediacaster_admin', 'type_url_form'), 20);
-add_filter('type_url_form_video', array('mediacaster_admin', 'type_url_form'), 20);
-add_filter('type_url_form_file', array('mediacaster_admin', 'type_url_form'), 20);
-add_filter('audio_send_to_editor_url', array('mediacaster_admin', 'send_to_editor_url'), 20, 3);
-add_filter('video_send_to_editor_url', array('mediacaster_admin', 'send_to_editor_url'), 20, 3);
-add_filter('file_send_to_editor_url', array('mediacaster_admin', 'send_to_editor_url'), 20, 3);
-
-add_action('admin_print_scripts', array('mediacaster_admin', 'admin_scripts'), 15);
-
 class mediacaster_admin {
 	/**
 	 * save_options()
@@ -1783,4 +1764,23 @@ EOS;
 		die("$url?$snapshot_id");
 	} # create_snapshot()
 } # mediacaster_admin
+
+add_action('save_post', array('mediacaster_admin', 'save_entry'));
+add_action('add_attachment', array('mediacaster_admin', 'save_attachment'));
+add_action('edit_attachment', array('mediacaster_admin', 'save_attachment'));
+
+add_action('settings_page_mediacaster', array('mediacaster_admin', 'save_options'), 0);
+
+add_filter('attachment_fields_to_edit', array('mediacaster_admin', 'attachment_fields_to_edit'), 20, 2);
+add_filter('attachment_fields_to_save', array('mediacaster_admin', 'attachment_fields_to_save'), 20, 2);
+add_filter('media_send_to_editor', array('mediacaster_admin', 'media_send_to_editor'), 20, 3);
+
+add_filter('type_url_form_audio', array('mediacaster_admin', 'type_url_form'), 20);
+add_filter('type_url_form_video', array('mediacaster_admin', 'type_url_form'), 20);
+add_filter('type_url_form_file', array('mediacaster_admin', 'type_url_form'), 20);
+add_filter('audio_send_to_editor_url', array('mediacaster_admin', 'send_to_editor_url'), 20, 3);
+add_filter('video_send_to_editor_url', array('mediacaster_admin', 'send_to_editor_url'), 20, 3);
+add_filter('file_send_to_editor_url', array('mediacaster_admin', 'send_to_editor_url'), 20, 3);
+
+add_action('admin_print_scripts', array('mediacaster_admin', 'admin_scripts'), 15);
 ?>

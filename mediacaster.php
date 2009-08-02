@@ -29,49 +29,6 @@ load_plugin_textdomain('mediacaster', false, dirname(plugin_basename(__FILE__)) 
  * @package Mediacaster
  **/
 
-# playlists:
-add_filter('the_content', array('mediacaster', 'podcasts'), 12);
-
-add_action('rss2_ns', array('mediacaster', 'display_feed_ns'));
-add_action('atom_ns', array('mediacaster', 'display_feed_ns'));
-
-add_action('rss2_head', array('mediacaster', 'display_feed_header'));
-add_action('atom_head', array('mediacaster', 'display_feed_header'));
-
-add_action('rss2_item', array('mediacaster', 'display_feed_enclosures'));
-add_action('atom_entry', array('mediacaster', 'display_feed_enclosures'));
-
-$ops = get_option('mediacaster');
-if ( $ops === false )
-	mediacaster::init_options();
-elseif ( !isset($ops['version']) && !defined('DOING_CRON') && is_admin() )
-	add_action('init', array('mediacaster', 'upgrade'), 1000);
-
-add_filter('widget_text', 'do_shortcode', 11);
-add_shortcode('mc', array('mediacaster', 'shortcode'));
-
-add_filter('ext2type', array('mediacaster', 'ext2type'));
-add_filter('upload_mimes', array('mediacaster', 'upload_mimes'));
-add_filter('wp_get_attachment_url', array('mediacaster', 'wp_get_attachment_url'), 10, 2);
-add_filter('get_attached_file', array('mediacaster', 'get_attached_file'), 10, 2);
-
-add_filter('get_the_excerpt', array('mediacaster', 'disable'), 0);
-add_filter('get_the_excerpt', array('mediacaster', 'enable'), 20);
-
-add_action('flush_cache', array('mediacaster', 'flush_cache'));
-add_action('after_db_upgrade', array('mediacaster', 'flush_cache'));
-
-if ( !is_admin() ) {
-	add_action('wp_print_scripts', array('mediacaster', 'scripts'), 0);
-	add_action('wp_print_styles', array('mediacaster', 'styles'), 0);
-	add_action('wp_footer', array('mediacaster', 'ltas_scripts'));
-	add_action('wp_footer', array('mediacaster', 'thickbox_images'), 20);
-	
-	add_action('template_redirect', array('mediacaster', 'template_redirect'), 0);
-} else {
-	add_action('admin_menu', array('mediacaster', 'admin_menu'));
-}
-
 class mediacaster {
 	/**
 	 * ext2type()
@@ -1703,4 +1660,46 @@ foreach ( array('settings_page_mediacaster',
 	'post.php', 'post-new.php', 'page.php', 'page-new.php',
 	'media-upload.php', 'upload.php', 'async-upload.php', 'media.php') as $hook )
 	add_action("load-$hook", 'mediacaster_admin');
+
+add_filter('the_content', array('mediacaster', 'podcasts'), 12);
+
+add_action('rss2_ns', array('mediacaster', 'display_feed_ns'));
+add_action('atom_ns', array('mediacaster', 'display_feed_ns'));
+
+add_action('rss2_head', array('mediacaster', 'display_feed_header'));
+add_action('atom_head', array('mediacaster', 'display_feed_header'));
+
+add_action('rss2_item', array('mediacaster', 'display_feed_enclosures'));
+add_action('atom_entry', array('mediacaster', 'display_feed_enclosures'));
+
+$ops = get_option('mediacaster');
+if ( $ops === false )
+	mediacaster::init_options();
+elseif ( !isset($ops['version']) && !defined('DOING_CRON') && is_admin() )
+	add_action('init', array('mediacaster', 'upgrade'), 1000);
+
+add_filter('widget_text', 'do_shortcode', 11);
+add_shortcode('mc', array('mediacaster', 'shortcode'));
+
+add_filter('ext2type', array('mediacaster', 'ext2type'));
+add_filter('upload_mimes', array('mediacaster', 'upload_mimes'));
+add_filter('wp_get_attachment_url', array('mediacaster', 'wp_get_attachment_url'), 10, 2);
+add_filter('get_attached_file', array('mediacaster', 'get_attached_file'), 10, 2);
+
+add_filter('get_the_excerpt', array('mediacaster', 'disable'), 0);
+add_filter('get_the_excerpt', array('mediacaster', 'enable'), 20);
+
+add_action('flush_cache', array('mediacaster', 'flush_cache'));
+add_action('after_db_upgrade', array('mediacaster', 'flush_cache'));
+
+if ( !is_admin() ) {
+	add_action('wp_print_scripts', array('mediacaster', 'scripts'), 0);
+	add_action('wp_print_styles', array('mediacaster', 'styles'), 0);
+	add_action('wp_footer', array('mediacaster', 'ltas_scripts'));
+	add_action('wp_footer', array('mediacaster', 'thickbox_images'), 20);
+	
+	add_action('template_redirect', array('mediacaster', 'template_redirect'), 0);
+} else {
+	add_action('admin_menu', array('mediacaster', 'admin_menu'));
+}
 ?>
