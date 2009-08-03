@@ -3,7 +3,7 @@
 Plugin Name: Mediacaster
 Plugin URI: http://www.semiologic.com/software/mediacaster/
 Description: Lets you add podcasts, videos, and formatted download links in your site's posts and pages.
-Version: 2.0 beta4
+Version: 2.0 RC
 Author: Denis de Bernardy
 Author URI: http://www.getsemiologic.com
 Text Domain: mediacaster
@@ -244,7 +244,7 @@ class mediacaster {
 			$height = (int) round($max_width * 9 / 16);
 		
 		if ( $width > $max_width ) {
-			$height = round($height * $max_width / $width);
+			$height = (int) round($height * $max_width / $width);
 			$width = $max_width;
 		}
 		
@@ -358,7 +358,7 @@ EOS;
 			}
 			
 			if ( $width > $max_width ) {
-				$height = round($height * $max_width / $width);
+				$height = (int) round($height * $max_width / $width);
 				$width = $max_width;
 			}
 		} else {
@@ -386,15 +386,6 @@ EOS;
 		$flashvars['repeat'] = 'list';
 		
 		$flashvars['plugins'] = array('quickkeys-1');
-		
-		if ( defined('sem_google_analytics_debug') && method_exists('google_analytics', 'get_uacct')
-			&& !current_user_can('publish_posts') && !current_user_can('publish_pages') && !is_feed() ) {
-			$uacct = google_analytics::get_uacct();
-			if ( $uacct ) {
-				$flashvars['plugins'][] = 'gapro-1';
-				$flashvars['gapro.accountid'] = $uacct;
-			}
-		}
 		
 		if ( $width >= $min_width ) {
 			if ( $image ) {
@@ -650,15 +641,6 @@ EOS;
 		
 		$flashvars['plugins'] = array('quickkeys-1');
 		
-		if ( defined('sem_google_analytics_debug') && method_exists('google_analytics', 'get_uacct')
-			&& !current_user_can('publish_posts') && !current_user_can('publish_pages') && !is_feed() ) {
-			$uacct = google_analytics::get_uacct();
-			if ( $uacct ) {
-				$flashvars['plugins'][] = 'gapro-1';
-				$flashvars['gapro.accountid'] = $uacct;
-			}
-		}
-		
 		if ( $width >= $min_width) {
 			$flashvars['controlbar'] = 'over';
 			if ( $link )
@@ -902,7 +884,7 @@ EOS;
 		$folder = plugin_dir_url(__FILE__);
 		$css = $folder . 'css/mediacaster.css';
 		
-		wp_enqueue_style('mediacaster', $css, null, '2.0-beta4');
+		wp_enqueue_style('mediacaster', $css, null, '2.0-rc1');
 		wp_enqueue_style('thickbox');
 	} # styles()
 	
@@ -1654,11 +1636,14 @@ EOS;
 
 function mediacaster_admin() {
 	include dirname(__FILE__) . '/mediacaster-admin.php';
+
+	if ( current_filter() == 'load-media-new.php' )
+		add_action('pre-upload-ui', array('mediacaster_admin', 'post_upload_ui'));	
 }
 
 foreach ( array('settings_page_mediacaster',
 	'post.php', 'post-new.php', 'page.php', 'page-new.php',
-	'media-upload.php', 'upload.php', 'async-upload.php', 'media.php') as $hook )
+	'media-upload.php', 'upload.php', 'async-upload.php', 'media.php', 'media-new.php') as $hook )
 	add_action("load-$hook", 'mediacaster_admin');
 
 add_filter('the_content', array('mediacaster', 'podcasts'), 12);

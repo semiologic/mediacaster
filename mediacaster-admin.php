@@ -172,7 +172,7 @@ class mediacaster_admin {
 				. '<td>';
 			
 			echo '<p>'
-				. sprintf(__('LongTailVideo\'s JWPlayer is distributed under a Creative Commons <a href="%s">Attribute, Share Alike, Non-Commercial license</a>.'), 'http://creativecommons.org/licenses/by-nc-sa/3.0/')
+				. sprintf(__('LongTailVideo\'s JWPlayer is distributed under a Creative Commons <a href="%s">Attribute, Share Alike, Non-Commercial license</a>.', 'mediacaster'), 'http://creativecommons.org/licenses/by-nc-sa/3.0/')
 				. '</p>' . "\n";
 			
 			global $sem_pro_version;
@@ -182,7 +182,7 @@ class mediacaster_admin {
 					. '</strong></p>' . "\n";
 			} else {
 				echo '<p>'
-					. __('You need to purchase a commercial license if:')
+					. __('You need to purchase a commercial license if:', 'mediacaster')
 					. '</p>' . "\n";
 
 				echo '<ul class="ul-disc">' . "\n";
@@ -779,16 +779,36 @@ class mediacaster_admin {
 			if ( !in_array($ext, mediacaster::get_extensions()) )
 				break;
 			
-			$post_fields['post_title']['required'] = true;
-			$post_fields['post_title']['input'] = 'html';
-			$post_fields['post_title']['html'] = ''
-				. '<input type="text" id="mc-title-' . $post->ID . '"'
-					. ' name="attachments[' . $post->ID . '][post_title]"'
-					. ' value="' . esc_attr($post->post_title) . '"'
-					. ' aria-required="true"'
-					. ' />';
+			$post_fields['post_title'] = array(
+				'label' => __('Title', 'mediacaster'),
+				'required' => true,
+				'input' => 'html',
+				'html' => ''
+					. '<input type="text" id="mc-title-' . $post->ID . '"'
+						. ' name="attachments[' . $post->ID . '][post_title]"'
+						. ' value="' . esc_attr($post->post_title) . '"'
+						. ' aria-required="true"'
+						. ' />'
+				);
 			unset($post_fields['post_excerpt']);
 			unset($post_fields['url']);
+			
+			$src = esc_url(wp_get_attachment_url($post->ID));
+			
+			if ( get_post_meta($post->ID, '_mc_src') ) {
+				$post_fields = array_merge(array(
+					'src' => array(
+						'label' => __('File URL', 'mediacaster'),
+						'required' => true,
+						'input' => 'html',
+						'html' => ''
+							. '<input type="text" id="mc-src-' . $post->ID . '" readonly="readonly"'
+							. ' value="' . $src . '"'
+							. ' />'
+						),
+					), $post_fields);
+			}
+			
 			$link = get_post_meta($post->ID, '_mc_link', true);
 			
 			$post_fields['link'] = array(
@@ -823,7 +843,6 @@ class mediacaster_admin {
 				break;
 			
 			$user = wp_get_current_user();
-			$src = esc_url(wp_get_attachment_url($post->ID));
 			
 			$image_id = get_post_meta($post->ID, '_mc_image_id', true);
 			$image_id = $image_id ? intval($image_id) : '';
@@ -906,7 +925,7 @@ class mediacaster_admin {
 
 				$crossdomain = ''
 					. '<p class="help">'
-					. sprintf(__('Important: To work on third party sites, preview images and the snapshot generator require a <a href="%s" onclick="window.open(this.href); return false;">crossdomain.xml</a> policy file. <a href="#" onclick="return mc.show_crossdomain(' . $post->ID . ');">Sample file</a>.', 'mediacaster'), 'http://www.adobe.com/devnet/articles/crossdomain_policy_file_spec.html')
+					. sprintf(__('Important: To work on third party sites, preview images and the snapshot generator require a <a href="%1$s" onclick="window.open(this.href); return false;">crossdomain.xml</a> policy file. <a href="#" onclick="%2$s">Sample file</a>.', 'mediacaster'), 'http://www.adobe.com/devnet/articles/crossdomain_policy_file_spec.html', 'return mc.show_crossdomain(' . $post->ID . ');')
 					. '</p>' . "\n"
 					. '<div id="mc-crossdomain-' . $post->ID . '" style="display: none;">'
 					. '<textarea class="code" rows="7">'
@@ -933,7 +952,10 @@ class mediacaster_admin {
 						. ' name="attachments[' . $post->ID . '][image]"'
 						. ' onchange="return mc.change_snapshot(' . $post->ID . ');"'
 						. ' value="' . ( $image && !$image_id ? esc_url($image) : '' ) . '" /><br />' . "\n"
-					. '<input type="hidden" id="mc-src-' . $post->ID . '" value="' . $src . '" />'
+					. ( !get_post_meta($post->ID, '_mc_src')
+						? '<input type="hidden" id="mc-src-' . $post->ID . '" value="' . $src . '" />'
+						: ''
+						)
 					. '<input type="hidden" id="mc-image-id-' . $post->ID . '" name="attachments[' . $post->ID . '][image_id]" value="' . $image_id . '" />'
 					. '<div class="hide-if-no-js" style="float: right">'
 					. '<button type="button" class="button" id="mc-new-snapshot-' . $post->ID . '"'
@@ -1029,7 +1051,75 @@ class mediacaster_admin {
 	 **/
 
 	function attachment_fields_to_save($post, $attachment) {
-		foreach ( array('link', 'image', 'width', 'height', 'ltas') as $var ) {
+		if ( empty($post['ID']) && !empty($attachment['src']) ) {
+			$src = $attachment['src'];
+			$guid = rtrim('ext:' . str_replace(array('?', '&'), '/', $src), '/');
+			
+			if ( preg_match("/https?:\/\/(?:[^\/]+\.)?youtube\.com\//", $src) || preg_match("/\b(rss2?|xml|feed|atom)\b/i", $src) ) {
+				$post['errors'][] = __('Invalid Media Type', 'sem-reloaded');
+				return $post;
+			}
+			
+			$mime_type = wp_check_filetype($src, null);
+			$ext = $mime_type['ext'];
+			$mime_type = $mime_type['type'];
+
+			if ( !$mime_type || !in_array($ext, mediacaster::get_extensions()) ) {
+				$post['errors'] = __('Invalid Media Type', 'sem-reloaded');
+				return $post;
+			}
+
+			if ( in_array($ext, mediacaster::get_extensions('audio')) )
+				$type = 'audio';
+			elseif ( in_array($ext, mediacaster::get_extensions('video')) )
+				$type = 'video';
+			else
+				$type = 'file';
+			
+			global $wpdb;
+			$att_id = $wpdb->get_var("
+				SELECT	ID
+				FROM	$wpdb->posts
+				WHERE	guid = '" . $wpdb->escape($guid) . "'
+				");
+			
+			extract($attachment, EXTR_SKIP);
+			
+			if ( $att_id ) {
+				$post = get_post($att_id, ARRAY_A);
+				if ( !empty($post_title) ) {
+					$post['post_title'] = $post_title;
+					$post['post_name'] = $post_title;
+				}
+				if ( !empty($post_content) )
+					$post['post_content'] = $post_content;
+			} else {
+				$post_date = current_time('mysql');
+				$post_date_gmt = current_time('mysql', 1);
+				
+				$post = array_merge(array(
+					'post_title' => $post_title,
+					'post_name' => $post_title,
+					'post_mime_type' => $mime_type,
+					'guid' => $guid,
+					'post_parent' => !empty($_POST['post_id']) ? intval($_POST['post_id']) : 0,
+					'post_content' => $post_content,
+					'post_date' => $post_date,
+					'post_date_gmt' => $post_date_gmt,
+					), $post);
+				
+				$att_id = wp_insert_attachment($post, false, $post_parent);
+				if ( is_wp_error($att_id) ) {
+					$post['errors'][] = __('Failed to insert your external attachment', 'mediacaster');
+					return $post;
+				}
+
+				update_post_meta($att_id, '_mc_src', $src);
+				$post['ID'] = $att_id;
+			}
+		}
+		
+		foreach ( array('link', 'image', 'image_id', 'width', 'height', 'ltas') as $var ) {
 			if ( isset($attachment[$var]) )
 				$post[$var] = $attachment[$var];
 		}
@@ -1153,7 +1243,7 @@ class mediacaster_admin {
 	 * @return string $html
 	 **/
 
-	function type_url_form($html) {
+	function type_url_form($html = null) {
 		switch ( current_filter() ) {
 		case 'type_url_form_audio':
 			$type = 'audio';
@@ -1294,7 +1384,7 @@ class mediacaster_admin {
 			. '<input type="hidden" id="mc-preview-src-0" value="" />' . "\n"
 			. '<div id="mc-preview-0"></div>'
 			. '<p class="help">'
-			. sprintf(__('Important: To work on third party sites, preview images and the snapshot generator require a <a href="%s" onclick="window.open(this.href); return false;">crossdomain.xml</a> policy file. <a href="#" onclick="return mc.show_crossdomain(0);">Sample file</a>.', 'mediacaster'), 'http://www.adobe.com/devnet/articles/crossdomain_policy_file_spec.html')
+			. sprintf(__('Important: To work on third party sites, preview images and the snapshot generator require a <a href="%1$s" onclick="window.open(this.href); return false;">crossdomain.xml</a> policy file. <a href="#" onclick="%2$s">Sample file</a>.', 'mediacaster'), 'http://www.adobe.com/devnet/articles/crossdomain_policy_file_spec.html', 'return mc.show_crossdomain(0);')
 			. '</p>' . "\n"
 			. '<div id="mc-crossdomain-0" style="display: none;">'
 			. '<textarea class="code" rows="7">'
@@ -1376,10 +1466,17 @@ class mediacaster_admin {
 		$o .= '
 				<tr>
 					<td></td>
-					<td>
-						<input type="submit" class="button" name="insertonlybutton" value="' . esc_attr(__('Insert into Post', 'mediacaster')) . '" />
-					</td>
-				</tr>
+					<td>';
+			
+		if ( !empty($_GET['post_id']) && intval($_GET['post_id']) > 0 ) {
+			$o .= '
+							<input type="submit" class="button" name="insertonlybutton" value="' . esc_attr(__('Insert into Post', 'mediacaster')) . '" />';
+		}
+		
+		$o .= '
+							<input type="submit" class="button" name="save" value="' . esc_attr(__('Save Attachment', 'mediacaster')) . '" />
+						</td>
+					</tr>
 			</tbody></table>';
 		
 		return $o;
@@ -1410,21 +1507,6 @@ class mediacaster_admin {
 		$post_content = $attachment['post_content'];
 		$src = $attachment['src'];
 		
-		switch ( current_filter() ) {
-		case 'video_send_to_editor_url':
-			$type = 'video';
-			break;
-			
-		case 'audio_send_to_editor_url':
-			$type = 'audio';
-			break;
-			
-		case 'file_send_to_editor_url':
-		default:
-			$type = 'file';
-			break;
-		}
-		
 		$post_id = !empty($_POST['post_id']) ? intval($_POST['post_id']) : false;
 		$post = $post_id ? get_post($post_id) : false;
 		
@@ -1447,19 +1529,19 @@ class mediacaster_admin {
 				: '';
 			
 			return ''
-				. '[mc src="' . $src . '"' . $width . $height . ']'
+				. '[mc src="' . $src . '" type="youtube"' . $width . $height . ']'
 				. $post_title
 				. '[/mc]';
 		} elseif ( preg_match("/\b(rss2?|xml|feed|atom)\b/i", $src) ) {
 			if ( !$post_title )
 				$post_title = __('MP3 Playlist', 'mediacaster');
 			
-			$autostart = !empty($attachment['image'])
+			$autostart = !empty($attachment['autostart'])
 				? ' autostart'
 				: '';
 			
 			return ''
-				. '[mc src="' . $src . '"' . $autostart . ']'
+				. '[mc src="' . $src . '" type="audio"' . $autostart . ']'
 				. $post_title
 				. '[/mc]';
 		} else {
@@ -1467,7 +1549,7 @@ class mediacaster_admin {
 			$ext = $mime_type['ext'];
 			$mime_type = $mime_type['type'];
 			
-			if ( !$mime_type || !in_array($ext, mediacaster::get_extensions()) && $type != 'file' ) {
+			if ( !$mime_type || !in_array($ext, mediacaster::get_extensions()) ) {
 				if ( !$post_title )
 					$post_title = __('Untitled Media', 'mediacaster');
 				
@@ -1476,10 +1558,12 @@ class mediacaster_admin {
 					. '</a>';
 			}
 			
-			if ( in_array($ext, mediacaster::get_extensions('audio')) && $type != 'audio' )
+			if ( in_array($ext, mediacaster::get_extensions('audio')) )
 				$type = 'audio';
-			elseif ( in_array($ext, mediacaster::get_extensions('video')) && $type != 'video' )
+			elseif ( in_array($ext, mediacaster::get_extensions('video')) )
 				$type = 'video';
+			else
+				$type = 'file';
 		}
 		
 		global $wpdb;
@@ -1581,7 +1665,7 @@ class mediacaster_admin {
 		
 		$folder = plugin_dir_url(__FILE__);
 		wp_enqueue_script('swfobject');
-		wp_enqueue_script('mediacaster_admin', $folder . 'js/admin.js', array('jquery-ui-sortable'), '2.0-beta4', true);
+		wp_enqueue_script('mediacaster_admin', $folder . 'js/admin.js', array('jquery-ui-sortable'), '2.0-rc1', true);
 		add_action('admin_print_footer_scripts', array('mediacaster_admin', 'footer_scripts'), 30);
 	} # admin_scripts()
 	
@@ -1763,6 +1847,25 @@ EOS;
 		
 		die("$url?$snapshot_id");
 	} # create_snapshot()
+	
+	
+	/**
+	 * post_upload_ui()
+	 *
+	 * @return void
+	 **/
+	
+	function post_upload_ui() {
+		echo '<h3>'
+			. __('Add Media From URL', 'mediacaster')
+			. '</h3>' . "\n";
+		
+		echo mediacaster_admin::type_url_form();
+		
+		echo '<h3>'
+			. __('Or Upload Files', 'mediacaster')
+			. '</h3>' . "\n";
+	} # post_upload_ui()
 } # mediacaster_admin
 
 add_action('save_post', array('mediacaster_admin', 'save_entry'));
