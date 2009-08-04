@@ -1064,7 +1064,7 @@ class mediacaster_admin {
 			$ext = $mime_type['ext'];
 			$mime_type = $mime_type['type'];
 
-			if ( !$mime_type || !in_array($ext, mediacaster::get_extensions()) ) {
+			if ( !$mime_type ) {
 				$post['errors'] = __('Invalid Media Type', 'sem-reloaded');
 				return $post;
 			}
@@ -1549,7 +1549,7 @@ class mediacaster_admin {
 			$ext = $mime_type['ext'];
 			$mime_type = $mime_type['type'];
 			
-			if ( !$mime_type || !in_array($ext, mediacaster::get_extensions()) ) {
+			if ( !$mime_type ) {
 				if ( !$post_title )
 					$post_title = __('Untitled Media', 'mediacaster');
 				
