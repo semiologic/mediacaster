@@ -140,6 +140,8 @@ class mediacaster {
 	/**
 	 * shortcode()
 	 *
+	 * @param array $args
+	 * @param string $content
 	 * @return string $player
 	 **/
 
