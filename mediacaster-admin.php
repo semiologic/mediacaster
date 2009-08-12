@@ -207,6 +207,7 @@ class mediacaster_admin {
 				. '<input type="checkbox" name="longtail[agree]" />'
 				. '&nbsp;'
 				. __('I have read the license and agree to its terms.', 'mediacaster')
+				. '</label>'
 				. '</p>' . "\n";
 			
 			echo '</td>'
