@@ -158,16 +158,6 @@ class mediacaster {
 			
 			if ( !$args['src'])
 				return '';
-			
-			if ( $attachment->post_parent && preg_match("/^audio\//i", $attachment->post_mime_type) ) {
-				$enclosed = get_post_meta($attachment->post_parent, '_mc_enclosed');
-				if ( $enclosed )
-					$enclosed = array_map('intval', $enclosed);
-				else
-					$enclosed = array();
-				if ( !in_array($attachment->post_parent, $enclosed) )
-					add_post_meta($attachment->post_parent, '_mc_enclosed', $attachment->ID);
-			}
 		} else {
 			$args['src'] = esc_url_raw(str_replace(' ', rawurlencode(' '), $args['src']));
 		}
@@ -181,6 +171,18 @@ class mediacaster {
 				$type = wp_check_filetype($args['src']);
 				$args['type'] = $type['ext'];
 			}
+		}
+		
+		if ( !empty($attachment) && $attachment->post_parent
+			&& in_array($args['type'], array('mp3', 'm4a', 'aac', 'audio'))
+			&& preg_match("/^audio\//i", $attachment->post_mime_type) ) {
+			$enclosed = get_post_meta($attachment->post_parent, '_mc_enclosed');
+			if ( $enclosed )
+				$enclosed = array_map('intval', $enclosed);
+			else
+				$enclosed = array();
+			if ( !in_array($attachment->post_parent, $enclosed) )
+				add_post_meta($attachment->post_parent, '_mc_enclosed', $attachment->ID);
 		}
 		
 		foreach ( array('width', 'height') as $arg ) {
