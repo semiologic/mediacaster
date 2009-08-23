@@ -11,7 +11,7 @@
 	border-top: solid 1px #228b22;
 	border-bottom: solid 1px #228b22;
     background: #ddffdd 10px center no-repeat;
-	color: #22e;
+	color: #22d;
 	text-decoration: none;
 	width: 100%;
 	padding: 30px 10px 30px 65px;
@@ -19,7 +19,7 @@
 }
 
 .media_attachment a:hover {
-	color: #c22;
+	color: #b22;
 }
 
 .media_attachment .media_info {
