@@ -468,12 +468,15 @@ EOS;
 		
 		$snapshot_id = $id ? get_post_meta($id, '_mc_image_id', true) : false;
 		
+		if ( $snapshot_id )
+			$snapshot = wp_get_attachment_url($snapshot_id);
+		
 		if ( $standalone ) {
 			$image = false;
 		} elseif ( !$image ) {
 			$image = get_post_meta($id, '_mc_image', true);
-			if ( !$image && $id && $snapshot_id )
-				$image = wp_get_attachment_url($snapshot_id);
+			if ( !$image && $snapshot )
+				$image = $snapshot;
 		}
 		
 		if ( $id && !$link )
@@ -485,13 +488,15 @@ EOS;
 				$height = (int) get_post_meta($id, '_mc_height', true);
 			}
 			
-			$_width = 2 * (int) get_post_meta($id, '_mc_image_width', true);
-			$_height = 2 * (int) get_post_meta($id, '_mc_image_height', true);
+			$_width = (int) get_post_meta($id, '_mc_image_width', true);
+			$_height = (int) get_post_meta($id, '_mc_image_height', true);
 			
 			if ( $image && !( $_width && $_height ) ) {
 				$image_size = get_post_meta($id, '_mc_image_size', true);
 				if ( $image_size === '' ) {
-					$image_size = @getimagesize($image);
+					$image_size = $snapshot
+						? @getimagesize($snapshot)
+						: @getimagesize($image);
 					if ( $image_size )
 						update_post_meta($id, '_mc_image_size', $image_size);
 					else
@@ -500,12 +505,8 @@ EOS;
 				
 				if ( $image_size ) {
 					list($_width, $_height) = $image_size;
-					if ( $_width && $_height ) {
-						update_post_meta($id, '_mc_image_width', $_width);
-						update_post_meta($id, '_mc_image_height', $_height);
-						$_width = 2 * (int) $_width;
-						$_height = 2 * (int) $_height;
-					}
+					$_width = (int) $_width;
+					$_height = (int) $_height;
 				}
 			}
 			
@@ -523,15 +524,15 @@ EOS;
 			$max_tb_width = 720;
 			$max_tb_height = 540;
 			
-			$tb_width = $_width;
-			$tb_height = $_height;
+			$tb_width = 2 * $_width;
+			$tb_height = 2 * $_height;
 			
 			if ( !$tb_width )
 				$tb_width = $max_tb_width;
 			if ( !$width )
-				$width = $tb_width ? $tb_width : $max_width;
-			if ( !$height && $tb_height )
-				$height = (int) round($tb_height * $width / $tb_width);
+				$width = $_width ? (int) round(1.5 * $_width) : $max_width;
+			if ( !$height && $_width && $_height )
+				$height = (int) round($_height * $width / $_width);
 			
 			if ( $width > $max_width ) {
 				$height = (int) round($height * $max_width / $width);
@@ -588,12 +589,12 @@ EOS;
 		$thickbox = $thickbox && !is_feed();
 		
 		if ( $standalone ) {
-			$max_width = 720;
-			$max_height = 540;
+			$max_width = 780;
+			$max_height = 520;
 			
 			if ( $_width ) {
-				$width = $_width;
-				$height = $_height;
+				$width = 2 * $_width;
+				$height = 2 * $_height;
 			} else {
 				$width = 2 * $width;
 				$height = 2 * $height;
@@ -604,8 +605,8 @@ EOS;
 		
 		if ( !$width ) {
 			if ( $_width ) {
-				$width = $_width;
-				$height = $_height;
+				$width = (int) round(1.5 * $_width);
+				$height = (int) round(1.5 * $_height);
 			} else {
 				$width = $max_width;
 			}
