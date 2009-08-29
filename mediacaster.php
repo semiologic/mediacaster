@@ -798,7 +798,7 @@ EOS;
 		if ( $autostarted )
 			return false;
 		
-		$autostarted |= $autostart;
+		$autostarted |= (bool) $autostart;
 		
 		return $autostart;
 	} # autostart()
