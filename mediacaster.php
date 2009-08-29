@@ -955,7 +955,7 @@ EOS;
 		if ( $enclosures !== '' && !$enclosures )
 			return array();
 		
-		$enclosures = $wpdb->get_results("
+		$do_enclosures = $wpdb->get_results("
 			SELECT	*
 			FROM	$wpdb->posts
 			WHERE	post_type = 'attachment'
@@ -963,16 +963,17 @@ EOS;
 			AND		post_mime_type NOT LIKE 'image/%'
 			ORDER BY menu_order, post_title, ID
 			");
-		update_post_cache($enclosures);
+		update_post_cache($do_enclosures);
 		
 		$to_cache = array();
-		foreach ( $enclosures as $enclosure )
+		foreach ( $do_enclosures as $enclosure )
 			$to_cache[] = $enclosure->ID;
 		update_postmeta_cache($to_cache);
 		
-		update_post_meta($post->ID, '_mc_enclosures', count($to_cache));
+		if ( $enclosures === '' )
+			update_post_meta($post->ID, '_mc_enclosures', count($to_cache));
 		
-		if ( !$enclosures )
+		if ( !$to_cache )
 			return array();
 		
 		$enclosed = get_post_meta($post->ID, '_mc_enclosed');
@@ -981,18 +982,18 @@ EOS;
 		else
 			$enclosed = array();
 		
-		foreach ( $enclosures as $key => $enclosure ) {
+		foreach ( $do_enclosures as $key => $enclosure ) {
 			if ( $playlist ) {
 				if ( !in_array($enclosure->post_mime_type, array('audio/mpeg', 'audio/mp3', 'audio/aac'))
 					|| in_array((int) $enclosure->ID, $enclosed) )
-					unset($enclosures[$key]);
+					unset($do_enclosures[$key]);
 			} else {
 				if ( preg_match("/^image\//i", $post->post_mime_type) )
-					unset($enclosures[$key]);
+					unset($do_enclosures[$key]);
 			}
 		}
 		
-		return $enclosures;
+		return $do_enclosures;
 	} # get_enclosures()
 	
 	
