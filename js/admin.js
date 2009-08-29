@@ -233,7 +233,7 @@ jQuery(document).ready(function() {
 			var p = mc.player;
 			var post_id = mc.post_id;
 			
-			if ( !p || typeof p.getConfig != 'function' || p.getConfig()['state'] != 'IDLE' )
+			if ( !p || typeof p.getConfig != 'function' )
 				return;
 			
 			var img = p.getConfig()['image'];
