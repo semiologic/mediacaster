@@ -889,7 +889,7 @@ EOS;
 		$folder = plugin_dir_url(__FILE__);
 		$css = $folder . 'css/mediacaster.css';
 		
-		wp_enqueue_style('mediacaster', $css, null, '2.0-rc1');
+		wp_enqueue_style('mediacaster', $css, null, '20090903');
 		wp_enqueue_style('thickbox');
 	} # styles()
 	
