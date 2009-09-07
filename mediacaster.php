@@ -165,7 +165,7 @@ class mediacaster {
 		if ( empty($args['type']) ) {
 			if ( preg_match("/^https?:\/\/(?:www\.)?youtube\.com\//i", $args['src']) ) {
 				$args['type'] = 'youtube';
-			} elseif ( preg_match("/\b(rss2?|xml|feed|atom)\b/i", $args['src']) ) {
+			} elseif ( preg_match("/[\/=](rss2?|xml|feed|atom)(\/|&|$)/i", $args['src']) ) {
 				$args['type'] = 'audio';
 			} else {
 				$type = wp_check_filetype($args['src']);

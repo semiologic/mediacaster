@@ -1056,7 +1056,7 @@ class mediacaster_admin {
 			$src = $attachment['src'];
 			$guid = rtrim('ext:' . str_replace(array('?', '&'), '/', $src), '/');
 			
-			if ( preg_match("/https?:\/\/(?:[^\/]+\.)?youtube\.com\//", $src) || preg_match("/\b(rss2?|xml|feed|atom)\b/i", $src) ) {
+			if ( preg_match("/https?:\/\/(?:[^\/]+\.)?youtube\.com\//", $src) || preg_match("/[\/=](rss2?|xml|feed|atom)(\/|&|$)/i", $src) ) {
 				$post['errors'][] = __('Invalid Media Type', 'sem-reloaded');
 				return $post;
 			}
@@ -1533,7 +1533,7 @@ class mediacaster_admin {
 				. '[mc src="' . $src . '" type="youtube"' . $width . $height . ']'
 				. $post_title
 				. '[/mc]';
-		} elseif ( preg_match("/\b(rss2?|xml|feed|atom)\b/i", $src) ) {
+		} elseif ( preg_match("/[\/=](rss2?|xml|feed|atom)(\/|&|$)/i", $src) ) {
 			if ( !$post_title )
 				$post_title = __('MP3 Playlist', 'mediacaster');
 			
@@ -1666,7 +1666,7 @@ class mediacaster_admin {
 		
 		$folder = plugin_dir_url(__FILE__);
 		wp_enqueue_script('swfobject');
-		wp_enqueue_script('mediacaster_admin', $folder . 'js/admin.js', array('jquery-ui-sortable'), '20090903', true);
+		wp_enqueue_script('mediacaster_admin', $folder . 'js/admin.js', array('jquery-ui-sortable'), '20090907', true);
 		add_action('admin_print_footer_scripts', array('mediacaster_admin', 'footer_scripts'), 30);
 	} # admin_scripts()
 	

@@ -26,7 +26,7 @@ jQuery(document).ready(function() {
 				return mc.set_invalid();
 			else if ( src.match(/^(https?:\/\/)?([^\/]+\.)?youtube\.com/i) )
 				return mc.set_youtube();
-			else if ( src.match(/\.(mp3|m4a|aac)$/i) || src.match(/\b(rss2?|xml|feed|atom)\b/i) )
+			else if ( src.match(/\.(mp3|m4a|aac)$/i) || src.match(/[\/=](rss2?|xml|feed|atom)(\/|&|$)/i) )
 				return mc.set_audio();
 			else if ( src.match(/\.(flv|f4b|f4p|f4v|mp4|m4v|mov|3pg|3g2)$/i) )
 				return mc.set_video();
@@ -337,7 +337,7 @@ jQuery(document).ready(function() {
 				
 				if ( src.match(/^(https?:\/\/)?([^\/]+\.)?youtube\.com/i) )
 					type = 'youtube';
-				else if ( src.match(/\.(mp3|m4a|aac)$/i) || src.match(/\b(rss2?|xml|feed|atom)\b/i) )
+				else if ( src.match(/\.(mp3|m4a|aac)$/i) || src.match(/[\/=](rss2?|xml|feed|atom)(\/|&|$)/i) )
 					type = 'audio';
 				else if ( src.match(/\.(flv|f4b|f4p|f4v|mp4|m4v|mov|3pg|3g2)$/i) )
 					type = 'video';
