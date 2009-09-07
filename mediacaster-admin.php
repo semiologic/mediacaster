@@ -796,19 +796,17 @@ class mediacaster_admin {
 			
 			$src = esc_url(wp_get_attachment_url($post->ID));
 			
-			if ( get_post_meta($post->ID, '_mc_src') ) {
-				$post_fields = array_merge(array(
-					'src' => array(
-						'label' => __('File URL', 'mediacaster'),
-						'required' => true,
-						'input' => 'html',
-						'html' => ''
-							. '<input type="text" id="mc-src-' . $post->ID . '" readonly="readonly"'
-							. ' value="' . $src . '"'
-							. ' />'
-						),
-					), $post_fields);
-			}
+			$post_fields = array_merge(array(
+				'src' => array(
+					'label' => __('File URL', 'mediacaster'),
+					'required' => true,
+					'input' => 'html',
+					'html' => ''
+						. '<input type="text" id="mc-src-' . $post->ID . '" readonly="readonly"'
+						. ' value="' . $src . '"'
+						. ' />'
+					),
+				), $post_fields);
 			
 			$link = get_post_meta($post->ID, '_mc_link', true);
 			
@@ -833,6 +831,19 @@ class mediacaster_admin {
 					. ' />';
 			unset($post_fields['post_excerpt']);
 			unset($post_fields['url']);
+			
+			$src = esc_url(wp_get_attachment_url($post->ID));
+			$post_fields = array_merge(array(
+				'src' => array(
+					'label' => __('File URL', 'mediacaster'),
+					'required' => true,
+					'input' => 'html',
+					'html' => ''
+						. '<input type="text" id="mc-src-' . $post->ID . '" readonly="readonly"'
+						. ' value="' . $src . '"'
+						. ' />'
+					),
+				), $post_fields);
 		}
 		
 		switch ( $post->post_mime_type ) {
@@ -953,10 +964,6 @@ class mediacaster_admin {
 						. ' name="attachments[' . $post->ID . '][image]"'
 						. ' onchange="return mc.change_snapshot(' . $post->ID . ');"'
 						. ' value="' . ( $image && !$image_id ? esc_url($image) : '' ) . '" /><br />' . "\n"
-					. ( !get_post_meta($post->ID, '_mc_src')
-						? '<input type="hidden" id="mc-src-' . $post->ID . '" value="' . $src . '" />'
-						: ''
-						)
 					. '<input type="hidden" id="mc-image-id-' . $post->ID . '" name="attachments[' . $post->ID . '][image_id]" value="' . $image_id . '" />'
 					. '<div class="hide-if-no-js" style="float: right">'
 					. '<button type="button" class="button" id="mc-new-snapshot-' . $post->ID . '"'
