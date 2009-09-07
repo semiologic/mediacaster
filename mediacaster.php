@@ -521,7 +521,7 @@ EOS;
 			
 			$href = apply_filters('the_permalink', get_permalink($id));
 			
-			$max_tb_width = 720;
+			$max_tb_width = 780;
 			$max_tb_height = 540;
 			
 			$tb_width = 2 * $_width;
