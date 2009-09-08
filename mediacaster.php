@@ -647,8 +647,6 @@ EOS;
 		
 		if ( $width >= $min_width) {
 			$flashvars['controlbar'] = 'over';
-			if ( $link )
-				$flashvars['link'] = esc_url_raw($link);
 			
 			$share = false;
 			if ( in_the_loop() ) {
@@ -660,9 +658,12 @@ EOS;
 					$share = apply_filters('the_permalink', get_permalink($share));
 			}
 			
-			if ( $share ) {
+			if ( !$share )
+				$share = $link;
+			
+			if ( $link ) {
 				$flashvars['plugins'][] = 'sharing-1';
-				$flashvars['sharing.link'] = $share;
+				$flashvars['link'] = esc_url_raw($link);
 			}
 			
 			$flashvars['dock'] = 'true';
