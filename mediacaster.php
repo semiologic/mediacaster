@@ -523,13 +523,13 @@ EOS;
 			$max_tb_width = 780;
 			$max_tb_height = 540;
 			
-			$tb_width = 2 * $_width;
-			$tb_height = 2 * $_height;
+			$tb_width = (int) round(1.5 * $_width);
+			$tb_height = (int) round(1.5 * $_height);
 			
 			if ( !$tb_width )
 				$tb_width = $max_tb_width;
 			if ( !$width )
-				$width = $_width ? (int) round(1.5 * $_width) : $max_width;
+				$width = $_width ? $_width : $max_width;
 			if ( !$height && $_width && $_height )
 				$height = (int) round($_height * $width / $_width);
 			
@@ -592,19 +592,19 @@ EOS;
 			$max_height = 520;
 			
 			if ( $_width ) {
-				$width = 2 * $_width;
-				$height = 2 * $_height;
+				$width = (int) round(1.5 * $_width);
+				$height = (int) round(1.5 * $_height);
 			} else {
-				$width = 2 * $width;
-				$height = 2 * $height;
+				$width = (int) round(1.5 * $width);
+				$height = (int) round(1.5 * $height);
 			}
 		} else {
 			$max_height = false;
 			
 			if ( !$width ) {
 				if ( $_width ) {
-					$width = (int) round(1.5 * $_width);
-					$height = (int) round(1.5 * $_height);
+					$width = $_width;
+					$height = $_height;
 				} else {
 					$width = $max_width;
 				}
@@ -658,12 +658,9 @@ EOS;
 					$share = apply_filters('the_permalink', get_permalink($share));
 			}
 			
-			if ( !$share )
-				$share = $link;
-			
-			if ( $link ) {
+			if ( $link || $share ) {
 				$flashvars['plugins'][] = 'sharing-1';
-				$flashvars['link'] = esc_url_raw($link);
+				$flashvars['link'] = esc_url_raw($link ? $link : $share);
 			}
 			
 			$flashvars['dock'] = 'true';
