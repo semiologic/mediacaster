@@ -468,8 +468,7 @@ EOS;
 		
 		$snapshot_id = $id ? get_post_meta($id, '_mc_image_id', true) : false;
 		
-		if ( $snapshot_id )
-			$snapshot = wp_get_attachment_url($snapshot_id);
+		$snapshot = $snapshot_id ? wp_get_attachment_url($snapshot_id) : false;
 		
 		if ( $standalone ) {
 			$image = false;
@@ -601,14 +600,14 @@ EOS;
 			}
 		} else {
 			$max_height = false;
-		}
-		
-		if ( !$width ) {
-			if ( $_width ) {
-				$width = (int) round(1.5 * $_width);
-				$height = (int) round(1.5 * $_height);
-			} else {
-				$width = $max_width;
+			
+			if ( !$width ) {
+				if ( $_width ) {
+					$width = (int) round(1.5 * $_width);
+					$height = (int) round(1.5 * $_height);
+				} else {
+					$width = $max_width;
+				}
 			}
 		}
 		
@@ -650,6 +649,23 @@ EOS;
 			$flashvars['controlbar'] = 'over';
 			if ( $link )
 				$flashvars['link'] = esc_url_raw($link);
+			
+			$share = false;
+			if ( in_the_loop() ) {
+				$share = apply_filters('the_permalink', get_permalink());
+			} elseif ( is_attachment($id) ) {
+				$share = get_post($id);
+				$share = $share->post_parent;
+				if ( $share )
+					$share = apply_filters('the_permalink', get_permalink($share));
+			}
+			
+			if ( $share ) {
+				$flashvars['plugins'][] = 'sharing-1';
+				$flashvars['sharing.link'] = $share;
+			}
+			
+			$flashvars['dock'] = 'on';
 		} else {
 			$width = max($width, 50);
 			$height = max($height, 50);
