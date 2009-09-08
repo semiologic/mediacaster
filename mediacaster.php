@@ -665,7 +665,7 @@ EOS;
 				$flashvars['sharing.link'] = $share;
 			}
 			
-			$flashvars['dock'] = 'on';
+			$flashvars['dock'] = 'true';
 		} else {
 			$width = max($width, 50);
 			$height = max($height, 50);
