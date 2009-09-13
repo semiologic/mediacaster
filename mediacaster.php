@@ -193,13 +193,8 @@ class mediacaster {
 		foreach ( array('autostart', 'thickbox', 'ltas') as $arg ) {
 			if ( isset($args[$arg]) )
 				continue;
-			$key = array_search($arg, $args);
-			if ( $key !== false ) {
-				unset($args[$key]);
-				$args[$arg] = $arg;
-			} else {
-				$args[$arg] = false;
-			}
+			
+			$args[$arg] = array_search($arg, $args) !== false;
 		}
 		
 		switch ( $args['type'] ) {
@@ -470,9 +465,7 @@ EOS;
 		
 		$snapshot = $snapshot_id ? wp_get_attachment_url($snapshot_id) : false;
 		
-		if ( $standalone ) {
-			$image = false;
-		} elseif ( !$image ) {
+		if ( !$image ) {
 			$image = get_post_meta($id, '_mc_image', true);
 			if ( !$image && $snapshot )
 				$image = $snapshot;
@@ -516,8 +509,6 @@ EOS;
 		}
 		
 		if ( !is_feed() && $thickbox && $image && $id ) {
-			$image = esc_url($image);
-			
 			$href = apply_filters('the_permalink', get_permalink($id));
 			
 			$max_tb_width = 780;
@@ -577,7 +568,7 @@ EOS;
 
 <div class="media_container">
 <div class="media media_caption">
-<a href="$href" class="thickbox no_icon" $title><img src="$image" width="$width" height="$height" alt="" /><br />$tip_text</a>
+<a href="$href" class="thickbox no_icon" $title><img src="$image" width="$width" alt="" /><br />$tip_text</a>
 </div>
 </div>
 
@@ -588,6 +579,7 @@ EOS;
 		$thickbox = $thickbox && !is_feed();
 		
 		if ( $standalone ) {
+			$image = false;
 			$max_width = 780;
 			$max_height = 520;
 			
@@ -648,22 +640,20 @@ EOS;
 		if ( $width >= $min_width) {
 			$flashvars['controlbar'] = 'over';
 			
-			$share = false;
-			if ( in_the_loop() ) {
-				$share = apply_filters('the_permalink', get_permalink());
-			} elseif ( is_attachment($id) ) {
-				$share = get_post($id);
-				$share = $share->post_parent;
-				if ( $share )
-					$share = apply_filters('the_permalink', get_permalink($share));
+			$link = false;
+			if ( !$link ) {
+				if ( in_the_loop() ) {
+					$link = apply_filters('the_permalink', get_permalink());
+				} elseif ( is_attachment($id) ) {
+					$link = get_post($id);
+					$link = $link->post_parent;
+					if ( $link )
+						$link = apply_filters('the_permalink', get_permalink($link));
+				}
 			}
 			
-			if ( $link || $share ) {
-				$flashvars['plugins'][] = 'sharing-1';
-				$flashvars['link'] = esc_url_raw($link ? $link : $share);
-			}
-			
-			$flashvars['dock'] = 'true';
+			if ( $link )
+				$flashvars['link'] = esc_url_raw($link);
 		} else {
 			$width = max($width, 50);
 			$height = max($height, 50);
@@ -1278,8 +1268,8 @@ EOS;
 		
 		return isset($type) ? $$type : array_merge($audio, $video);
 	} # get_extensions()
-
-
+	
+	
 	/**
 	 * init_options()
 	 *
