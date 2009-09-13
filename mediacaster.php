@@ -456,73 +456,79 @@ EOS;
 		extract(mediacaster::defaults());
 		extract(mediacaster::get_skin($skin));
 		
-		foreach ( array('width', 'height', '_width', '_height', 'id', 'standalone', 'link') as $arg ) {
+		foreach ( array('width', 'height', 'image_width', 'image_height', 'id', 'standalone', 'link') as $arg ) {
 			if ( empty($$arg) )
 				$$arg = false;
 		}
 		
-		$snapshot_id = $id ? get_post_meta($id, '_mc_image_id', true) : false;
+		$image = get_post_meta($id, '_mc_image', true);
+		$image_id = $id ? get_post_meta($id, '_mc_image_id', true) : false;
 		
-		$snapshot = $snapshot_id ? wp_get_attachment_url($snapshot_id) : false;
-		
-		if ( !$image ) {
-			$image = get_post_meta($id, '_mc_image', true);
-			if ( !$image && $snapshot )
-				$image = $snapshot;
+		if ( ( !$image_width || !$image_height ) && $id ) {
+			$image_width = (int) get_post_meta($id, '_mc_width', true);
+			$image_height = (int) get_post_meta($id, '_mc_height', true);
+			
+			if ( ( !$image_width || !$image_height ) && $image ) {
+				$image_size = get_post_meta($id, '_mc_image_size', true);
+				
+				if ( $image_size === '' ) {
+					$image_size = @getimagesize($image);
+					if ( !$image_size )
+						$image_size = array();
+					update_post_meta($id, '_mc_image_size', $image_size);
+				}
+				
+				if ( $image_size ) {
+					$image_width = (int) $image_size[0];
+					$image_height = (int) $image_size[1];
+				}
+			}
+			
+			if ( ( !$image_width || !$image_height ) && $image_id ) {
+				$image = wp_get_attachment_url($image_id);
+				$image_width = (int) get_post_meta($id, '_mc_image_width', true);
+				$image_height = (int) get_post_meta($id, '_mc_image_height', true);
+			}
 		}
+		
+		if ( !$image && $image_id )
+			$image = wp_get_attachment_url($image_id);
 		
 		if ( $id && !$link )
 			$link = get_post_meta($id, '_mc_link', true);
 		
-		if ( $id ) {
-			if ( !$width ) {
-				$width = (int) get_post_meta($id, '_mc_width', true);
-				$height = (int) get_post_meta($id, '_mc_height', true);
-			}
-			
-			$_width = (int) get_post_meta($id, '_mc_image_width', true);
-			$_height = (int) get_post_meta($id, '_mc_image_height', true);
-			
-			if ( $image && !( $_width && $_height ) ) {
-				$image_size = get_post_meta($id, '_mc_image_size', true);
-				if ( $image_size === '' ) {
-					$image_size = $snapshot
-						? @getimagesize($snapshot)
-						: @getimagesize($image);
-					if ( $image_size )
-						update_post_meta($id, '_mc_image_size', $image_size);
-					else
-						update_post_meta($id, '_mc_image_size', array());
-				}
-				
-				if ( $image_size ) {
-					list($_width, $_height) = $image_size;
-					$_width = (int) $_width;
-					$_height = (int) $_height;
-				}
-			}
-			
-			if ( !$_width || !$_height ) {
-				$_width = false;
-				$_height = false;
-			}
-		}
+		$width = (int) $width;
+		$height = (int) $height;
 		
-		if ( !is_feed() && $thickbox && $image && $id ) {
+		$max_tb_width = 780;
+		$max_tb_height = 540;
+		
+		$thumbnail = get_post_meta($id, '_mc_thumbnail', true);
+		
+		if ( !is_feed() && $thickbox && ( $image || $thumbnail ) && $id ) {
 			$href = apply_filters('the_permalink', get_permalink($id));
 			
-			$max_tb_width = 780;
-			$max_tb_height = 540;
+			$thumbnail_size = get_post_meta($id, '_mc_thumbnail_size', true);
 			
-			$tb_width = (int) round(1.5 * $_width);
-			$tb_height = (int) round(1.5 * $_height);
+			if ( $thumbnail && $thumbnail_size ) {
+				$image = $thumbnail;
+				if ( !$width && !$height ) {
+					$width = $thumbnail_size[0];
+					$height = $thumbnail_size[1];
+				} elseif ( !$height ) {
+					$height = (int) round($thumbnail_size[1] * $width / $thumbnail_size[0]);
+				}
+			}
+			
+			$tb_width = (int) round(1.5 * $image_width);
+			$tb_height = (int) round(1.5 * $image_height);
 			
 			if ( !$tb_width )
-				$tb_width = $max_tb_width;
+				$tb_width = $max_width;
 			if ( !$width )
-				$width = $_width ? $_width : $max_width;
-			if ( !$height && $_width && $_height )
-				$height = (int) round($_height * $width / $_width);
+				$width = $image_width ? $image_width : $max_width;
+			if ( !$height && $image_width && $image_height )
+				$height = (int) round($image_height * $width / $image_width);
 			
 			if ( $width > $max_width ) {
 				$height = (int) round($height * $max_width / $width);
@@ -580,12 +586,12 @@ EOS;
 		
 		if ( $standalone ) {
 			$image = false;
-			$max_width = 780;
-			$max_height = 520;
+			$max_width = $max_tb_width;
+			$max_height = $max_tb_height;
 			
-			if ( $_width ) {
-				$width = (int) round(1.5 * $_width);
-				$height = (int) round(1.5 * $_height);
+			if ( $image_width ) {
+				$width = (int) round(1.5 * $image_width);
+				$height = (int) round(1.5 * $image_height);
 			} else {
 				$width = (int) round(1.5 * $width);
 				$height = (int) round(1.5 * $height);
@@ -594,9 +600,9 @@ EOS;
 			$max_height = false;
 			
 			if ( !$width ) {
-				if ( $_width ) {
-					$width = $_width;
-					$height = $_height;
+				if ( $image_width ) {
+					$width = $image_width;
+					$height = $image_height;
 				} else {
 					$width = $max_width;
 				}
@@ -604,8 +610,8 @@ EOS;
 		}
 		
 		if ( !$height ) {
-			if ( $_height )
-				$height = (int) round($_height * $width / $_width);
+			if ( $image_height )
+				$height = (int) round($image_height * $width / $image_width);
 			else
 				$height = (int) round($width * 9 / 16);
 		}
@@ -620,7 +626,14 @@ EOS;
 			$height = $max_height;
 		}
 		
-		$player_id = 'm' . md5($src . '_' . $count++);
+		if ( in_the_loop() )
+			$salt = get_the_ID();
+		elseif ( is_singular() || is_attachment() )
+			$salt = $GLOBALS['wp_query']->get_queried_object_id();
+		else
+			$salt = uniqid(rand());
+		
+		$player_id = 'm' . md5($src . '_' . $count++ . '_' . $salt);
 		
 		$allowfullscreen = 'true';
 		$allowscriptaccess = 'always';
