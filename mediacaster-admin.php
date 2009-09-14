@@ -719,6 +719,20 @@ class mediacaster_admin {
 			if ( $image_id != $attachment['image_id'] ) {
 				$image_id = (int) $attachment['image_id'];
 				update_post_meta($post_id, '_mc_image_id', $image_id);
+				$meta = get_post_meta($image_id, '_wp_attachment_metadata', true);
+				if ( $meta ) {
+					update_post_meta($post_id, '_mc_image_width', $meta['width']);
+					update_post_meta($post_id, '_mc_image_height', $meta['height']);
+				}
+			}
+			
+			$post_parent = !empty($_POST['post_id']) && intval($_POST['post_id'])
+				? (int) $_POST['post_id']
+				: false;
+			$shot = get_post($image_id);
+			if ( $post_parent && $shot->post_parent != $post_parent ) {
+				$shot->post_parent = $post_parent;
+				wp_update_post($shot);
 			}
 		}
 		
@@ -1027,8 +1041,8 @@ class mediacaster_admin {
 			
 			if ( !$image && $snapshot ) {
 				$image = $snapshot;
-				$image_width = $snapshot_width;
-				$image_height = $snapshot_height;
+				$image_width = $snapshot_width ? $snapshot_width : false;
+				$image_height = $snapshot_height ? $snapshot_height : false;
 			}
 			
 			$width = get_post_meta($post->ID, '_mc_width', true);
@@ -1042,13 +1056,13 @@ class mediacaster_admin {
 			if ( $image ) {
 				$preview = ''
 					. '<input type="hidden" id="mc-snapshot-src-' . $post->ID . '"'
-						. ' value="' . ( $snapshot ? esc_url($snapshot) : '' ) . '" />' . "\n"
+						. ' value="' . ( $image ? esc_url($image) : '' ) . '" />' . "\n"
 					. '<input type="hidden" id="mc-snapshot-width-' . $post->ID . '"'
 						. ' value="' . $snapshot_width . '" />' . "\n"
 					. '<input type="hidden" id="mc-snapshot-height-' . $post->ID . '"'
 						. ' value="' . $snapshot_height . '" />' . "\n"
 					. '<div style="width: 460px; overflow: hidden;"><div id="mc-preview-' . $post->ID . '" align="center" style="clear: both; margin: 0px auto;">'
-					. '<img src="' . esc_url($image . '?' . $image_id) . '" width="' . ( $image_width <= 460 ? $image_width : 460 ) . '" alt="" />' . "\n"
+					. '<img src="' . esc_url($image . '?' . $image_id) . '" width="' . ( $image_width && $image_width <= 460 ? $image_width : 460 ) . '" alt="" />' . "\n"
 					. '</div></div>' . "\n";
 			} else {
 				$preview = ''
@@ -1187,7 +1201,7 @@ class mediacaster_admin {
 				$thumbnail_preview = '';
 			}
 			
-			$thumbnail_preview = '<div style="width: 460px; overflow: none;"><div id="mc-thumbnail-preview-' . $post->ID . '" style="margin: 0px auto;" align="center">' . $thumbnail_preview . '</div></div>' . "\n";
+			$thumbnail_preview = '<div style="width: 460px; overflow: hidden;"><div id="mc-thumbnail-preview-' . $post->ID . '" style="margin: 0px auto;" align="center">' . $thumbnail_preview . '</div></div>' . "\n";
 			
 			$post_fields['tb_thumbnail'] = array(
 				'label' => __('Thumbnail', 'mediacaster'),
@@ -1334,6 +1348,7 @@ class mediacaster_admin {
 
 				update_post_meta($att_id, '_mc_src', $src);
 				$post['ID'] = $att_id;
+				$_POST['attachments'][$att_id] = $_POST['attachments'][0];
 			}
 		}
 		
@@ -1541,7 +1556,7 @@ class mediacaster_admin {
 						<span class="alignleft"><label>' . __('Snapshot Image', 'mediacaster') . '</label></span>
 					</th>
 					<td class="field">'
-				. '<div style="width: 460px;>'
+				. '<div style="width: 460px;">'
 				. '<input type="text" id="mc-image-0"'
 							. ' name="attachments[0][image]"'
 							. ' onchange="return mc.change_snapshot(0);"'
@@ -1836,6 +1851,7 @@ class mediacaster_admin {
 			if ( is_wp_error($att_id) )
 				die(-1);
 			
+			#$_POST['attachments'][$att_id] = $_POST['attachments'][0];
 			update_post_meta($att_id, '_mc_src', $src);
 			
 			if ( in_array($type, array('audio', 'video')) ) {
@@ -1863,8 +1879,21 @@ class mediacaster_admin {
 				$image_id = false;
 				if ( !empty($attachment['image_id']) && intval($attachment['image_id']) ) {
 					$image_id = get_post_meta($att_id, '_mc_image_id');
-					if ( $image_id != $attachment['image_id'] )
-						update_post_meta($att_id, '_mc_image_id', $attachment['image_id']);
+					if ( $image_id != $attachment['image_id'] ) {
+						$image_id = (int) $attachment['image_id'];
+						update_post_meta($att_id, '_mc_image_id', $image_id);
+						$meta = get_post_meta($image_id, '_wp_attachment_metadata', true);
+						if ( $meta ) {
+							update_post_meta($att_id, '_mc_image_width', $meta['width']);
+							update_post_meta($att_id, '_mc_image_height', $meta['height']);
+						}
+					}
+					
+					$shot = get_post($image_id);
+					if ( $post_parent && $shot->post_parent != $post_parent ) {
+						$shot->post_parent = $post_parent;
+						wp_update_post($shot);
+					}
 				}
 				
 				$snapshot = $image_id ? wp_get_attachment_url($image_id) : false;
@@ -2116,7 +2145,7 @@ EOS;
 			delete_post_meta($attachment->ID, '_mc_image');
 			delete_post_meta($attachment->ID, '_mc_image_size');
 			delete_post_meta($attachment->ID, '_mc_width');
-			delete_post_meta($attachment->ID, '_mc_heigth');
+			delete_post_meta($attachment->ID, '_mc_height');
 		}
 		
 		die($url . '?' . $snapshot_id . '.' . $meta['width'] . '.' . $meta['height']);

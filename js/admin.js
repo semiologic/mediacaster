@@ -250,7 +250,7 @@ jQuery(document).ready(function() {
 				flashvars.plugins = 'quickkeys-1,snapshot-1';
 				flashvars['snapshot.script'] = mc.site_url + '/mc-snapshot.' + post_id + '.' + user_id + '.' + nonce + '.php';
 				flashvars.id = s_id;
-
+				
 				var attributes = {};
 				attributes.id = s_id;
 				attributes.name = s_id;
