@@ -1971,7 +1971,7 @@ class mediacaster_admin {
 		
 		$folder = plugin_dir_url(__FILE__);
 		wp_enqueue_script('swfobject');
-		wp_enqueue_script('mediacaster_admin', $folder . 'js/admin.js', array('jquery-ui-sortable'), time() /*'20090907'*/, true);
+		wp_enqueue_script('mediacaster_admin', $folder . 'js/admin.js', array('jquery-ui-sortable'), '20090914', true);
 		add_action('admin_print_footer_scripts', array('mediacaster_admin', 'footer_scripts'), 30);
 	} # admin_scripts()
 	

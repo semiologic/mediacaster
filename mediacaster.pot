@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: 2.0\n"
 "Report-Msgid-Bugs-To: https://tickets.semiologic.com\n"
-"POT-Creation-Date: 2009-09-13 23:17+0200\n"
+"POT-Creation-Date: 2009-09-14 13:19+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -83,8 +83,8 @@ msgstr ""
 msgid "Save Changes"
 msgstr ""
 
-#: mediacaster-admin.php:225 mediacaster-admin.php:1244
-#: mediacaster-admin.php:1699
+#: mediacaster-admin.php:225 mediacaster-admin.php:1258
+#: mediacaster-admin.php:1714
 msgid "Media Player"
 msgstr ""
 
@@ -504,32 +504,32 @@ msgstr ""
 msgid "TV & Film"
 msgstr ""
 
-#: mediacaster-admin.php:883
+#: mediacaster-admin.php:897
 #, php-format
 msgid "Video: %s"
 msgstr ""
 
-#: mediacaster-admin.php:928 mediacaster-admin.php:1491
+#: mediacaster-admin.php:942 mediacaster-admin.php:1506
 msgid "Title"
 msgstr ""
 
-#: mediacaster-admin.php:946 mediacaster-admin.php:985
-#: mediacaster-admin.php:1484
+#: mediacaster-admin.php:960 mediacaster-admin.php:999
+#: mediacaster-admin.php:1499
 msgid "File URL"
 msgstr ""
 
-#: mediacaster-admin.php:959 mediacaster-admin.php:1509
-#: mediacaster-admin.php:1524
+#: mediacaster-admin.php:973 mediacaster-admin.php:1524
+#: mediacaster-admin.php:1539
 msgid "Link URL"
 msgstr ""
 
-#: mediacaster-admin.php:961 mediacaster-admin.php:1516
+#: mediacaster-admin.php:975 mediacaster-admin.php:1531
 msgid ""
 "The link URL to which the player should direct users to (e.g. an affiliate "
 "link)."
 msgstr ""
 
-#: mediacaster-admin.php:1075 mediacaster-admin.php:1570
+#: mediacaster-admin.php:1089 mediacaster-admin.php:1585
 #, php-format
 msgid ""
 "Important: To work on third party sites, preview images and the snapshot "
@@ -538,195 +538,196 @@ msgid ""
 "\">Sample file</a>."
 msgstr ""
 
-#: mediacaster-admin.php:1088 mediacaster-admin.php:1583
+#: mediacaster-admin.php:1102 mediacaster-admin.php:1598
 msgid ""
 "Paste the above in a plain text file, and upload it so it's available as:"
 msgstr ""
 
-#: mediacaster-admin.php:1089 mediacaster-admin.php:1584
+#: mediacaster-admin.php:1103 mediacaster-admin.php:1599
 msgid ""
 "http://your-account-id.your-video-host.com/<strong>crossdomain.xml</strong>"
 msgstr ""
 
-#: mediacaster-admin.php:1095 mediacaster-admin.php:1541
+#: mediacaster-admin.php:1109 mediacaster-admin.php:1556
 msgid "Snapshot Image"
 msgstr ""
 
-#: mediacaster-admin.php:1106 mediacaster-admin.php:1553
+#: mediacaster-admin.php:1120 mediacaster-admin.php:1568
 msgid "New Snapshot"
 msgstr ""
 
-#: mediacaster-admin.php:1110 mediacaster-admin.php:1557
+#: mediacaster-admin.php:1124 mediacaster-admin.php:1572
 msgid "Cancel Snapshot"
 msgstr ""
 
-#: mediacaster-admin.php:1113 mediacaster-admin.php:1561
-msgid "The URL of a preview image for your video."
+#: mediacaster-admin.php:1127 mediacaster-admin.php:1576
+msgid "The URL of the preview image for your video."
 msgstr ""
 
-#: mediacaster-admin.php:1122 mediacaster-admin.php:1594
+#: mediacaster-admin.php:1136 mediacaster-admin.php:1609
 msgid "Width x Height"
 msgstr ""
 
-#: mediacaster-admin.php:1139 mediacaster-admin.php:1613
+#: mediacaster-admin.php:1153 mediacaster-admin.php:1628
 msgid "4:3"
 msgstr ""
 
-#: mediacaster-admin.php:1141 mediacaster-admin.php:1614
+#: mediacaster-admin.php:1155 mediacaster-admin.php:1629
 msgid "TV"
 msgstr ""
 
-#: mediacaster-admin.php:1142 mediacaster-admin.php:1616
+#: mediacaster-admin.php:1156 mediacaster-admin.php:1631
 msgid "3:2"
 msgstr ""
 
-#: mediacaster-admin.php:1144 mediacaster-admin.php:1617
+#: mediacaster-admin.php:1158 mediacaster-admin.php:1632
 msgid "Camera"
 msgstr ""
 
-#: mediacaster-admin.php:1145 mediacaster-admin.php:1619
+#: mediacaster-admin.php:1159 mediacaster-admin.php:1634
 msgid "16:9"
 msgstr ""
 
-#: mediacaster-admin.php:1147 mediacaster-admin.php:1620
+#: mediacaster-admin.php:1161 mediacaster-admin.php:1635
 msgid "HD"
 msgstr ""
 
-#: mediacaster-admin.php:1148 mediacaster-admin.php:1621
+#: mediacaster-admin.php:1162 mediacaster-admin.php:1636
 msgid "1.85:1"
 msgstr ""
 
-#: mediacaster-admin.php:1150 mediacaster-admin.php:1623
+#: mediacaster-admin.php:1164 mediacaster-admin.php:1638
 msgid "Movie"
 msgstr ""
 
-#: mediacaster-admin.php:1151 mediacaster-admin.php:1624
+#: mediacaster-admin.php:1165 mediacaster-admin.php:1639
 msgid "Fit the available width"
 msgstr ""
 
-#: mediacaster-admin.php:1153 mediacaster-admin.php:1626
+#: mediacaster-admin.php:1167 mediacaster-admin.php:1641
 msgid "Clear"
 msgstr ""
 
-#: mediacaster-admin.php:1163
+#: mediacaster-admin.php:1177
 msgid ""
 "Your video's size and aspect ratio are extracted from its snapshot image; "
 "leave these fields empty unless if you wish to specify an arbitrary size or "
 "aspect ratio."
 msgstr ""
 
-#: mediacaster-admin.php:1172 mediacaster-admin.php:1639
+#: mediacaster-admin.php:1186 mediacaster-admin.php:1654
 msgid "Thickbox"
 msgstr ""
 
-#: mediacaster-admin.php:1177 mediacaster-admin.php:1642
+#: mediacaster-admin.php:1191 mediacaster-admin.php:1657
 msgid "Open in a thickbox window (requires a preview image)."
 msgstr ""
 
-#: mediacaster-admin.php:1193 mediacaster-admin.php:1649
+#: mediacaster-admin.php:1207 mediacaster-admin.php:1664
 msgid "Thumbnail"
 msgstr ""
 
-#: mediacaster-admin.php:1202 mediacaster-admin.php:1657
-msgid "The URL of a preview image if it should differ from the snapshot image."
+#: mediacaster-admin.php:1216 mediacaster-admin.php:1672
+msgid ""
+"The URL of the thickbox thumbnail, should it differ from the snapshot image."
 msgstr ""
 
-#: mediacaster-admin.php:1212 mediacaster-admin.php:1667
+#: mediacaster-admin.php:1226 mediacaster-admin.php:1682
 msgid "Insert Ads"
 msgstr ""
 
-#: mediacaster-admin.php:1219 mediacaster-admin.php:1674
+#: mediacaster-admin.php:1233 mediacaster-admin.php:1689
 msgid "Insert Ads (premium ads require a title and a description)."
 msgstr ""
 
-#: mediacaster-admin.php:1229 mediacaster-admin.php:1683
+#: mediacaster-admin.php:1243 mediacaster-admin.php:1698
 msgid "Autostart"
 msgstr ""
 
-#: mediacaster-admin.php:1234 mediacaster-admin.php:1686
+#: mediacaster-admin.php:1248 mediacaster-admin.php:1701
 msgid "Automatically start the (first) media player (bandwidth intensive)."
 msgstr ""
 
-#: mediacaster-admin.php:1239 mediacaster-admin.php:1693
+#: mediacaster-admin.php:1253 mediacaster-admin.php:1708
 msgid "Insert As"
 msgstr ""
 
-#: mediacaster-admin.php:1250 mediacaster-admin.php:1705
+#: mediacaster-admin.php:1264 mediacaster-admin.php:1720
 msgid "Download Link"
 msgstr ""
 
-#: mediacaster-admin.php:1254
+#: mediacaster-admin.php:1268
 msgid "Create Widget"
 msgstr ""
 
-#: mediacaster-admin.php:1277 mediacaster-admin.php:1286
+#: mediacaster-admin.php:1291 mediacaster-admin.php:1300
 msgid "Invalid Media Type"
 msgstr ""
 
-#: mediacaster-admin.php:1331
+#: mediacaster-admin.php:1345
 msgid "Failed to insert your external attachment"
 msgstr ""
 
-#: mediacaster-admin.php:1368 mediacaster-admin.php:1798
-#: mediacaster-admin.php:1822
+#: mediacaster-admin.php:1383 mediacaster-admin.php:1813
+#: mediacaster-admin.php:1837
 msgid "Untitled Media"
 msgstr ""
 
-#: mediacaster-admin.php:1500
+#: mediacaster-admin.php:1515
 msgid "Description"
 msgstr ""
 
-#: mediacaster-admin.php:1528
+#: mediacaster-admin.php:1543
 #, php-format
 msgid ""
 "Not available, but don't miss YouTube's <a href=\"%s\" onclick=\"window.open"
 "(this.href); return false;\">video annotation</a> features."
 msgstr ""
 
-#: mediacaster-admin.php:1631
+#: mediacaster-admin.php:1646
 msgid ""
 "Your video's size and aspect ratio are extracted from its snapshot image; "
 "leave these fields empty unless you wish to specify an arbitrary size or "
 "aspect ratio."
 msgstr ""
 
-#: mediacaster-admin.php:1717
+#: mediacaster-admin.php:1732
 msgid "Insert into Post"
 msgstr ""
 
-#: mediacaster-admin.php:1721
+#: mediacaster-admin.php:1736
 msgid "Save Attachment"
 msgstr ""
 
-#: mediacaster-admin.php:1765
+#: mediacaster-admin.php:1780
 msgid "YouTube Video"
 msgstr ""
 
-#: mediacaster-admin.php:1781
+#: mediacaster-admin.php:1796
 msgid "MP3 Playlist"
 msgstr ""
 
-#: mediacaster-admin.php:2087
+#: mediacaster-admin.php:2116
 #, php-format
 msgid "%s Snapshot"
 msgstr ""
 
-#: mediacaster-admin.php:2087
+#: mediacaster-admin.php:2116
 msgid "Video"
 msgstr ""
 
-#: mediacaster-admin.php:2134
+#: mediacaster-admin.php:2163
 msgid "Add Media From URL"
 msgstr ""
 
-#: mediacaster-admin.php:2140
+#: mediacaster-admin.php:2169
 msgid "Or Upload Files"
 msgstr ""
 
-#: mediacaster.php:571
+#: mediacaster.php:587
 msgid "Click to Play the Video"
 msgstr ""
 
-#: mediacaster.php:1330 mediacaster.php:1331
+#: mediacaster.php:1331 mediacaster.php:1332
 msgid "Mediacaster"
 msgstr ""
