@@ -1110,7 +1110,7 @@ class mediacaster_admin {
 						. __('Cancel Snapshot', 'mediacaster') . '</button>'
 						. '</div>' . "\n"
 					. '<p class="help">'
-						. __('The URL of a preview image for your video.', 'mediacaster')
+						. __('The URL of the preview image for your video.', 'mediacaster')
 						. '</p>' . "\n"
 					. '</div>' . "\n"
 					. $preview
@@ -1199,7 +1199,7 @@ class mediacaster_admin {
 							. ' value="' . ( $thumbnail ? esc_url($thumbnail) : '' )
 							. '" />' . "\n"
 					. '<p class="help">'
-						. __('The URL of a preview image if it should differ from the snapshot image.', 'mediacaster')
+						. __('The URL of the thickbox thumbnail, should it differ from the snapshot image.', 'mediacaster')
 						. '</p>' . "\n"
 					. $thumbnail_preview
 					,
@@ -1558,7 +1558,7 @@ class mediacaster_admin {
 					. '</div>' . "\n"
 				. '</div>' . "\n"
 				. '<p class="help">'
-					. __('The URL of a preview image for your video.', 'mediacaster')
+					. __('The URL of the preview image for your video.', 'mediacaster')
 					. '</p>' . "\n"
 			. '<input type="hidden" id="mc-snapshot-src-0" value="" />' . "\n"
 			. '<input type="hidden" id="mc-snapshot-width-0"'
@@ -1654,7 +1654,7 @@ class mediacaster_admin {
 								. ' onchange="return mc.change_thumbnail(0);"'
 								. ' value="" /><br />' . "\n"
 					. '<p class="help">'
-						. __('The URL of a preview image if it should differ from the snapshot image.', 'mediacaster')
+						. __('The URL of the thickbox thumbnail, should it differ from the snapshot image.', 'mediacaster')
 						. '</p>' . "\n"
 					. '</td>
 				</tr>';

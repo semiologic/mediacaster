@@ -349,8 +349,12 @@ jQuery(document).ready(function() {
 			if ( shot_src && ( !img_src || img_src == shot_src ) )
 				img_src = shot_src + '?' + jQuery("#mc-image-id-" + post_id).val();
 			
-			if ( !img_src )
-				return mc.clear_snapshot(post_id);
+			if ( !img_src ) {
+				jQuery("#mc-preview-" + post_id).fadeOut('slow', function() {
+					mc.clear_snapshot(post_id)
+				}).fadeIn('slow');
+				return;
+			}
 			
 			var s_width = jQuery("#mc-preview-" + post_id).width();
 			var s_height = jQuery("#mc-preview-" + post_id).height();
@@ -402,65 +406,62 @@ jQuery(document).ready(function() {
 			}).fadeIn('slow');
 		},
 		
-		change_thumbnail: function(post_id) {
-			
-		},
-		
 		clear_snapshot: function(post_id) {
 			jQuery("#mc-scale-" + post_id).val('');
 			jQuery("#mc-snapshot-size-" + post_id ).text('');
 			jQuery("#mc-preview-" + post_id).html('').css('width', '').parent().css('height', '');
 		},
 		
-		get_shortcode: function(post_id) {
-			if ( !post_id )
+		change_thumbnail: function(post_id) {
+			var img_src = jQuery("#mc-thumbnail-" + post_id).val();
+			
+			if ( !img_src ) {
+				jQuery("#mc-thumbnail-preview-" + post_id).fadeOut('slow', function() {
+					jQuery(this).html('').css('width', '').parent().css('height', '');
+				}).fadeIn('slow');
 				return;
-			
-			var shortcode = '';
-			jQuery("#mc-shortcode-" + post_id).html('');
-			
-			shortcode += '[mc id="' + post_id + '"';
-			
-			if ( jQuery("#mc-insert-" + post_id + '-player').attr('checked') ) {
-				var src = jQuery("#mc-src-" + post_id).val();
-				var type;
-				
-				if ( src.match(/^(https?:\/\/)?([^\/]+\.)?youtube\.com/i) )
-					type = 'youtube';
-				else if ( src.match(/\.(mp3|m4a|aac)$/i) || src.match(/[\/=](rss2?|xml|feed|atom)(\/|&|$)/i) )
-					type = 'audio';
-				else if ( src.match(/\.(flv|f4b|f4p|f4v|mp4|m4v|mov|3pg|3g2)$/i) )
-					type = 'video';
-				
-				shortcode += ' type="' + type + '"';
-				
-				if ( jQuery("#mc-width-" + post_id).val() ) {
-					shortcode += ' width="' + jQuery("#mc-width-" + post_id).val() + '"';
-					if ( jQuery("#mc-height-" + post_id).val() )
-						shortcode += ' height="' + jQuery("#mc-height-" + post_id).val() + '"';
-				}
-				
-				if ( type == 'video' && jQuery("#mc-thickbox-" + post_id).size() && jQuery("#mc-thickbox-" + post_id).attr('checked') ) {
-					shortcode += ' thickbox';
-					if ( jQuery("#mc-thumbnail-" + post_id).val() )
-						shortcode += '="' + jQuery("#mc-thumbnail-" + post_id).val() + '"';
-				}
-					
-				
-				if ( type != 'youtube' && jQuery("#mc-autostart-" + post_id).attr('checked') )
-					shortcode += ' autostart';
-			} else {
-				shortcode += ' type="file"';
 			}
 			
-			shortcode += ']' + jQuery("#mc-title-" + post_id).val() + '[/mc]';
+			var s_width = jQuery("#mc-thumbnail-preview-" + post_id).width();
+			var s_height = jQuery("#mc-thumbnail-preview-" + post_id).height();
 			
-			if ( jQuery("#mc-shortcode-" + post_id).val() != shortcode )
-				jQuery("#mc-shortcode-" + post_id).fadeOut('slow', function() {
-					jQuery(this).val(shortcode);
-				}).fadeIn('fast');
+			if ( s_width && s_height )
+				jQuery("#mc-thumbnail-preview-" + post_id).css('width', s_width).parent().css('height', s_height);
+			else
+				jQuery("#mc-thumbnail-preview-" + post_id).css('width', '').parent().css('height', 0);
 			
-			return false;
+			var img = new Image;
+			jQuery(img).load(function() {
+				var shot, s_width, s_height;
+				
+				shot = jQuery(this);
+				
+				s_width = shot.width();
+				s_height = shot.height();
+				
+				if ( !s_width || !s_height ) {
+					jQuery("#mc-thumbnail-preview-" + post_id).fadeOut('slow', function() {
+						jQuery(this).html('').css('width', '').parent().css('height', '');
+					}).show();
+					return;
+				}
+				
+				if ( s_width > 460 ) {
+					s_height = Math.round(s_height * 460 / s_width);
+					s_width = 460;
+					shot.attr('width', s_width);
+				}
+				
+				jQuery("#mc-thumbnail-preview-" + post_id).css('width', s_width).parent().css('height', '');
+			}).error(function() {
+				jQuery(this).html('').css('width', '').parent().css('height', '');
+				return;
+			});
+			
+			jQuery("#mc-thumbnail-preview-" + post_id).fadeOut('slow', function() {
+				jQuery(img).attr('src', img_src);
+				jQuery(this).html(img);
+			}).fadeIn('slow');
 		}
 	};
 	
