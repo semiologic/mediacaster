@@ -284,7 +284,14 @@ class mediacaster {
 		
 		$player = 'http://www.youtube.com/' . $src . '&fs=1&rel=0&border=0&showinfo=0&showsearch=0&hd=' . $hd;
 		
-		$player_id = 'm' . md5($src . '_' . $count++);
+		if ( in_the_loop() )
+			$salt = get_the_ID();
+		elseif ( is_singular() || is_attachment() )
+			$salt = $GLOBALS['wp_query']->get_queried_object_id();
+		else
+			$salt = uniqid(rand());
+		
+		$player_id = 'm' . md5($src . '_' . $count++ . '_' . $salt);
 		
 		$script = '';
 		
@@ -369,7 +376,14 @@ EOS;
 			$height = 0;
 		}
 		
-		$player_id = 'm' . md5($src . '_' . $count++);
+		if ( in_the_loop() )
+			$salt = get_the_ID();
+		elseif ( is_singular() || is_attachment() )
+			$salt = $GLOBALS['wp_query']->get_queried_object_id();
+		else
+			$salt = uniqid(rand());
+		
+		$player_id = 'm' . md5($src . '_' . $count++ . '_' . $salt);
 		
 		$allowfullscreen = 'false';
 		$allowscriptaccess = 'always';
