@@ -653,18 +653,6 @@ EOS;
 		if ( $width >= $min_width) {
 			$flashvars['controlbar'] = 'over';
 			
-			$link = false;
-			if ( !$link ) {
-				if ( in_the_loop() ) {
-					$link = apply_filters('the_permalink', get_permalink());
-				} elseif ( is_attachment($id) ) {
-					$link = get_post($id);
-					$link = $link->post_parent;
-					if ( $link )
-						$link = apply_filters('the_permalink', get_permalink($link));
-				}
-			}
-			
 			if ( $link )
 				$flashvars['link'] = esc_url_raw($link);
 		} else {
