@@ -470,12 +470,13 @@ EOS;
 		extract(mediacaster::defaults());
 		extract(mediacaster::get_skin($skin));
 		
-		foreach ( array('width', 'height', 'image_width', 'image_height', 'id', 'standalone', 'link') as $arg ) {
+		foreach ( array('width', 'height', 'image_width', 'image_height', 'id', 'standalone', 'link', 'image', 'thumbnail') as $arg ) {
 			if ( empty($$arg) )
 				$$arg = false;
 		}
 		
-		$image = get_post_meta($id, '_mc_image', true);
+		if ( !$image )
+			$image = get_post_meta($id, '_mc_image', true);
 		$image_id = $id ? get_post_meta($id, '_mc_image_id', true) : false;
 		
 		if ( ( !$image_width || !$image_height ) && $id ) {
@@ -517,7 +518,8 @@ EOS;
 		$max_tb_width = 780;
 		$max_tb_height = 540;
 		
-		$thumbnail = get_post_meta($id, '_mc_thumbnail', true);
+		if ( !$thumbnail )
+			$thumbnail = get_post_meta($id, '_mc_thumbnail', true);
 		
 		if ( !is_feed() && $thickbox && ( $image || $thumbnail ) && $id ) {
 			$href = apply_filters('the_permalink', get_permalink($id));
@@ -534,8 +536,8 @@ EOS;
 				}
 			}
 			
-			$tb_width = (int) round(1.5 * $image_width);
-			$tb_height = (int) round(1.5 * $image_height);
+			$tb_width = $image_width;
+			$tb_height = $image_height;
 			
 			if ( !$tb_width )
 				$tb_width = $max_width;
@@ -604,11 +606,8 @@ EOS;
 			$max_height = $max_tb_height;
 			
 			if ( $image_width ) {
-				$width = (int) round(1.5 * $image_width);
-				$height = (int) round(1.5 * $image_height);
-			} else {
-				$width = (int) round(1.5 * $width);
-				$height = (int) round(1.5 * $height);
+				$width = $image_width;
+				$height = $image_height;
 			}
 		} else {
 			$max_height = false;
