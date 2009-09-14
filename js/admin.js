@@ -37,31 +37,31 @@ jQuery(document).ready(function() {
 		},
 		
 		set_youtube: function() {
-			jQuery("#mc-content-row, #mc-link-row, #mc-snapshot-row, #mc-thickbox-row, #mc-thumbnail-row, #mc-autostart-row, #mc-player-row").not(":hidden").fadeOut('fast');
+			jQuery("#mc-content-row, #mc-link-row, #mc-snapshot-row, #mc-thickbox-row, #mc-thumbnail-row, #mc-autostart-row, #mc-player-row, #mc-save-attachment").not(":hidden").fadeOut('fast');
 			jQuery("#mc-youtube-row, #mc-format-row").not(":visible").fadeIn('fast');
 			return false;
 		},
 		
 		set_audio: function() {
 			jQuery("#mc-youtube-row, #mc-format-row, #mc-snapshot-row, #mc-thickbox-row, #mc-thumbnail-row").not(":hidden").fadeOut('fast');
-			jQuery("#mc-content-row, #mc-link-row, #mc-autostart-row, #mc-player-row").not(":visible").fadeIn('fast');
+			jQuery("#mc-content-row, #mc-link-row, #mc-autostart-row, #mc-player-row, #mc-save-attachment").not(":visible").fadeIn('fast');
 			return false;
 		},
 		
 		set_video: function() {
 			jQuery("#mc-youtube-row").not(":hidden").fadeOut('fast');
-			jQuery("#mc-content-row, #mc-link-row, #mc-format-row, #mc-snapshot-row, #mc-thickbox-row, #mc-thumbnail-row, #mc-autostart-row, #mc-player-row").not(":visible").fadeIn('fast');
+			jQuery("#mc-content-row, #mc-link-row, #mc-format-row, #mc-snapshot-row, #mc-thickbox-row, #mc-thumbnail-row, #mc-autostart-row, #mc-player-row, #mc-save-attachment").not(":visible").fadeIn('fast');
 			return false;
 		},
 		
 		set_file: function() {
 			jQuery("#mc-link-row, #mc-youtube-row, #mc-format-row, #mc-snapshot-row, #mc-thickbox-row, #mc-thumbnail-row, #mc-autostart-row, #mc-player-row").not(":hidden").fadeOut('fast');
-			jQuery("#mc-content-row").not(":visible").fadeIn('fast');
+			jQuery("#mc-content-row, #mc-save-attachment").not(":visible").fadeIn('fast');
 			return false;
 		},
 		
 		set_invalid: function() {
-			jQuery("#mc-content-row, #mc-link-row, #mc-youtube-row, #mc-format-row, #mc-snapshot-row, #mc-thickbox-row, #mc-thumbnail-row, #mc-autostart-row, #mc-player-row").not(":hidden").fadeOut('fast');
+			jQuery("#mc-content-row, #mc-link-row, #mc-youtube-row, #mc-format-row, #mc-snapshot-row, #mc-thickbox-row, #mc-thumbnail-row, #mc-autostart-row, #mc-player-row, #mc-save-attachment").not(":hidden").fadeOut('fast');
 			return false;
 		},
 

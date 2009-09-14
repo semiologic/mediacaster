@@ -1733,7 +1733,7 @@ class mediacaster_admin {
 		}
 		
 		$o .= '
-							<input type="submit" class="button" name="save" value="' . esc_attr(__('Save Attachment', 'mediacaster')) . '" />
+							<input id="mc-save-attachment" type="submit" class="button" name="save" value="' . esc_attr(__('Save Attachment', 'mediacaster')) . '" />
 						</td>
 					</tr>
 			</tbody></table>';

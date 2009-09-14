@@ -247,7 +247,7 @@ class mediacaster {
 			$width = $max_width;
 		}
 		
-		$hd = $width >= 480 && $height >= 270 ? 1 : 0; // 480px wide, 16:9 format
+		$hd = 0;//$width >= 480 && $height >= 270 ? 1 : 0; // 480px wide, 16:9 format
 		
 		$height += 25; // controlbar
 		
