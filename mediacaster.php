@@ -1701,7 +1701,7 @@ add_filter('upload_mimes', array('mediacaster', 'upload_mimes'));
 add_filter('wp_get_attachment_url', array('mediacaster', 'wp_get_attachment_url'), 10, 2);
 add_filter('get_attached_file', array('mediacaster', 'get_attached_file'), 10, 2);
 
-add_filter('get_the_excerpt', array('mediacaster', 'disable'), 0);
+add_filter('get_the_excerpt', array('mediacaster', 'disable'), -20);
 add_filter('get_the_excerpt', array('mediacaster', 'enable'), 20);
 
 add_action('flush_cache', array('mediacaster', 'flush_cache'));
