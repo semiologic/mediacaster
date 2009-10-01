@@ -16,9 +16,7 @@ Lets you add podcasts, videos, and pretty download links to your site's posts an
 
 = Help Me! =
 
-The [Semiologic forum](http://forum.semiologic.com) is the best place to report issues. Please note, however, that while community members and I do our best to answer all queries, we're assisting you on a voluntary basis.
-
-If you require more dedicated assistance, consider using [Semiologic Pro](http://www.getsemiologic.com).
+The [Semiologic forum](http://forum.semiologic.com) is the best place to report issues.
 
 
 == Installation ==
