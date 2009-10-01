@@ -1007,14 +1007,10 @@ EOS;
 			$enclosed = array();
 		
 		foreach ( $do_enclosures as $key => $enclosure ) {
-			if ( $playlist ) {
-				if ( !in_array($enclosure->post_mime_type, array('audio/mpeg', 'audio/mp3', 'audio/aac'))
-					|| in_array((int) $enclosure->ID, $enclosed) )
-					unset($do_enclosures[$key]);
-			} else {
-				if ( preg_match("/^image\//i", $post->post_mime_type) )
-					unset($do_enclosures[$key]);
-			}
+			if ( in_array((int) $enclosure->ID, $enclosed) )
+				add_post_meta($post->ID, '_mc_enclosed', (int) $enclosure->ID);
+			if ( $playlist && !in_array($enclosure->post_mime_type, array('audio/mpeg', 'audio/mp3', 'audio/aac')) )
+				unset($do_enclosures[$key]);
 		}
 		
 		return $do_enclosures;
