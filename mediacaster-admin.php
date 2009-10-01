@@ -715,7 +715,7 @@ class mediacaster_admin {
 		
 		$image_id = false;
 		if ( !empty($attachment['image_id']) && intval($attachment['image_id']) ) {
-			$image_id = get_post_meta($post_id, '_mc_image_id');
+			$image_id = get_post_meta($post_id, '_mc_image_id', true);
 			if ( $image_id != $attachment['image_id'] ) {
 				$image_id = (int) $attachment['image_id'];
 				update_post_meta($post_id, '_mc_image_id', $image_id);
@@ -1878,7 +1878,7 @@ class mediacaster_admin {
 				
 				$image_id = false;
 				if ( !empty($attachment['image_id']) && intval($attachment['image_id']) ) {
-					$image_id = get_post_meta($att_id, '_mc_image_id');
+					$image_id = get_post_meta($att_id, '_mc_image_id', true);
 					if ( $image_id != $attachment['image_id'] ) {
 						$image_id = (int) $attachment['image_id'];
 						update_post_meta($att_id, '_mc_image_id', $image_id);
