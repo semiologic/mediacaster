@@ -1162,6 +1162,9 @@ class mediacaster_admin {
 					. '<button type="button" class="button" title="' . __('1.85:1', 'mediacaster') . '"'
 						. ' onclick="return mc.set_185_1(' . $post->ID . ');">'
 						. __('Movie', 'mediacaster') . '</button>'
+					. '<button type="button" class="button" title="' . __('1.85:1', 'mediacaster') . '"'
+						. ' onclick="return mc.set_240_1(' . $post->ID . ');">'
+						. __('Wide', 'mediacaster') . '</button>'
 					. '<button type="button" class="button" title="' . __('Fit the available width', 'mediacaster') . '"'
 						. ' onclick="return mc.set_max(' . $post->ID . ');">'
 						. __('Clear', 'mediacaster') . '</button>'
@@ -1636,6 +1639,9 @@ class mediacaster_admin {
 				. '<button type="button" class="button" title="' . __('1.85:1', 'mediacaster') . '"'
 					. ' onclick="return mc.set_185_1(0);">'
 					. __('Movie', 'mediacaster') . '</button>'
+				. '<button type="button" class="button" title="' . __('1.85:1', 'mediacaster') . '"'
+					. ' onclick="return mc.set_240_1(0);">'
+					. __('Wide', 'mediacaster') . '</button>'
 				. '<button type="button" class="button" title="' . __('Fit the available width', 'mediacaster') . '"'
 					. ' onclick="return mc.set_max(0);">'
 					. __('Clear', 'mediacaster') . '</button>'
@@ -1971,7 +1977,7 @@ class mediacaster_admin {
 		
 		$folder = plugin_dir_url(__FILE__);
 		wp_enqueue_script('swfobject');
-		wp_enqueue_script('mediacaster_admin', $folder . 'js/admin.js', array('jquery-ui-sortable'), '20090914', true);
+		wp_enqueue_script('mediacaster_admin', $folder . 'js/admin.js', array('jquery-ui-sortable'), '20091002', true);
 		add_action('admin_print_footer_scripts', array('mediacaster_admin', 'footer_scripts'), 30);
 	} # admin_scripts()
 	

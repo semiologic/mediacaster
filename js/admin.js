@@ -149,6 +149,25 @@ jQuery(document).ready(function() {
 			return false;
 		},
 
+		set_240_1: function(post_id) {
+			var default_width = mc.default_width;
+			var template = jQuery(window.parent.document.getElementById('page_template')).val();
+			if ( template == 'letter.php' )
+				default_width = 620;
+			else if ( template == 'monocolumn.php' && default_width != mc.max_width )
+				default_width = mc.max_width;
+			
+			if ( jQuery("#mc-preview-" + post_id).children('img').size() )
+				default_width = parseInt(jQuery("#mc-snapshot-width-" + post_id).val());
+			
+			if ( !jQuery("#mc-width-" + post_id).val() )
+				jQuery("#mc-width-" + post_id).val(default_width);
+			jQuery("#mc-height-" + post_id).val(Math.ceil(parseInt(jQuery("#mc-width-" + post_id).val()) * 1 / 2.4));
+			
+			jQuery("#mc-scale-" + post_id).val(2.4);
+			return false;
+		},
+
 		get_scale: function(post_id) {
 			var width = parseInt(jQuery("#mc-width-" + post_id).val());
 			var height = parseInt(jQuery("#mc-height-" + post_id).val());

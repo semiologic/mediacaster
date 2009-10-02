@@ -563,10 +563,10 @@ EOS;
 			}
 			
 			if ( !$height && !$tb_height ) {
-				$height = (int) round($width * 9 / 16);
-				$tb_height = (int) round($tb_width * 9 / 16);
+				$height = (int) round($width * 2 / 3);
+				$tb_height = (int) round($tb_width * 2 / 3);
 			} elseif ( !$height ) {
-				$height = (int) round($width * 9 / 16);
+				$height = (int) round($width * 2 / 3);
 			} elseif ( !$tb_height ) {
 				$tb_height = (int) $height * $tb_width / $width;
 			}
@@ -632,7 +632,7 @@ EOS;
 			if ( $image_height )
 				$height = (int) round($image_height * $width / $image_width);
 			else
-				$height = (int) round($width * 9 / 16);
+				$height = (int) round($width * 2 / 3);
 		}
 		
 		if ( $width > $max_width ) {
