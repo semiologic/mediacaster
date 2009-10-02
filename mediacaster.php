@@ -249,7 +249,7 @@ class mediacaster {
 		
 		$hd = 0;//$width >= 480 && $height >= 270 ? 1 : 0; // 480px wide, 16:9 format
 		
-		foreach ( array(array(16, 9), array(3, 2), array(4, 3), array(18.5, 10)) as $ratio ) {
+		foreach ( array(array(16, 9), array(3, 2), array(4, 3), array(18.5, 10), array(24,10)) as $ratio ) {
 			list($w, $h) = $ratio;
 			if ( abs(round($h * $width / $height, 1) - $w) <= .1 ) {
 				$height += 25; // controlbar
