@@ -240,7 +240,7 @@ class mediacaster {
 		if ( empty($width) )
 			$width = $max_width;
 		if ( empty($height) )
-			$height = (int) round($max_width * 9 / 16);
+			$height = (int) round($max_width * 2 / 3);
 		
 		if ( $width > $max_width ) {
 			$height = (int) round($height * $max_width / $width);
