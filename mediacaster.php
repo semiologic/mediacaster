@@ -1673,6 +1673,7 @@ foreach ( array('settings_page_mediacaster',
 	add_action("load-$hook", 'mediacaster_admin');
 
 add_filter('the_content', array('mediacaster', 'podcasts'), 12);
+add_filter('the_excerpt', array('mediacaster', 'podcasts'), 12);
 
 add_action('rss2_ns', array('mediacaster', 'display_feed_ns'));
 add_action('atom_ns', array('mediacaster', 'display_feed_ns'));
