@@ -668,12 +668,24 @@ EOS;
 		$flashvars['repeat'] = 'list';
 		
 		$flashvars['plugins'] = array('quickkeys-1');
+		$flashvars['dock'] = 'true';
 		
 		if ( $width >= $min_width) {
 			$flashvars['controlbar'] = 'over';
 			
 			if ( $link )
 				$flashvars['link'] = esc_url_raw($link);
+			
+			/*
+			$flashvars['plugins'][] = 'sharing';
+			if ( in_the_loop() ) {
+				$flashvars['sharing.link'] = apply_filters('the_permalink', get_permalink());
+			} elseif ( is_singular() ) {
+				$flashvars['sharing.link'] = apply_filters('the_permalink', get_permalink($GLOBALS['wp_query']->get_queried_object_id()));
+			} else {
+				$flashvars['sharing.link'] = user_trailingslashit(get_option('home'));
+			}
+			*/
 		} else {
 			$width = max($width, 50);
 			$height = max($height, 50);
