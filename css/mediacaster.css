@@ -8,10 +8,10 @@
 
 .media_attachment a {
 	display: block;
-	border-top: solid 1px #228b22;
-	border-bottom: solid 1px #228b22;
-    background: #ddffdd 10px center no-repeat;
-	color: #22d;
+	border-top: solid 1px #282;
+	border-bottom: solid 1px #282;
+    background: #efe;
+	color: #11d;
 	text-decoration: none;
 	width: 100%;
 	padding: 30px 10px 30px 65px;
@@ -19,7 +19,7 @@
 }
 
 .media_attachment a:hover {
-	color: #b22;
+	color: #b11;
 }
 
 .media_attachment .media_info {
