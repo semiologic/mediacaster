@@ -10,7 +10,7 @@
 	display: block;
 	border-top: solid 1px #282;
 	border-bottom: solid 1px #282;
-    background: #efe;
+    background: #efe 10px center no-repeat;
 	color: #11d;
 	text-decoration: none;
 	width: 100%;
