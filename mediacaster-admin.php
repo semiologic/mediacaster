@@ -1086,7 +1086,7 @@ class mediacaster_admin {
 
 				$crossdomain = ''
 					. '<p class="help" style="width: 460px;">'
-					. sprintf(__('Important: To work on third party sites, preview images and the snapshot generator require a <a href="%1$s" onclick="window.open(this.href); return false;">crossdomain.xml</a> policy file. <a href="#" onclick="%2$s">Sample file</a>.', 'mediacaster'), 'http://www.adobe.com/devnet/articles/crossdomain_policy_file_spec.html', 'return mc.show_crossdomain(' . $post->ID . ');')
+					. sprintf(__('Important: To work on third party sites, preview images and the snapshot generator require a <a href="%1$s" target="_blank">crossdomain.xml</a> policy file. <a href="#" onclick="%2$s">Sample file</a>.', 'mediacaster'), 'http://www.adobe.com/devnet/articles/crossdomain_policy_file_spec.html', 'return mc.show_crossdomain(' . $post->ID . ');')
 					. '</p>' . "\n"
 					. '<div id="mc-crossdomain-' . $post->ID . '" style="display: none;">'
 					. '<textarea class="code" rows="7">'
@@ -1585,7 +1585,7 @@ class mediacaster_admin {
 				. ' value="" />' . "\n"
 			. '<div style="width: 460px; overflow: hidden;"><div id="mc-preview-0" align="center" style="clear: both; display: none; margin: 0px auto;"></div></div>'
 			. '<p class="help" style="width: 460px;">'
-			. sprintf(__('Important: To work on third party sites, preview images and the snapshot generator require a <a href="%1$s" onclick="window.open(this.href); return false;">crossdomain.xml</a> policy file. <a href="#" onclick="%2$s">Sample file</a>.', 'mediacaster'), 'http://www.adobe.com/devnet/articles/crossdomain_policy_file_spec.html', 'return mc.show_crossdomain(0);')
+			. sprintf(__('Important: To work on third party sites, preview images and the snapshot generator require a <a href="%1$s" target="_blank">crossdomain.xml</a> policy file. <a href="#" onclick="%2$s">Sample file</a>.', 'mediacaster'), 'http://www.adobe.com/devnet/articles/crossdomain_policy_file_spec.html', 'return mc.show_crossdomain(0);')
 			. '</p>' . "\n"
 			. '<div id="mc-crossdomain-0" style="display: none;">'
 			. '<textarea class="code" rows="7">'
