@@ -1543,7 +1543,7 @@ class mediacaster_admin {
 					</th>
 					<td class="field">'
 				. '<p class="help">'
-					. sprintf(__('Not available, but don\'t miss YouTube\'s <a href="%s" onclick="window.open(this.href); return false;">video annotation</a> features.', 'mediacaster'), 'http://www.google.com/support/youtube/bin/answer.py?answer=92710&topic=14354')
+					. sprintf(__('Not available, but don\'t miss YouTube\'s <a href="%s" target="_blank">video annotation</a> features.', 'mediacaster'), 'http://www.google.com/support/youtube/bin/answer.py?answer=92710&topic=14354')
 					. '</p>' . "\n"
 					. '</td>
 				</tr>';	

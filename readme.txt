@@ -27,6 +27,10 @@ The [Semiologic forum](http://forum.semiologic.com) is the best place to report 
 
 == Change Log ==
 
+= 2.0.1 =
+
+- FLVPlayer v.4.6
+
 = 2.0 =
 
 - FLVPlayer v.4.5
