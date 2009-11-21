@@ -30,6 +30,7 @@ The [Semiologic forum](http://forum.semiologic.com) is the best place to report 
 = 2.0.1 =
 
 - FLVPlayer v.4.6
+- WP 2.9 compat
 
 = 2.0 =
 
