@@ -175,8 +175,7 @@ class mediacaster_admin {
 				. sprintf(__('LongTailVideo\'s JWPlayer is distributed under a Creative Commons <a href="%s">Attribute, Share Alike, Non-Commercial license</a>.', 'mediacaster'), 'http://creativecommons.org/licenses/by-nc-sa/3.0/')
 				. '</p>' . "\n";
 			
-			global $sem_pro_version;
-			if ( get_option('sem_pro_version') || !empty($sem_pro_version) ) {
+			if ( class_exists('version_checker') ) {
 				echo '<p><strong>'
 					. __('Your Semiologic Pro license includes a commercial JWPlayer license, complete with a Premium Skin, for use on your Semiologic Pro sites.', 'mediacaster')
 					. '</strong></p>' . "\n";
