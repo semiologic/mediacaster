@@ -6,9 +6,9 @@
 #, fuzzy
 msgid ""
 msgstr ""
-"Project-Id-Version: 2.0.1\n"
+"Project-Id-Version: 2.0.2\n"
 "Report-Msgid-Bugs-To: https://tickets.semiologic.com\n"
-"POT-Creation-Date: 2009-11-20 11:34+0100\n"
+"POT-Creation-Date: 2009-12-12 19:36+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -50,115 +50,115 @@ msgid ""
 "\">Attribute, Share Alike, Non-Commercial license</a>."
 msgstr ""
 
-#: mediacaster-admin.php:181
+#: mediacaster-admin.php:180
 msgid ""
 "Your Semiologic Pro license includes a commercial JWPlayer license, complete "
 "with a Premium Skin, for use on your Semiologic Pro sites."
 msgstr ""
 
-#: mediacaster-admin.php:185
+#: mediacaster-admin.php:184
 msgid "You need to purchase a commercial license if:"
 msgstr ""
 
-#: mediacaster-admin.php:191
+#: mediacaster-admin.php:190
 msgid "Your site serves any ads (AdSense, display banners, etc.)"
 msgstr ""
 
-#: mediacaster-admin.php:195
+#: mediacaster-admin.php:194
 msgid ""
 "You want to remove the JWPlayer's attribution (eliminate the right-click "
 "link)"
 msgstr ""
 
-#: mediacaster-admin.php:199
+#: mediacaster-admin.php:198
 msgid "You are a corporation (governmental or nonprofit use is free)"
 msgstr ""
 
-#: mediacaster-admin.php:209
+#: mediacaster-admin.php:208
 msgid "I have read the license and agree to its terms."
 msgstr ""
 
-#: mediacaster-admin.php:219 mediacaster-admin.php:355
-#: mediacaster-admin.php:412 mediacaster-admin.php:557
+#: mediacaster-admin.php:218 mediacaster-admin.php:354
+#: mediacaster-admin.php:411 mediacaster-admin.php:556
 msgid "Save Changes"
 msgstr ""
 
-#: mediacaster-admin.php:225 mediacaster-admin.php:1261
-#: mediacaster-admin.php:1720
+#: mediacaster-admin.php:224 mediacaster-admin.php:1260
+#: mediacaster-admin.php:1719
 msgid "Media Player"
 msgstr ""
 
-#: mediacaster-admin.php:232
+#: mediacaster-admin.php:231
 msgid "Player Skin"
 msgstr ""
 
-#: mediacaster-admin.php:238
+#: mediacaster-admin.php:237
 msgid "Bekle"
 msgstr ""
 
-#: mediacaster-admin.php:239
+#: mediacaster-admin.php:238
 msgid "Kleur"
 msgstr ""
 
-#: mediacaster-admin.php:240
+#: mediacaster-admin.php:239
 msgid "Modieus"
 msgstr ""
 
-#: mediacaster-admin.php:260
+#: mediacaster-admin.php:259
 msgid "MP3 Playlist Position"
 msgstr ""
 
-#: mediacaster-admin.php:273
+#: mediacaster-admin.php:272
 msgid "Top"
 msgstr ""
 
-#: mediacaster-admin.php:286
+#: mediacaster-admin.php:285
 msgid "Bottom"
 msgstr ""
 
-#: mediacaster-admin.php:299
+#: mediacaster-admin.php:298
 msgid "None (manual inserts only)"
 msgstr ""
 
-#: mediacaster-admin.php:308
+#: mediacaster-admin.php:307
 msgid "MP3 Playlist Cover"
 msgstr ""
 
-#: mediacaster-admin.php:331
+#: mediacaster-admin.php:330
 msgid "Delete"
 msgstr ""
 
-#: mediacaster-admin.php:334
+#: mediacaster-admin.php:333
 msgid "Your cover is not writable by the server."
 msgstr ""
 
-#: mediacaster-admin.php:342
+#: mediacaster-admin.php:341
 msgid "New Image (jpg or png)"
 msgstr ""
 
-#: mediacaster-admin.php:360
+#: mediacaster-admin.php:359
 msgid "LongTail AdSolution"
 msgstr ""
 
-#: mediacaster-admin.php:364
+#: mediacaster-admin.php:363
 #, php-format
 msgid ""
 "<a href=\"%s\">LongTail AdSolution</a> (LTAS) allows you to insert pre-roll, "
 "overlay mid-roll, and post-roll advertisements within your videos."
 msgstr ""
 
-#: mediacaster-admin.php:371
+#: mediacaster-admin.php:370
 msgid "LTAS Script"
 msgstr ""
 
-#: mediacaster-admin.php:386
+#: mediacaster-admin.php:385
 #, php-format
 msgid ""
 "You will find the needed LongTail AdSolution script after <a href=\"%1$s"
 "\">signing up</a>, and logging into the <a href=\"%2$s\">LTAS Dashboard</a>."
 msgstr ""
 
-#: mediacaster-admin.php:389
+#: mediacaster-admin.php:388
 msgid ""
 "Once logged in, browse Setup / Channel Setup. Create a channel if needed. "
 "Once it's approved, click Implement. Choose JW 4.4 or later as the player, "
@@ -166,11 +166,11 @@ msgid ""
 "ignore the remaining steps."
 msgstr ""
 
-#: mediacaster-admin.php:394
+#: mediacaster-admin.php:393
 msgid "Premium Ads"
 msgstr ""
 
-#: mediacaster-admin.php:398
+#: mediacaster-admin.php:397
 #, php-format
 msgid ""
 "To serve Premium Ads (from Video, Scanscout, YuMe, etc.) on your site, you "
@@ -178,358 +178,358 @@ msgid ""
 "href=\"%s\">LongTailVideo sales</a> for more details."
 msgstr ""
 
-#: mediacaster-admin.php:401
+#: mediacaster-admin.php:400
 msgid ""
 "To qualify for the latter, you must either (i) own or (ii) license your "
 "video content. Additionally, your site cannot have any violent, pornographic "
 "or inappropriate content."
 msgstr ""
 
-#: mediacaster-admin.php:403
+#: mediacaster-admin.php:402
 msgid ""
 "Note that premium Advertisers disallow mid-roll ads when the controlbar is "
 "inline, as is done in Mediacaster. Use pre- and post- roll ads only, if your "
 "site is accepted to serve premium ads."
 msgstr ""
 
-#: mediacaster-admin.php:418
+#: mediacaster-admin.php:417
 msgid "iTunes"
 msgstr ""
 
-#: mediacaster-admin.php:426
+#: mediacaster-admin.php:425
 msgid "Author"
 msgstr ""
 
-#: mediacaster-admin.php:441
+#: mediacaster-admin.php:440
 msgid "Summary"
 msgstr ""
 
-#: mediacaster-admin.php:456
+#: mediacaster-admin.php:455
 msgid "Categories"
 msgstr ""
 
-#: mediacaster-admin.php:462
+#: mediacaster-admin.php:461
 msgid "- Select -"
 msgstr ""
 
-#: mediacaster-admin.php:486
+#: mediacaster-admin.php:485
 msgid "Explicit"
 msgstr ""
 
-#: mediacaster-admin.php:491 mediacaster-admin.php:519
+#: mediacaster-admin.php:490 mediacaster-admin.php:518
 msgid "Yes"
 msgstr ""
 
-#: mediacaster-admin.php:492 mediacaster-admin.php:520
+#: mediacaster-admin.php:491 mediacaster-admin.php:519
 msgid "No"
 msgstr ""
 
-#: mediacaster-admin.php:493
+#: mediacaster-admin.php:492
 msgid "Clean"
 msgstr ""
 
-#: mediacaster-admin.php:514
+#: mediacaster-admin.php:513
 msgid "Block iTunes"
 msgstr ""
 
-#: mediacaster-admin.php:541
+#: mediacaster-admin.php:540
 msgid "Copyright"
 msgstr ""
 
-#: mediacaster-admin.php:574
+#: mediacaster-admin.php:573
 msgid "Arts"
 msgstr ""
 
-#: mediacaster-admin.php:575
+#: mediacaster-admin.php:574
 msgid "Arts / Design"
 msgstr ""
 
-#: mediacaster-admin.php:576
+#: mediacaster-admin.php:575
 msgid "Arts / Fashion & Beauty"
 msgstr ""
 
-#: mediacaster-admin.php:577
+#: mediacaster-admin.php:576
 msgid "Arts / Food"
 msgstr ""
 
-#: mediacaster-admin.php:578
+#: mediacaster-admin.php:577
 msgid "Arts / Literature"
 msgstr ""
 
-#: mediacaster-admin.php:579
+#: mediacaster-admin.php:578
 msgid "Arts / Performing Arts"
 msgstr ""
 
-#: mediacaster-admin.php:580
+#: mediacaster-admin.php:579
 msgid "Arts / Visual Arts"
 msgstr ""
 
-#: mediacaster-admin.php:582
+#: mediacaster-admin.php:581
 msgid "Business"
 msgstr ""
 
-#: mediacaster-admin.php:583
+#: mediacaster-admin.php:582
 msgid "Business / Business News"
 msgstr ""
 
-#: mediacaster-admin.php:584
+#: mediacaster-admin.php:583
 msgid "Business / Careers"
 msgstr ""
 
-#: mediacaster-admin.php:585
+#: mediacaster-admin.php:584
 msgid "Business / Investing"
 msgstr ""
 
-#: mediacaster-admin.php:586
+#: mediacaster-admin.php:585
 msgid "Business / Management & Marketing"
 msgstr ""
 
-#: mediacaster-admin.php:587
+#: mediacaster-admin.php:586
 msgid "Business / Shopping"
 msgstr ""
 
-#: mediacaster-admin.php:589
+#: mediacaster-admin.php:588
 msgid "Comedy"
 msgstr ""
 
-#: mediacaster-admin.php:591
+#: mediacaster-admin.php:590
 msgid "Education"
 msgstr ""
 
-#: mediacaster-admin.php:592
+#: mediacaster-admin.php:591
 msgid "Education / Education Technology"
 msgstr ""
 
-#: mediacaster-admin.php:593
+#: mediacaster-admin.php:592
 msgid "Education / Higher Education"
 msgstr ""
 
-#: mediacaster-admin.php:594
+#: mediacaster-admin.php:593
 msgid "Education / K-12"
 msgstr ""
 
-#: mediacaster-admin.php:595
+#: mediacaster-admin.php:594
 msgid "Education / Language Courses"
 msgstr ""
 
-#: mediacaster-admin.php:596
+#: mediacaster-admin.php:595
 msgid "Education / Training"
 msgstr ""
 
-#: mediacaster-admin.php:598
+#: mediacaster-admin.php:597
 msgid "Games & Hobbies"
 msgstr ""
 
-#: mediacaster-admin.php:599
+#: mediacaster-admin.php:598
 msgid "Games & Hobbies / Automotive"
 msgstr ""
 
-#: mediacaster-admin.php:600
+#: mediacaster-admin.php:599
 msgid "Games & Hobbies / Aviation"
 msgstr ""
 
-#: mediacaster-admin.php:601
+#: mediacaster-admin.php:600
 msgid "Games & Hobbies / Hobbies"
 msgstr ""
 
-#: mediacaster-admin.php:602
+#: mediacaster-admin.php:601
 msgid "Games & Hobbies / Other Games"
 msgstr ""
 
-#: mediacaster-admin.php:603
+#: mediacaster-admin.php:602
 msgid "Games & Hobbies / Video Games"
 msgstr ""
 
-#: mediacaster-admin.php:605
+#: mediacaster-admin.php:604
 msgid "Government & Organizations"
 msgstr ""
 
-#: mediacaster-admin.php:606
+#: mediacaster-admin.php:605
 msgid "Government & Organizations / Local"
 msgstr ""
 
-#: mediacaster-admin.php:607
+#: mediacaster-admin.php:606
 msgid "Government & Organizations / National"
 msgstr ""
 
-#: mediacaster-admin.php:608
+#: mediacaster-admin.php:607
 msgid "Government & Organizations / Non-Profit"
 msgstr ""
 
-#: mediacaster-admin.php:609
+#: mediacaster-admin.php:608
 msgid "Government & Organizations / Regional"
 msgstr ""
 
-#: mediacaster-admin.php:611
+#: mediacaster-admin.php:610
 msgid "Health"
 msgstr ""
 
-#: mediacaster-admin.php:612
+#: mediacaster-admin.php:611
 msgid "Health / Alternative Health"
 msgstr ""
 
-#: mediacaster-admin.php:613
+#: mediacaster-admin.php:612
 msgid "Health / Fitness & Nutrition"
 msgstr ""
 
-#: mediacaster-admin.php:614
+#: mediacaster-admin.php:613
 msgid "Health / Self-Help"
 msgstr ""
 
-#: mediacaster-admin.php:615
+#: mediacaster-admin.php:614
 msgid "Health / Sexuality"
 msgstr ""
 
-#: mediacaster-admin.php:617
+#: mediacaster-admin.php:616
 msgid "Kids & Family"
 msgstr ""
 
-#: mediacaster-admin.php:619
+#: mediacaster-admin.php:618
 msgid "Music"
 msgstr ""
 
-#: mediacaster-admin.php:621
+#: mediacaster-admin.php:620
 msgid "News & Politics"
 msgstr ""
 
-#: mediacaster-admin.php:623
+#: mediacaster-admin.php:622
 msgid "Religion & Spirituality"
 msgstr ""
 
-#: mediacaster-admin.php:624
+#: mediacaster-admin.php:623
 msgid "Religion & Spirituality / Buddhism"
 msgstr ""
 
-#: mediacaster-admin.php:625
+#: mediacaster-admin.php:624
 msgid "Religion & Spirituality / Christianity"
 msgstr ""
 
-#: mediacaster-admin.php:626
+#: mediacaster-admin.php:625
 msgid "Religion & Spirituality / Hinduism"
 msgstr ""
 
-#: mediacaster-admin.php:627
+#: mediacaster-admin.php:626
 msgid "Religion & Spirituality / Islam"
 msgstr ""
 
-#: mediacaster-admin.php:628
+#: mediacaster-admin.php:627
 msgid "Religion & Spirituality / Judaism"
 msgstr ""
 
-#: mediacaster-admin.php:629
+#: mediacaster-admin.php:628
 msgid "Religion & Spirituality / Other"
 msgstr ""
 
-#: mediacaster-admin.php:630
+#: mediacaster-admin.php:629
 msgid "Religion & Spirituality / Spirituality"
 msgstr ""
 
-#: mediacaster-admin.php:632
+#: mediacaster-admin.php:631
 msgid "Science & Medicine"
 msgstr ""
 
-#: mediacaster-admin.php:633
+#: mediacaster-admin.php:632
 msgid "Science & Medicine / Medicine"
 msgstr ""
 
-#: mediacaster-admin.php:634
+#: mediacaster-admin.php:633
 msgid "Science & Medicine / Natural Sciences"
 msgstr ""
 
-#: mediacaster-admin.php:635
+#: mediacaster-admin.php:634
 msgid "Science & Medicine / Social Sciences"
 msgstr ""
 
-#: mediacaster-admin.php:637
+#: mediacaster-admin.php:636
 msgid "Society & Culture"
 msgstr ""
 
-#: mediacaster-admin.php:638
+#: mediacaster-admin.php:637
 msgid "Society & Culture / History"
 msgstr ""
 
-#: mediacaster-admin.php:639
+#: mediacaster-admin.php:638
 msgid "Society & Culture / Personal Journals"
 msgstr ""
 
-#: mediacaster-admin.php:640
+#: mediacaster-admin.php:639
 msgid "Society & Culture / Philosophy"
 msgstr ""
 
-#: mediacaster-admin.php:641
+#: mediacaster-admin.php:640
 msgid "Society & Culture / Places & Travel"
 msgstr ""
 
-#: mediacaster-admin.php:643
+#: mediacaster-admin.php:642
 msgid "Sports & Recreation"
 msgstr ""
 
-#: mediacaster-admin.php:644
+#: mediacaster-admin.php:643
 msgid "Sports & Recreation / Amateur"
 msgstr ""
 
-#: mediacaster-admin.php:645
+#: mediacaster-admin.php:644
 msgid "Sports & Recreation / College & High School"
 msgstr ""
 
-#: mediacaster-admin.php:646
+#: mediacaster-admin.php:645
 msgid "Sports & Recreation / Outdoor"
 msgstr ""
 
-#: mediacaster-admin.php:647
+#: mediacaster-admin.php:646
 msgid "Sports & Recreation / Professional"
 msgstr ""
 
-#: mediacaster-admin.php:649
+#: mediacaster-admin.php:648
 msgid "Technology"
 msgstr ""
 
-#: mediacaster-admin.php:650
+#: mediacaster-admin.php:649
 msgid "Technology / Gadgets"
 msgstr ""
 
-#: mediacaster-admin.php:651
+#: mediacaster-admin.php:650
 msgid "Technology / Tech News"
 msgstr ""
 
-#: mediacaster-admin.php:652
+#: mediacaster-admin.php:651
 msgid "Technology / Podcasting"
 msgstr ""
 
-#: mediacaster-admin.php:653
+#: mediacaster-admin.php:652
 msgid "Technology / Software How-To"
 msgstr ""
 
-#: mediacaster-admin.php:655
+#: mediacaster-admin.php:654
 msgid "TV & Film"
 msgstr ""
 
-#: mediacaster-admin.php:897
+#: mediacaster-admin.php:896
 #, php-format
 msgid "Video: %s"
 msgstr ""
 
-#: mediacaster-admin.php:942 mediacaster-admin.php:1509
+#: mediacaster-admin.php:941 mediacaster-admin.php:1508
 msgid "Title"
 msgstr ""
 
-#: mediacaster-admin.php:960 mediacaster-admin.php:999
-#: mediacaster-admin.php:1502
+#: mediacaster-admin.php:959 mediacaster-admin.php:998
+#: mediacaster-admin.php:1501
 msgid "File URL"
 msgstr ""
 
-#: mediacaster-admin.php:973 mediacaster-admin.php:1527
-#: mediacaster-admin.php:1542
+#: mediacaster-admin.php:972 mediacaster-admin.php:1526
+#: mediacaster-admin.php:1541
 msgid "Link URL"
 msgstr ""
 
-#: mediacaster-admin.php:975 mediacaster-admin.php:1534
+#: mediacaster-admin.php:974 mediacaster-admin.php:1533
 msgid ""
 "The link URL to which the player should direct users to (e.g. an affiliate "
 "link)."
 msgstr ""
 
-#: mediacaster-admin.php:1089 mediacaster-admin.php:1588
+#: mediacaster-admin.php:1088 mediacaster-admin.php:1587
 #, php-format
 msgid ""
 "Important: To work on third party sites, preview images and the snapshot "
@@ -537,194 +537,194 @@ msgid ""
 "policy file. <a href=\"#\" onclick=\"%2$s\">Sample file</a>."
 msgstr ""
 
-#: mediacaster-admin.php:1102 mediacaster-admin.php:1601
+#: mediacaster-admin.php:1101 mediacaster-admin.php:1600
 msgid ""
 "Paste the above in a plain text file, and upload it so it's available as:"
 msgstr ""
 
-#: mediacaster-admin.php:1103 mediacaster-admin.php:1602
+#: mediacaster-admin.php:1102 mediacaster-admin.php:1601
 msgid ""
 "http://your-account-id.your-video-host.com/<strong>crossdomain.xml</strong>"
 msgstr ""
 
-#: mediacaster-admin.php:1109 mediacaster-admin.php:1559
+#: mediacaster-admin.php:1108 mediacaster-admin.php:1558
 msgid "Snapshot Image"
 msgstr ""
 
-#: mediacaster-admin.php:1120 mediacaster-admin.php:1571
+#: mediacaster-admin.php:1119 mediacaster-admin.php:1570
 msgid "New Snapshot"
 msgstr ""
 
-#: mediacaster-admin.php:1124 mediacaster-admin.php:1575
+#: mediacaster-admin.php:1123 mediacaster-admin.php:1574
 msgid "Cancel Snapshot"
 msgstr ""
 
-#: mediacaster-admin.php:1127 mediacaster-admin.php:1579
+#: mediacaster-admin.php:1126 mediacaster-admin.php:1578
 msgid "The URL of the preview image for your video."
 msgstr ""
 
-#: mediacaster-admin.php:1136 mediacaster-admin.php:1612
+#: mediacaster-admin.php:1135 mediacaster-admin.php:1611
 msgid "Width x Height"
 msgstr ""
 
-#: mediacaster-admin.php:1153 mediacaster-admin.php:1631
+#: mediacaster-admin.php:1152 mediacaster-admin.php:1630
 msgid "4:3"
 msgstr ""
 
-#: mediacaster-admin.php:1155 mediacaster-admin.php:1632
+#: mediacaster-admin.php:1154 mediacaster-admin.php:1631
 msgid "TV"
 msgstr ""
 
-#: mediacaster-admin.php:1156 mediacaster-admin.php:1634
+#: mediacaster-admin.php:1155 mediacaster-admin.php:1633
 msgid "3:2"
 msgstr ""
 
-#: mediacaster-admin.php:1158 mediacaster-admin.php:1635
+#: mediacaster-admin.php:1157 mediacaster-admin.php:1634
 msgid "Camera"
 msgstr ""
 
-#: mediacaster-admin.php:1159 mediacaster-admin.php:1637
+#: mediacaster-admin.php:1158 mediacaster-admin.php:1636
 msgid "16:9"
 msgstr ""
 
-#: mediacaster-admin.php:1161 mediacaster-admin.php:1638
+#: mediacaster-admin.php:1160 mediacaster-admin.php:1637
 msgid "HD"
 msgstr ""
 
-#: mediacaster-admin.php:1162 mediacaster-admin.php:1165
-#: mediacaster-admin.php:1639 mediacaster-admin.php:1642
+#: mediacaster-admin.php:1161 mediacaster-admin.php:1164
+#: mediacaster-admin.php:1638 mediacaster-admin.php:1641
 msgid "1.85:1"
 msgstr ""
 
-#: mediacaster-admin.php:1164 mediacaster-admin.php:1641
+#: mediacaster-admin.php:1163 mediacaster-admin.php:1640
 msgid "Movie"
 msgstr ""
 
-#: mediacaster-admin.php:1167 mediacaster-admin.php:1644
+#: mediacaster-admin.php:1166 mediacaster-admin.php:1643
 msgid "Wide"
 msgstr ""
 
-#: mediacaster-admin.php:1168 mediacaster-admin.php:1645
+#: mediacaster-admin.php:1167 mediacaster-admin.php:1644
 msgid "Fit the available width"
 msgstr ""
 
-#: mediacaster-admin.php:1170 mediacaster-admin.php:1647
+#: mediacaster-admin.php:1169 mediacaster-admin.php:1646
 msgid "Clear"
 msgstr ""
 
-#: mediacaster-admin.php:1180
+#: mediacaster-admin.php:1179
 msgid ""
 "Your video's size and aspect ratio are extracted from its snapshot image; "
 "leave these fields empty unless if you wish to specify an arbitrary size or "
 "aspect ratio."
 msgstr ""
 
-#: mediacaster-admin.php:1189 mediacaster-admin.php:1660
+#: mediacaster-admin.php:1188 mediacaster-admin.php:1659
 msgid "Thickbox"
 msgstr ""
 
-#: mediacaster-admin.php:1194 mediacaster-admin.php:1663
+#: mediacaster-admin.php:1193 mediacaster-admin.php:1662
 msgid "Open in a thickbox window (requires a preview image)."
 msgstr ""
 
-#: mediacaster-admin.php:1210 mediacaster-admin.php:1670
+#: mediacaster-admin.php:1209 mediacaster-admin.php:1669
 msgid "Thumbnail"
 msgstr ""
 
-#: mediacaster-admin.php:1219 mediacaster-admin.php:1678
+#: mediacaster-admin.php:1218 mediacaster-admin.php:1677
 msgid ""
 "The URL of the thickbox thumbnail, should it differ from the snapshot image."
 msgstr ""
 
-#: mediacaster-admin.php:1229 mediacaster-admin.php:1688
+#: mediacaster-admin.php:1228 mediacaster-admin.php:1687
 msgid "Insert Ads"
 msgstr ""
 
-#: mediacaster-admin.php:1236 mediacaster-admin.php:1695
+#: mediacaster-admin.php:1235 mediacaster-admin.php:1694
 msgid "Insert Ads (premium ads require a title and a description)."
 msgstr ""
 
-#: mediacaster-admin.php:1246 mediacaster-admin.php:1704
+#: mediacaster-admin.php:1245 mediacaster-admin.php:1703
 msgid "Autostart"
 msgstr ""
 
-#: mediacaster-admin.php:1251 mediacaster-admin.php:1707
+#: mediacaster-admin.php:1250 mediacaster-admin.php:1706
 msgid "Automatically start the (first) media player (bandwidth intensive)."
 msgstr ""
 
-#: mediacaster-admin.php:1256 mediacaster-admin.php:1714
+#: mediacaster-admin.php:1255 mediacaster-admin.php:1713
 msgid "Insert As"
 msgstr ""
 
-#: mediacaster-admin.php:1267 mediacaster-admin.php:1726
+#: mediacaster-admin.php:1266 mediacaster-admin.php:1725
 msgid "Download Link"
 msgstr ""
 
-#: mediacaster-admin.php:1271
+#: mediacaster-admin.php:1270
 msgid "Create Widget"
 msgstr ""
 
-#: mediacaster-admin.php:1294 mediacaster-admin.php:1303
+#: mediacaster-admin.php:1293 mediacaster-admin.php:1302
 msgid "Invalid Media Type"
 msgstr ""
 
-#: mediacaster-admin.php:1348
+#: mediacaster-admin.php:1347
 msgid "Failed to insert your external attachment"
 msgstr ""
 
-#: mediacaster-admin.php:1386 mediacaster-admin.php:1819
-#: mediacaster-admin.php:1843
+#: mediacaster-admin.php:1385 mediacaster-admin.php:1818
+#: mediacaster-admin.php:1842
 msgid "Untitled Media"
 msgstr ""
 
-#: mediacaster-admin.php:1518
+#: mediacaster-admin.php:1517
 msgid "Description"
 msgstr ""
 
-#: mediacaster-admin.php:1546
+#: mediacaster-admin.php:1545
 #, php-format
 msgid ""
 "Not available, but don't miss YouTube's <a href=\"%s\" target=\"_blank"
 "\">video annotation</a> features."
 msgstr ""
 
-#: mediacaster-admin.php:1652
+#: mediacaster-admin.php:1651
 msgid ""
 "Your video's size and aspect ratio are extracted from its snapshot image; "
 "leave these fields empty unless you wish to specify an arbitrary size or "
 "aspect ratio."
 msgstr ""
 
-#: mediacaster-admin.php:1738
+#: mediacaster-admin.php:1737
 msgid "Insert into Post"
 msgstr ""
 
-#: mediacaster-admin.php:1742
+#: mediacaster-admin.php:1741
 msgid "Save Attachment"
 msgstr ""
 
-#: mediacaster-admin.php:1786
+#: mediacaster-admin.php:1785
 msgid "YouTube Video"
 msgstr ""
 
-#: mediacaster-admin.php:1802
+#: mediacaster-admin.php:1801
 msgid "MP3 Playlist"
 msgstr ""
 
-#: mediacaster-admin.php:2122
+#: mediacaster-admin.php:2121
 #, php-format
 msgid "%s Snapshot"
 msgstr ""
 
-#: mediacaster-admin.php:2122
+#: mediacaster-admin.php:2121
 msgid "Video"
 msgstr ""
 
-#: mediacaster-admin.php:2169
+#: mediacaster-admin.php:2168
 msgid "Add Media From URL"
 msgstr ""
 
-#: mediacaster-admin.php:2175
+#: mediacaster-admin.php:2174
 msgid "Or Upload Files"
 msgstr ""
 
@@ -732,6 +732,6 @@ msgstr ""
 msgid "Click to Play the Video"
 msgstr ""
 
-#: mediacaster.php:1345 mediacaster.php:1346
+#: mediacaster.php:1346 mediacaster.php:1347
 msgid "Mediacaster"
 msgstr ""
