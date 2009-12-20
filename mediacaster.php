@@ -61,6 +61,8 @@ class mediacaster {
 			$mimes['3gp|3g2'] = 'video/3gpp';
 		if ( !isset($mimes['diff|patch']) )
 			$mimes['diff|patch'] = 'text/plain';
+		if ( !isset($mimes['rar']) )
+			$mimes['rar'] = 'application/x-rar-compressed';
 		return $mimes;
 	} # upload_mimes()
 	
