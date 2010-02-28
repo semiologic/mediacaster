@@ -1314,7 +1314,7 @@ class mediacaster_admin {
 			$att_id = $wpdb->get_var("
 				SELECT	ID
 				FROM	$wpdb->posts
-				WHERE	guid = '" . $wpdb->escape($guid) . "'
+				WHERE	guid = '" . $wpdb->_real_escape($guid) . "'
 				");
 			
 			extract($attachment, EXTR_SKIP);
@@ -1834,7 +1834,7 @@ class mediacaster_admin {
 		$att_id = $wpdb->get_var("
 			SELECT	ID
 			FROM	$wpdb->posts
-			WHERE	guid = '" . $wpdb->escape($guid) . "'
+			WHERE	guid = '" . $wpdb->_real_escape($guid) . "'
 			");
 		
 		if ( !$att_id ) {
