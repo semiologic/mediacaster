@@ -1710,6 +1710,7 @@ if ( $ops === false )
 elseif ( !isset($ops['version']) && !defined('DOING_CRON') && is_admin() )
 	add_action('init', array('mediacaster', 'upgrade'), 1000);
 
+add_filter('widget_text', 'shortcode_unautop');
 add_filter('widget_text', 'do_shortcode', 11);
 add_shortcode('mc', array('mediacaster', 'shortcode'));
 
