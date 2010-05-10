@@ -27,6 +27,10 @@ The [Semiologic forum](http://forum.semiologic.com) is the best place to report 
 
 == Change Log ==
 
+= 2.0.5 =
+
+- WP 3.0 / WPMU compat
+
 = 2.0.4 =
 
 - Proper backwards compat (fix text widget problem in WP 2.8)

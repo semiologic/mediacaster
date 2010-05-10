@@ -51,7 +51,11 @@ class mediacaster_admin {
 				$entropy = intval(get_option('sem_entropy')) + 1;
 				update_option('sem_entropy', $entropy);
 				
-				$cover = '/cover-' . $entropy . '.' . $ext;
+				$site_basedir = function_exists('is_site_admin') && defined('VHOST') && VHOST
+					? $_SERVER['HTTP_HOST'] . '/'
+					: '';
+				
+				$cover = $site_basedir . '/cover-' . $entropy . '.' . $ext;
 				
 				$new_name = WP_CONTENT_DIR . $cover;
 				
