@@ -3,7 +3,7 @@ Contributors: Denis-de-Bernardy
 Donate link: http://www.semiologic.com/partners/
 Tags: mediacaster, podcasting, podcast, videocasting, videocast, mp3, mp4, flv, mov, movie, video, semiologic
 Requires at least: 2.8
-Tested up to: 2.9.2
+Tested up to: 3.0
 Stable tag: trunk
 
 Lets you add podcasts, videos, and pretty download links to your site's posts and pages.
@@ -29,7 +29,7 @@ The [Semiologic forum](http://forum.semiologic.com) is the best place to report 
 
 = 2.0.5 =
 
-- WP 3.0 / WPMU compat
+- WP 3.0 compat
 
 = 2.0.4 =
 
