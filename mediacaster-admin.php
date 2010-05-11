@@ -51,7 +51,7 @@ class mediacaster_admin {
 				$entropy = intval(get_option('sem_entropy')) + 1;
 				update_option('sem_entropy', $entropy);
 				
-				$site_basedir = function_exists('is_site_admin') && defined('VHOST') && VHOST && VHOST != 'off'
+				$site_basedir = defined('SUBDOMAIN_INSTALL') && SUBDOMAIN_INSTALL
 					? $_SERVER['HTTP_HOST'] . '/'
 					: '';
 				
