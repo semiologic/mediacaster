@@ -48,8 +48,8 @@ class mediacaster_admin {
 				if ( $cover && file_exists(WP_CONTENT_DIR . $cover) )
 					@unlink(WP_CONTENT_DIR . $cover);
 				
-				$entropy = intval(get_option('sem_entropy')) + 1;
-				update_option('sem_entropy', $entropy);
+				$entropy = intval(get_site_option('sem_entropy')) + 1;
+				update_site_option('sem_entropy', $entropy);
 				
 				$site_basedir = '/covers';
 				if ( defined('SUBDOMAIN_INSTALL') && SUBDOMAIN_INSTALL )
