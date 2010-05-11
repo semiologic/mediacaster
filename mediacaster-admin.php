@@ -51,9 +51,14 @@ class mediacaster_admin {
 				$entropy = intval(get_option('sem_entropy')) + 1;
 				update_option('sem_entropy', $entropy);
 				
-				$site_basedir = defined('SUBDOMAIN_INSTALL') && SUBDOMAIN_INSTALL
-					? $_SERVER['HTTP_HOST'] . '/'
-					: '';
+				$site_basedir = '/covers';
+				if ( defined('SUBDOMAIN_INSTALL') && SUBDOMAIN_INSTALL )
+					$site_basedir .= '/' . $_SERVER['HTTP_HOST'];
+				if ( function_exists('is_multisite') && is_multisite() ) {
+					$home_path = parse_url(get_option('home'));
+					$home_path = isset($home_path['path']) ? rtrim($home_path['path'], '/') : '';
+					$site_basedir .= $home_path;
+				}
 				
 				$cover = $site_basedir . '/cover-' . $entropy . '.' . $ext;
 				
