@@ -60,6 +60,8 @@ class mediacaster_admin {
 					$site_basedir .= $home_path;
 				}
 				
+				wp_mkdir_p(WP_CONTENT_DIR . $site_basedir);
+				
 				$cover = $site_basedir . '/cover-' . $entropy . '.' . $ext;
 				
 				$new_name = WP_CONTENT_DIR . $cover;
