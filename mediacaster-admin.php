@@ -110,12 +110,17 @@ class mediacaster_admin {
 		
 		$longtail['script'] = false;
 		$longtail['channel'] = false;
-		$script = stripslashes($_POST['longtail']['script']);
-		if ( preg_match("/src=[\"']https?:\/\/www.ltassrv.com\/[^\?\"']+\?d=\d+&s=\d+&c=(\d+)/i", $script, $match) ) {
-			if ( strpos($script, 'type="text/javascript"') === false )
-				$script = str_replace('<script', '<script type="text/javascript"', $script);
-			$longtail['script'] = $script;
-			$longtail['channel'] = array_pop($match);
+		if ( current_user_can('unfiltered_html') ) {
+			$script = stripslashes($_POST['longtail']['script']);
+			if ( preg_match("/src=[\"']https?:\/\/www.ltassrv.com\/[^\?\"']+\?d=\d+&s=\d+&c=(\d+)/i", $script, $match) ) {
+				if ( strpos($script, 'type="text/javascript"') === false )
+					$script = str_replace('<script', '<script type="text/javascript"', $script);
+				$longtail['script'] = $script;
+				$longtail['channel'] = array_pop($match);
+			}
+		} elseif ( isset($old_ops['longtail']['script']) ) {
+			$longtail['script'] = $old_ops['longtail']['script'];
+			$longtail['channel'] = $old_ops['longtail']['channel'];
 		}
 		
 		$options = compact('player', 'itunes', 'longtail', 'version');
@@ -190,6 +195,11 @@ class mediacaster_admin {
 				echo '<p><strong>'
 					. __('Your Semiologic Pro license includes a commercial JWPlayer license, complete with a Premium Skin, for use on your Semiologic Pro sites.', 'mediacaster')
 					. '</strong></p>' . "\n";
+				if ( function_exists('is_multisite') && is_multisite() ) {
+					echo '<p><strong>'
+						. __('Also note that, just like Semiologic software, the commercial JWPlayer is licensed, individually, to whoever purchased it. It should not be redistributed or otherwise be made available to 3rd parties, including by means of multisite installations.', 'mediacaster')
+						. '</strong></p>' . "\n";
+				}
 			} else {
 				echo '<p>'
 					. __('You need to purchase a commercial license if:', 'mediacaster')
