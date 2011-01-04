@@ -3,7 +3,7 @@ Contributors: Denis-de-Bernardy
 Donate link: http://www.semiologic.com/partners/
 Tags: mediacaster, podcasting, podcast, videocasting, videocast, mp3, mp4, flv, mov, movie, video, semiologic
 Requires at least: 2.8
-Tested up to: 3.0
+Tested up to: 3.1
 Stable tag: trunk
 
 Lets you add podcasts, videos, and pretty download links to your site's posts and pages.
