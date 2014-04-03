@@ -7,6 +7,84 @@
 
 class mediacaster_admin {
 	/**
+	 * Plugin instance.
+	 *
+	 * @see get_instance()
+	 * @type object
+	 */
+	protected static $instance = NULL;
+
+	/**
+	 * URL to this plugin's directory.
+	 *
+	 * @type string
+	 */
+	public $plugin_url = '';
+
+	/**
+	 * Path to this plugin's directory.
+	 *
+	 * @type string
+	 */
+	public $plugin_path = '';
+
+	/**
+	 * Access this plugin’s working instance
+	 *
+	 * @wp-hook plugins_loaded
+	 * @return  object of this class
+	 */
+	public static function get_instance()
+	{
+		NULL === self::$instance and self::$instance = new self;
+
+		return self::$instance;
+	}
+
+
+	/**
+	 * Constructor.
+	 *
+	 *
+	 */
+
+    function mediacaster_admin() {
+	    $this->plugin_url    = plugins_url( '/', __FILE__ );
+	  	$this->plugin_path   = plugin_dir_path( __FILE__ );
+
+	    $this->init();
+    } #mediacaster_admin()
+
+	/**
+	 * init()
+	 *
+	 * @return void
+	 **/
+
+	function init() {
+
+		// more stuff: register actions and filters
+		add_action('save_post', array($this, 'save_entry'));
+		add_action('add_attachment', array($this, 'save_attachment'));
+		add_action('edit_attachment', array($this, 'save_attachment'));
+		add_action('add_attachment', array($this, 'create_widget'), 50);
+		add_action('edit_attachment', array($this, 'create_widget'), 50);
+
+		add_action('settings_page_mediacaster', array($this, 'save_options'), 0);
+
+		add_filter('attachment_fields_to_edit', array($this, 'attachment_fields_to_edit'), 20, 2);
+		add_filter('attachment_fields_to_save', array($this, 'attachment_fields_to_save'), 20, 2);
+		add_filter('media_send_to_editor', array($this, 'media_send_to_editor'), 20, 3);
+
+		add_filter('wp_media_insert_url_form', array($this, 'media_insert_url_form'), 20);
+		add_filter('audio_send_to_editor_url', array($this, 'send_to_editor_url'), 20, 3);
+		add_filter('video_send_to_editor_url', array($this, 'send_to_editor_url'), 20, 3);
+		add_filter('file_send_to_editor_url', array($this, 'send_to_editor_url'), 20, 3);
+
+		add_action('admin_print_scripts', array($this, 'admin_scripts'), 15);
+	}
+
+    /**
 	 * save_options()
 	 *
 	 * @return void
@@ -149,7 +227,7 @@ class mediacaster_admin {
 	 * @return void
 	 **/
 
-	function edit_options() {
+	static function edit_options() {
 		$options = get_option('mediacaster');
 		
 		if ( !$options['longtail']['licensed'] ) {
@@ -170,8 +248,6 @@ class mediacaster_admin {
 		echo '<input type="hidden" name="MAX_FILE_SIZE" value="' . esc_attr($bytes) .'" />' . "\n";
 
 		wp_nonce_field('mediacaster');
-		
-		screen_icon();
 		
 		echo '<h2>'. __('Mediacaster Settings', 'mediacaster') . '</h2>' . "\n";
 		
@@ -586,10 +662,10 @@ class mediacaster_admin {
 	/**
 	 * get_itunes_categories()
 	 *
-	 * @return void
+	 * @return array
 	 **/
 
-	function get_itunes_categories() {
+    static function get_itunes_categories() {
 		return array(
 			'Arts' => __('Arts', 'mediacaster'),
 			'Arts / Design' => __('Arts / Design', 'mediacaster'),
@@ -1102,7 +1178,7 @@ class mediacaster_admin {
 			$crossdomain = '';
 			if ( preg_match("/https?:\/\//i", $file) ) {
 				$site_host = parse_url(get_option('home'));
-				$site_host = $site_host['host'];
+				$site_host = (isset($site_host['host'])) ? $site_host['host'] : '';
 
 				$crossdomain = ''
 					. '<p class="help" style="width: 460px;">'
@@ -1490,31 +1566,17 @@ class mediacaster_admin {
 		
 		return $html;
 	} # media_send_to_editor()
-	
-	
-	/**
-	 * type_url_form()
-	 *
-	 * @param string $html
-	 * @return string $html
-	 **/
 
-	function type_url_form($html = null) {
-		switch ( current_filter() ) {
-		case 'type_url_form_audio':
-			$type = 'audio';
-			break;
-			
-		case 'type_url_form_video':
-			$type = 'video';
-			break;
-			
-		case 'type_url_form_file':
-		default:
-			$type = 'file';
-			break;
-		}
-		
+
+    /**
+     * media_insert_url_form()
+     *
+     * @param string $type
+     * @return string $html
+     */
+
+	function media_insert_url_form($type = 'image') {
+
 		$o = '
 			<table class="describe"><tbody>
 				<tr>
@@ -1571,7 +1633,7 @@ class mediacaster_admin {
 		$user = wp_get_current_user();
 		$nonce = wp_create_nonce('snapshot-0');
 		$site_host = parse_url(get_option('home'));
-		$site_host = $site_host['host'];
+		$site_host = (isset($site_host['host'])) ? $site_host['host'] : '';
 		
 		$o .= '
 				<tr id="mc-snapshot-row" ' . ( $type != 'video' ? ' style="display: none;"' : '' ) . '>
@@ -1998,7 +2060,7 @@ class mediacaster_admin {
 		$folder = plugin_dir_url(__FILE__);
 		wp_enqueue_script('swfobject');
 		wp_enqueue_script('mediacaster_admin', $folder . 'js/admin.js', array('jquery-ui-sortable'), '20091002', true);
-		add_action('admin_print_footer_scripts', array('mediacaster_admin', 'footer_scripts'), 30);
+		add_action('admin_print_footer_scripts', array($this, 'footer_scripts'), 30);
 	} # admin_scripts()
 	
 	
@@ -2063,7 +2125,7 @@ EOS;
 	 * @return void
 	 **/
 	
-	function create_snapshot($post_id, $user_id, $nonce) {
+	static function create_snapshot($post_id, $user_id, $nonce) {
 		status_header(200);
 		header('Content-Type: text/plain; Charset: UTF-8');
 		
@@ -2086,9 +2148,8 @@ EOS;
 		
 		if ( $post && $post->ID )
 			$_POST['post_id'] = $post->ID; // for the uploads folder plugin
-		
-		$user = wp_set_current_user($user_id);
-		if ( !$user || !$user->has_cap('upload_files') || $post->ID && !$user->has_cap('edit_post', $post->ID) )
+
+		if ( !current_user_can('upload_files') || $post->ID && !current_user_can('edit_post', $post->ID) )
 			die(-1);
 		
 		if ( wp_verify_nonce($nonce, 'snapshot-' . ( $attachment->ID ? $attachment->ID : '0' )) !== 1 )
@@ -2184,7 +2245,7 @@ EOS;
 	 * @return void
 	 **/
 	
-	function post_upload_ui() {
+	static function post_upload_ui() {
 		echo '<h3>'
 			. __('Add Media From URL', 'mediacaster')
 			. '</h3>' . "\n";
@@ -2197,24 +2258,4 @@ EOS;
 	} # post_upload_ui()
 } # mediacaster_admin
 
-add_action('save_post', array('mediacaster_admin', 'save_entry'));
-add_action('add_attachment', array('mediacaster_admin', 'save_attachment'));
-add_action('edit_attachment', array('mediacaster_admin', 'save_attachment'));
-add_action('add_attachment', array('mediacaster_admin', 'create_widget'), 50);
-add_action('edit_attachment', array('mediacaster_admin', 'create_widget'), 50);
-
-add_action('settings_page_mediacaster', array('mediacaster_admin', 'save_options'), 0);
-
-add_filter('attachment_fields_to_edit', array('mediacaster_admin', 'attachment_fields_to_edit'), 20, 2);
-add_filter('attachment_fields_to_save', array('mediacaster_admin', 'attachment_fields_to_save'), 20, 2);
-add_filter('media_send_to_editor', array('mediacaster_admin', 'media_send_to_editor'), 20, 3);
-
-add_filter('type_url_form_audio', array('mediacaster_admin', 'type_url_form'), 20);
-add_filter('type_url_form_video', array('mediacaster_admin', 'type_url_form'), 20);
-add_filter('type_url_form_file', array('mediacaster_admin', 'type_url_form'), 20);
-add_filter('audio_send_to_editor_url', array('mediacaster_admin', 'send_to_editor_url'), 20, 3);
-add_filter('video_send_to_editor_url', array('mediacaster_admin', 'send_to_editor_url'), 20, 3);
-add_filter('file_send_to_editor_url', array('mediacaster_admin', 'send_to_editor_url'), 20, 3);
-
-add_action('admin_print_scripts', array('mediacaster_admin', 'admin_scripts'), 15);
-?>
+$mediacaster_admin = mediacaster_admin::get_instance();

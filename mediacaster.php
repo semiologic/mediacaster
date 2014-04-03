@@ -3,24 +3,21 @@
 Plugin Name: Mediacaster
 Plugin URI: http://www.semiologic.com/software/mediacaster/
 Description: Lets you add podcasts, videos, and formatted download links in your site's posts and pages.
-Version: 2.0.6
-Author: Denis de Bernardy
+Version: 2.1 dev
+Author: Denis de Bernardy & Mike Koepke
 Author URI: http://www.getsemiologic.com
 Text Domain: mediacaster
 Domain Path: /lang
+License: Dual licensed under the MIT and GPLv2 licenses
 */
 
 /*
 Terms of use
 ------------
 
-This software is copyright Mesoconcepts (http://www.mesoconcepts.com), and is distributed under the terms of the Mesoconcepts license. In a nutshell, you may freely use it for any purpose, but may not redistribute it without written permission.
-
-http://www.mesoconcepts.com/license/
+This software is copyright Denis de Bernardy & Mike Koepke, and is distributed under the terms of the MIT and GPLv2 licenses.
 */
 
-
-load_plugin_textdomain('mediacaster', false, dirname(plugin_basename(__FILE__)) . '/lang');
 
 
 /**
@@ -31,6 +28,148 @@ load_plugin_textdomain('mediacaster', false, dirname(plugin_basename(__FILE__)) 
 
 class mediacaster {
 	/**
+	 * Plugin instance.
+	 *
+	 * @see get_instance()
+	 * @type object
+	 */
+	protected static $instance = NULL;
+
+	/**
+	 * URL to this plugin's directory.
+	 *
+	 * @type string
+	 */
+	public $plugin_url = '';
+
+	/**
+	 * Path to this plugin's directory.
+	 *
+	 * @type string
+	 */
+	public $plugin_path = '';
+
+	/**
+	 * Access this plugin’s working instance
+	 *
+	 * @wp-hook plugins_loaded
+	 * @return  object of this class
+	 */
+	public static function get_instance()
+	{
+		NULL === self::$instance and self::$instance = new self;
+
+		return self::$instance;
+	}
+
+
+	/**
+	 * Loads translation file.
+	 *
+	 * Accessible to other classes to load different language files (admin and
+	 * front-end for example).
+	 *
+	 * @wp-hook init
+	 * @param   string $domain
+	 * @return  void
+	 */
+	public function load_language( $domain )
+	{
+		load_plugin_textdomain(
+			$domain,
+			FALSE,
+			$this->plugin_path . 'lang'
+		);
+	}
+
+	/**
+	 * Constructor.
+	 *
+	 *
+	 */
+
+	public function __construct() {
+	    $this->plugin_url    = plugins_url( '/', __FILE__ );
+        $this->plugin_path   = plugin_dir_path( __FILE__ );
+        $this->load_language( 'mediacaster' );
+
+	    add_action( 'plugins_loaded', array ( $this, 'init' ) );
+    } #mediacaster
+
+	/**
+	 * init()
+	 *
+	 * @return void
+	 **/
+
+	function init() {
+
+		// more stuff: register actions and filters
+		add_filter('the_content', array($this, 'podcasts'), 12);
+		add_filter('the_excerpt', array($this, 'podcasts'), 12);
+
+		add_action('rss2_ns', array($this, 'display_feed_ns'));
+		add_action('atom_ns', array($this, 'display_feed_ns'));
+
+		add_action('rss2_head', array($this, 'display_feed_header'));
+		add_action('atom_head', array($this, 'display_feed_header'));
+
+		add_action('rss2_item', array($this, 'display_feed_enclosures'));
+		add_action('atom_entry', array($this, 'display_feed_enclosures'));
+
+		$ops = get_option('mediacaster');
+		if ( $ops === false )
+			mediacaster::init_options();
+		elseif ( !isset($ops['version']) && !defined('DOING_CRON') && is_admin() )
+			add_action('init', array($this, 'upgrade'), 1000);
+
+		if ( function_exists('shortcode_unautop') )
+			add_filter('widget_text', 'shortcode_unautop');
+		add_filter('widget_text', 'do_shortcode', 11);
+		add_shortcode('mc', array($this, 'shortcode'));
+
+		add_filter('ext2type', array($this, 'ext2type'));
+		add_filter('upload_mimes', array($this, 'upload_mimes'));
+		add_filter('wp_get_attachment_url', array($this, 'wp_get_attachment_url'), 10, 2);
+		add_filter('get_attached_file', array($this, 'get_attached_file'), 10, 2);
+
+		add_filter('get_the_excerpt', array($this, 'disable'), -20);
+		add_filter('get_the_excerpt', array($this, 'enable'), 20);
+
+		add_action('flush_cache', array($this, 'flush_cache'));
+		add_action('after_db_upgrade', array($this, 'flush_cache'));
+
+		if ( !is_admin() ) {
+			add_action('wp_print_scripts', array($this, 'scripts'), 0);
+			add_action('wp_print_styles', array($this, 'styles'), 0);
+			add_action('wp_footer', array($this, 'ltas_scripts'));
+			add_action('wp_footer', array($this, 'thickbox_images'), 20);
+
+			add_action('template_redirect', array($this, 'template_redirect'), 0);
+		} else {
+			add_action('admin_menu', array($this, 'admin_menu'));
+
+			foreach ( array('settings_page_mediacaster',
+				'post.php', 'post-new.php', 'page.php', 'page-new.php',
+				'media-upload.php', 'upload.php', 'async-upload.php', 'media.php', 'media-new.php') as $hook )
+				add_action("load-$hook", array($this, 'mediacaster_admin'));
+		}
+
+	}
+
+	/**
+	* mediacaster_admin()
+	*
+	* @return void
+	**/
+	function mediacaster_admin() {
+		include_once $this->plugin_path . '/mediacaster-admin.php';
+
+		if ( current_filter() == 'load-media-new.php' )
+			add_action('pre-upload-ui', array('mediacaster_admin', 'post_upload_ui'));
+	}
+
+    /**
 	 * ext2type()
 	 *
 	 * @param array $types
@@ -43,14 +182,14 @@ class mediacaster {
 		$types['code'] = array_merge($types['code'], array('diff', 'patch'));
 		return $types;
 	} # ext2type()
-	
-	
-	/**
-	 * upload_mimes()
-	 *
-	 * @param array $mines
-	 * @return array $mines
-	 **/
+
+
+    /**
+     * upload_mimes()
+     *
+     * @param array $mimes
+     * @return array $mines
+     */
 	
 	function upload_mimes($mimes) {
 		if ( !isset($mimes['flv|f4b|f4p|f4v']) )
@@ -147,7 +286,7 @@ class mediacaster {
 	 * @return string $player
 	 **/
 
-	function shortcode($args, $content = '') {
+	static function shortcode($args, $content = '') {
 		if ( empty($args['src']) ) {
 			if ( empty($args['id']) )
 				return '';
@@ -231,7 +370,7 @@ class mediacaster {
 	 * youtube()
 	 *
 	 * @param array $args
-	 * @return void
+	 * @return string
 	 **/
 
 	function youtube($args) {
@@ -756,7 +895,7 @@ EOS;
 	/**
 	 * defaults()
 	 *
-	 * @return void
+	 * @return array
 	 **/
 
 	function defaults() {
@@ -821,14 +960,14 @@ EOS;
 		
 		return isset($skin_details[$skin]) ? $skin_details[$skin] : $skin_details['bekle'];
 	} # get_skin()
-	
-	
-	/**
-	 * autostart()
-	 *
-	 * @param string $autostart
-	 * @return string $autostart
-	 **/
+
+
+    /**
+     * autostart()
+     *
+     * @param bool $autostart
+     * @return string $autostart
+     */
 
 	function autostart($autostart = false) {
 		static $autostarted = false;
@@ -885,7 +1024,7 @@ EOS;
 	 **/
 
 	function disable($in = null) {
-		remove_filter('the_content', array('mediacaster', 'podcasts'), 12);
+		remove_filter('the_content', array($this, 'podcasts'), 12);
 		
 		return $in;
 	} # disable()
@@ -899,7 +1038,7 @@ EOS;
 	 **/
 	
 	function enable($in = null) {
-		add_filter('the_content', array('mediacaster', 'podcasts'), 12);
+		add_filter('the_content', array($this, 'podcasts'), 12);
 		
 		return $in;
 	} # enable()
@@ -1043,9 +1182,9 @@ EOS;
 		if ( !in_the_loop() )
 			return $content;
 		
-		$o = get_option('mediacaster');
+        $options = get_option('mediacaster');
 		
-		if ( $o['player']['position'] == 'none' )
+		if ( $options['player']['position'] == 'none' )
 			return $content;
 		
 		$podcasts = mediacaster::get_enclosures(get_the_ID(), true);
@@ -1176,7 +1315,7 @@ EOS;
 
 		if ( $options['itunes']['category'] ) {
 			foreach ( (array) $options['itunes']['category'] as $category ) {
-				$cats = split('/', $category);
+				$cats = explode('/', $category);
 
 				$cat = array_pop($cats);
 
@@ -1285,15 +1424,16 @@ EOS;
 		
 		echo "\n";
 	} # display_feed_enclosures()
-	
-	
-	/**
-	 * get_extensions()
-	 *
-	 * @return array $extensions
-	 **/
 
-	function get_extensions($type = null) {
+
+    /**
+     * get_extensions()
+     *
+     * @param null $type
+     * @return array $extensions
+     */
+
+	static function get_extensions($type = null) {
 		$audio = array('mp3', 'm4a', 'aac');
 		$video = array('flv', 'f4b', 'f4p', 'f4v', 'mp4', 'm4v', 'mov', '3pg', '3g2');
 		
@@ -1307,7 +1447,7 @@ EOS;
 	 * @return void
 	 **/
 
-	function init_options() {
+	static function init_options() {
 		$options = array();
 
 		$options['player'] = array(
@@ -1436,7 +1576,7 @@ EOS;
 			
 			if ( !$files[$i] ) {
 				if ( is_writable(ABSPATH . $post->media_path) && $empty )
-					rmdir(ABSPATH . $post->media_path);
+					@rmdir(ABSPATH . $post->media_path);
 			}
 		}
 		
@@ -1680,60 +1820,4 @@ EOS;
 	} # flush_cache()
 } # mediacaster
 
-function mediacaster_admin() {
-	include_once dirname(__FILE__) . '/mediacaster-admin.php';
-
-	if ( current_filter() == 'load-media-new.php' )
-		add_action('pre-upload-ui', array('mediacaster_admin', 'post_upload_ui'));	
-}
-
-foreach ( array('settings_page_mediacaster',
-	'post.php', 'post-new.php', 'page.php', 'page-new.php',
-	'media-upload.php', 'upload.php', 'async-upload.php', 'media.php', 'media-new.php') as $hook )
-	add_action("load-$hook", 'mediacaster_admin');
-
-add_filter('the_content', array('mediacaster', 'podcasts'), 12);
-add_filter('the_excerpt', array('mediacaster', 'podcasts'), 12);
-
-add_action('rss2_ns', array('mediacaster', 'display_feed_ns'));
-add_action('atom_ns', array('mediacaster', 'display_feed_ns'));
-
-add_action('rss2_head', array('mediacaster', 'display_feed_header'));
-add_action('atom_head', array('mediacaster', 'display_feed_header'));
-
-add_action('rss2_item', array('mediacaster', 'display_feed_enclosures'));
-add_action('atom_entry', array('mediacaster', 'display_feed_enclosures'));
-
-$ops = get_option('mediacaster');
-if ( $ops === false )
-	mediacaster::init_options();
-elseif ( !isset($ops['version']) && !defined('DOING_CRON') && is_admin() )
-	add_action('init', array('mediacaster', 'upgrade'), 1000);
-
-if ( function_exists('shortcode_unautop') )
-	add_filter('widget_text', 'shortcode_unautop');
-add_filter('widget_text', 'do_shortcode', 11);
-add_shortcode('mc', array('mediacaster', 'shortcode'));
-
-add_filter('ext2type', array('mediacaster', 'ext2type'));
-add_filter('upload_mimes', array('mediacaster', 'upload_mimes'));
-add_filter('wp_get_attachment_url', array('mediacaster', 'wp_get_attachment_url'), 10, 2);
-add_filter('get_attached_file', array('mediacaster', 'get_attached_file'), 10, 2);
-
-add_filter('get_the_excerpt', array('mediacaster', 'disable'), -20);
-add_filter('get_the_excerpt', array('mediacaster', 'enable'), 20);
-
-add_action('flush_cache', array('mediacaster', 'flush_cache'));
-add_action('after_db_upgrade', array('mediacaster', 'flush_cache'));
-
-if ( !is_admin() ) {
-	add_action('wp_print_scripts', array('mediacaster', 'scripts'), 0);
-	add_action('wp_print_styles', array('mediacaster', 'styles'), 0);
-	add_action('wp_footer', array('mediacaster', 'ltas_scripts'));
-	add_action('wp_footer', array('mediacaster', 'thickbox_images'), 20);
-	
-	add_action('template_redirect', array('mediacaster', 'template_redirect'), 0);
-} else {
-	add_action('admin_menu', array('mediacaster', 'admin_menu'));
-}
-?>
+$mediacaster = mediacaster::get_instance();
