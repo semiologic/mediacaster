@@ -1,10 +1,12 @@
 === Mediacaster ===
 Contributors: Denis-de-Bernardy
-Donate link: http://www.semiologic.com/partners/
+Donate link: https://www.semiologic.com/donate/
 Tags: mediacaster, podcasting, podcast, videocasting, videocast, mp3, mp4, flv, mov, movie, video, semiologic
 Requires at least: 2.8
 Tested up to: 3.2.1
 Stable tag: trunk
+
+> *This plugin has been retired.  No further development will occur on it.*
 
 Lets you add podcasts, videos, and pretty download links to your site's posts and pages.
 
@@ -16,16 +18,20 @@ Lets you add podcasts, videos, and pretty download links to your site's posts an
 
 = Help Me! =
 
-The [Semiologic forum](http://forum.semiologic.com) is the best place to report issues.
+The [Semiologic Support Page](https://www.semiologic.com/support/) is the best place to report issues.
 
 
 == Installation ==
 
 1. Upload the plugin folder to the `/wp-content/plugins/` directory
-1. Activate the plugin through the 'Plugins' menu in WordPress
+2. Activate the plugin through the 'Plugins' menu in WordPress
 
 
 == Change Log ==
+
+= 2.1.1 =
+
+- Development has ceased on this plugin.  Updated source and readme accordingly
 
 = 2.1 =
 

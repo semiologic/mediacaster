@@ -2,8 +2,8 @@
 /*
 Plugin Name: Mediacaster
 Plugin URI: http://www.semiologic.com/software/mediacaster/
-Description: Lets you add podcasts, videos, and formatted download links in your site's posts and pages.
-Version: 2.1 dev
+Description: RETIRED - Lets you add podcasts, videos, and formatted download links in your site's posts and pages.
+Version: 2.1.1
 Author: Denis de Bernardy & Mike Koepke
 Author URI: http://www.getsemiologic.com
 Text Domain: mediacaster
@@ -18,7 +18,31 @@ Terms of use
 This software is copyright Denis de Bernardy & Mike Koepke, and is distributed under the terms of the MIT and GPLv2 licenses.
 */
 
+/*
+ * This plugin has been retired.  No further development will occur on it.
+ * */
 
+// Disable the plugin
+
+$active_plugins = get_option('active_plugins');
+
+if ( !is_array($active_plugins) )
+{
+	$active_plugins = array();
+}
+
+foreach ( (array) $active_plugins as $key => $plugin )
+{
+	if ( $plugin == 'mediacaster/mediacaster.php' )
+	{
+		unset($active_plugins[$key]);
+		break;
+	}
+}
+
+sort($active_plugins);
+
+update_option('active_plugins', $active_plugins);
 
 /**
  * mediacaster
@@ -78,7 +102,7 @@ class mediacaster {
 		load_plugin_textdomain(
 			$domain,
 			FALSE,
-			$this->plugin_path . 'lang'
+			dirname(plugin_basename(__FILE__)) . '/lang'
 		);
 	}
 
@@ -143,7 +167,6 @@ class mediacaster {
 			add_action('wp_print_scripts', array($this, 'scripts'), 0);
 			add_action('wp_print_styles', array($this, 'styles'), 0);
 			add_action('wp_footer', array($this, 'ltas_scripts'));
-			add_action('wp_footer', array($this, 'thickbox_images'), 20);
 
 			add_action('template_redirect', array($this, 'template_redirect'), 0);
 		} else {
@@ -1053,6 +1076,10 @@ EOS;
 	function scripts() {
 		wp_enqueue_script('swfobject');
 		wp_enqueue_script('thickbox');
+
+		wp_localize_script('thickbox', 'thickboxL10n', array(
+			'loadingAnimation' => includes_url('js/thickbox/loadingAnimation.gif'),
+		));
 	} # scripts()
 	
 	
@@ -1083,31 +1110,7 @@ EOS;
 		if ( !empty($o['longtail']['script']) )
 			echo $o['longtail']['script'] . "\n";
 	} # ltas_scripts()
-	
-	
-	/**
-	 * thickbox_images()
-	 *
-	 * @return void
-	 **/
 
-	function thickbox_images() {
-		if ( class_exists('auto_thickbox') )
-			return;
-		
-		$includes_url = includes_url();
-		
-		echo <<<EOS
-
-<script type="text/javascript">
-var tb_pathToImage = "{$includes_url}js/thickbox/loadingAnimation.gif";
-var tb_closeImage = "{$includes_url}js/thickbox/tb-close.png";
-</script>
-
-EOS;
-	} # thickbox_images()
-	
-	
 	/**
 	 * get_enclosures()
 	 *
