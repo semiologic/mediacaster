@@ -6,12 +6,13 @@ Requires at least: 2.8
 Tested up to: 3.2.1
 Stable tag: trunk
 
-> *This plugin has been retired.  No further development will occur on it.*
-
 Lets you add podcasts, videos, and pretty download links to your site's posts and pages.
 
 
 == Description ==
+
+
+> *This plugin has been retired.  No further development will occur on it.*
 
 Lets you add podcasts, videos, and pretty download links to your site's posts and pages.
 
